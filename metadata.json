@@ -1,0 +1,6 @@
+{
+  "name": "PDF Decryptor",
+  "description": "Decrypt encrypted PDF files directly on your device.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
