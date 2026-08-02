@@ -9,13 +9,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileOpen
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,18 +26,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.PasswordEntity
 import com.example.ui.theme.MyApplicationTheme
-import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import com.tom_roush.pdfbox.pdmodel.PDDocument
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PDFBoxResourceLoader.init(applicationContext)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
@@ -49,58 +47,52 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PDFDecryptorScreen(modifier: Modifier = Modifier) {
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedFileName by remember { mutableStateOf("") }
+fun PDFDecryptorScreen(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = viewModel()
+) {
+    var selectedUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var statusMessage by remember { mutableStateOf<String?>(null) }
-    var isProcessing by remember { mutableStateOf(false) }
+    var filePrefix by remember { mutableStateOf("decrypted") }
+
+    val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
+    val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
+    val savedPasswords by viewModel.savedPasswords.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+    var showSavePasswordDialog by remember { mutableStateOf(false) }
+    var showPasswordListDialog by remember { mutableStateOf(false) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-        onResult = { uri ->
-            if (uri != null) {
-                selectedFileUri = uri
-                selectedFileName = getFileName(context, uri) ?: "Unknown PDF"
-                statusMessage = null
+        contract = ActivityResultContracts.OpenMultipleDocuments(),
+        onResult = { uris ->
+            if (uris.isNotEmpty()) {
+                selectedUris = uris
+                viewModel.statusMessage.value = null
             }
         }
     )
 
-    val saveFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/pdf"),
+    val directoryPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri ->
-            if (uri != null && selectedFileUri != null) {
-                isProcessing = true
-                statusMessage = "Decrypting..."
-                coroutineScope.launch {
-                    try {
-                        val result = withContext(Dispatchers.IO) {
-                            decryptPdf(context, selectedFileUri!!, uri, password)
-                        }
-                        if (result) {
-                            statusMessage = "Decrypted and saved successfully!"
-                            password = ""
-                        } else {
-                            statusMessage = "Failed to decrypt. File may not be encrypted, or error occurred."
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        val msg = e.message?.lowercase() ?: ""
-                        if (msg.contains("password") || msg.contains("decrypt")) {
-                            statusMessage = "Error: Incorrect password or corrupted file."
-                        } else {
-                            statusMessage = "Error: ${e.message}"
-                        }
-                    } finally {
-                        isProcessing = false
-                    }
-                }
+            if (uri != null) {
+                // Grant persistable URI permission
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                viewModel.decryptMultiplePdfs(
+                    context = context,
+                    inputUris = selectedUris,
+                    outputDirectoryUri = uri,
+                    passwordValue = password,
+                    prefix = filePrefix
+                )
             }
         }
     )
@@ -116,61 +108,84 @@ fun PDFDecryptorScreen(modifier: Modifier = Modifier) {
             text = "PDF Decryptor",
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 24.dp)
         )
 
         Button(
             onClick = { filePickerLauncher.launch(arrayOf("application/pdf")) },
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Icon(Icons.Default.FileOpen, contentDescription = "Select PDF")
+            Icon(Icons.Default.FileOpen, contentDescription = "Select PDFs")
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Select Encrypted PDF")
+            Text("Select Encrypted PDFs")
         }
 
-        if (selectedFileUri != null) {
+        if (selectedUris.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Text(
-                    text = "Selected: $selectedFileName",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Selected ${selectedUris.size} file(s)",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = selectedUris.joinToString(", ") { getFileName(context, it) ?: "Unknown" },
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("PDF Password") },
+                value = filePrefix,
+                onValueChange = { filePrefix = it },
+                label = { Text("Output File Prefix") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    val description = if (passwordVisible) "Hide password" else "Show password"
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = description)
-                    }
-                }
+                modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("PDF Password") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = { showPasswordListDialog = true }) {
+                    Icon(Icons.Default.List, contentDescription = "Saved Passwords")
+                }
+                IconButton(
+                    onClick = { showSavePasswordDialog = true },
+                    enabled = password.isNotBlank()
+                ) {
+                    Icon(Icons.Default.Save, contentDescription = "Save Password")
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = {
-                    val newName = if (selectedFileName.endsWith(".pdf", ignoreCase = true)) {
-                        selectedFileName.substringBeforeLast(".") + "_decrypted.pdf"
-                    } else {
-                        "decrypted_$selectedFileName.pdf"
-                    }
-                    saveFileLauncher.launch(newName)
+                    directoryPickerLauncher.launch(null)
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 enabled = !isProcessing && password.isNotEmpty(),
@@ -183,9 +198,9 @@ fun PDFDecryptorScreen(modifier: Modifier = Modifier) {
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Icon(Icons.Default.LockOpen, contentDescription = "Decrypt")
+                    Icon(Icons.Default.Folder, contentDescription = "Select Output Directory")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Decrypt & Save")
+                    Text("Select Output Folder & Decrypt")
                 }
             }
         }
@@ -194,14 +209,80 @@ fun PDFDecryptorScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = statusMessage!!,
-                color = if (statusMessage!!.startsWith("Error") || statusMessage!!.startsWith("Failed")) 
-                            MaterialTheme.colorScheme.error 
-                        else 
-                            MaterialTheme.colorScheme.primary,
+                color = if (statusMessage!!.startsWith("Error") || statusMessage!!.startsWith("Failed"))
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
         }
+    }
+
+    if (showSavePasswordDialog) {
+        var passwordName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showSavePasswordDialog = false },
+            title = { Text("Save Password") },
+            text = {
+                OutlinedTextField(
+                    value = passwordName,
+                    onValueChange = { passwordName = it },
+                    label = { Text("Password Name (e.g., Bank Statement)") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (passwordName.isNotBlank()) {
+                        viewModel.savePassword(passwordName, password)
+                        showSavePasswordDialog = false
+                    }
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSavePasswordDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showPasswordListDialog) {
+        AlertDialog(
+            onDismissRequest = { showPasswordListDialog = false },
+            title = { Text("Saved Passwords") },
+            text = {
+                if (savedPasswords.isEmpty()) {
+                    Text("No saved passwords.")
+                } else {
+                    LazyColumn {
+                        items(savedPasswords) { savedPass ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        password = savedPass.passwordValue
+                                        showPasswordListDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = savedPass.name,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                IconButton(onClick = { viewModel.deletePassword(savedPass.id) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPasswordListDialog = false }) { Text("Close") }
+            }
+        )
     }
 }
 
@@ -225,22 +306,4 @@ fun getFileName(context: Context, uri: Uri): String? {
         }
     }
     return result
-}
-
-fun decryptPdf(context: Context, inputUri: Uri, outputUri: Uri, password: String): Boolean {
-    context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
-        val document = PDDocument.load(inputStream, password)
-        try {
-            if (document.isEncrypted) {
-                document.setAllSecurityToBeRemoved(true)
-                context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
-                    document.save(outputStream)
-                    return true
-                }
-            }
-        } finally {
-            document.close()
-        }
-    }
-    return false
 }
