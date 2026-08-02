@@ -57,6 +57,7 @@ fun PDFDecryptorScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var filePrefix by remember { mutableStateOf("decrypted") }
+    var selectedFileNames by remember { mutableStateOf("") }
 
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
@@ -65,6 +66,18 @@ fun PDFDecryptorScreen(
     val context = LocalContext.current
     var showSavePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordListDialog by remember { mutableStateOf(false) }
+
+    // ⚡ Bolt: Offload I/O operations (ContentResolver queries) from the main UI thread during composition.
+    // This prevents blocking the main thread and avoids redundant queries on every recomposition.
+    LaunchedEffect(selectedUris) {
+        if (selectedUris.isNotEmpty()) {
+            selectedFileNames = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                selectedUris.joinToString(", ") { getFileName(context, it) ?: "Unknown" }
+            }
+        } else {
+            selectedFileNames = ""
+        }
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -133,7 +146,7 @@ fun PDFDecryptorScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedUris.joinToString(", ") { getFileName(context, it) ?: "Unknown" },
+                        text = selectedFileNames,
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
