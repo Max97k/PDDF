@@ -220,70 +220,100 @@ fun PDFDecryptorScreen(
     }
 
     if (showSavePasswordDialog) {
-        var passwordName by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showSavePasswordDialog = false },
-            title = { Text("Save Password") },
-            text = {
-                OutlinedTextField(
-                    value = passwordName,
-                    onValueChange = { passwordName = it },
-                    label = { Text("Password Name (e.g., Bank Statement)") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (passwordName.isNotBlank()) {
-                        viewModel.savePassword(passwordName, password)
-                        showSavePasswordDialog = false
-                    }
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSavePasswordDialog = false }) { Text("Cancel") }
+        SavePasswordDialog(
+            onDismiss = { showSavePasswordDialog = false },
+            onSave = { name ->
+                viewModel.savePassword(name, password)
+                showSavePasswordDialog = false
             }
         )
     }
 
     if (showPasswordListDialog) {
-        AlertDialog(
-            onDismissRequest = { showPasswordListDialog = false },
-            title = { Text("Saved Passwords") },
-            text = {
-                if (savedPasswords.isEmpty()) {
-                    Text("No saved passwords.")
-                } else {
-                    LazyColumn {
-                        items(savedPasswords) { savedPass ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        password = savedPass.passwordValue
-                                        showPasswordListDialog = false
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = savedPass.name,
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                IconButton(onClick = { viewModel.deletePassword(savedPass.id) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+        PasswordListDialog(
+            savedPasswords = savedPasswords,
+            onDismiss = { showPasswordListDialog = false },
+            onPasswordSelected = { pwd ->
+                password = pwd
+                showPasswordListDialog = false
+            },
+            onDelete = { id -> viewModel.deletePassword(id) }
+        )
+    }
+}
+
+@Composable
+fun SavePasswordDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var passwordName by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Save Password") },
+        text = {
+            OutlinedTextField(
+                value = passwordName,
+                onValueChange = { passwordName = it },
+                label = { Text("Password Name (e.g., Bank Statement)") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (passwordName.isNotBlank()) {
+                    onSave(passwordName)
+                }
+            }) { Text("Save") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun PasswordListDialog(
+    savedPasswords: List<PasswordEntity>,
+    onDismiss: () -> Unit,
+    onPasswordSelected: (String) -> Unit,
+    onDelete: (Int) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Saved Passwords") },
+        text = {
+            if (savedPasswords.isEmpty()) {
+                Text("No saved passwords.")
+            } else {
+                LazyColumn {
+                    items(savedPasswords) { savedPass ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onPasswordSelected(savedPass.passwordValue)
                                 }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = savedPass.name,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            IconButton(onClick = { onDelete(savedPass.id) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showPasswordListDialog = false }) { Text("Close") }
             }
-        )
-    }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
 }
 
 fun getFileName(context: Context, uri: Uri): String? {
