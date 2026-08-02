@@ -115,7 +115,7 @@ fun PDFDecryptorScreen(
             onClick = { filePickerLauncher.launch(arrayOf("application/pdf")) },
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Icon(Icons.Default.FileOpen, contentDescription = "Select PDFs")
+            Icon(Icons.Default.FileOpen, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Select Encrypted PDFs")
         }
@@ -166,7 +166,10 @@ fun PDFDecryptorScreen(
                     trailingIcon = {
                         val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                            Icon(
+                                imageVector = image,
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            )
                         }
                     }
                 )
@@ -198,7 +201,7 @@ fun PDFDecryptorScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Icon(Icons.Default.Folder, contentDescription = "Select Output Directory")
+                    Icon(Icons.Default.Folder, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Select Output Folder & Decrypt")
                 }
@@ -272,7 +275,10 @@ fun PDFDecryptorScreen(
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 IconButton(onClick = { viewModel.deletePassword(savedPass.id) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete ${savedPass.name}"
+                                    )
                                 }
                             }
                         }
