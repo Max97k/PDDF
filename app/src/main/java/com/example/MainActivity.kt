@@ -54,6 +54,7 @@ fun PDFDecryptorScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     var selectedUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var resolvedFileNames by remember { mutableStateOf<List<String>>(emptyList()) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var filePrefix by remember { mutableStateOf("decrypted") }
@@ -65,6 +66,17 @@ fun PDFDecryptorScreen(
     val context = LocalContext.current
     var showSavePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordListDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedUris) {
+        if (selectedUris.isEmpty()) {
+            resolvedFileNames = emptyList()
+        } else {
+            resolvedFileNames = emptyList() // clear stale data while loading
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                resolvedFileNames = selectedUris.map { getFileName(context, it) ?: "Unknown" }
+            }
+        }
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -133,7 +145,7 @@ fun PDFDecryptorScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedUris.joinToString(", ") { getFileName(context, it) ?: "Unknown" },
+                        text = resolvedFileNames.joinToString(", "),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
