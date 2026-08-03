@@ -50,6 +50,7 @@ jobs:
           releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
           track: internal
           status: completed
+          whatsNewDirectory: distribution/whatsnew
 
       # 3. 同時建立 GitHub Release 存檔
       - name: Create GitHub Release
