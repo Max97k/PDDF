@@ -35,4 +35,8 @@
     <string name="summary_wrong_password">❌ Incorrect Password: %1$d</string>
     <string name="summary_unsupported">⚠️ Advanced Encryption (DRM/Certificate): %1$d</string>
     <string name="summary_error">❌ Failed/Read Error: %1$d</string>
+    <string name="btn_open_file_manager">Open File Manager</string>
+    <string name="btn_open_pdf">Open PDF App</string>
+    <string name="btn_overwrite">Overwrite Original</string>
+    <string name="btn_save_as">Save As New</string>
 </resources>

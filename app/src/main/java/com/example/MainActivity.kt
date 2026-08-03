@@ -1,5 +1,6 @@
 package com.example
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -104,44 +105,44 @@ fun PDFDecryptorScreen(
     val selectedFileNames by viewModel.selectedFileNames.collectAsStateWithLifecycle()
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var filePrefix by remember { mutableStateOf("") }
-    var deleteOriginal by remember { mutableStateOf(true) }
 
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
     val savedPasswords by viewModel.savedPasswords.collectAsStateWithLifecycle()
-    val conflictMode by viewModel.conflictMode.collectAsStateWithLifecycle()
-    val rememberConflictChoice by viewModel.rememberConflictChoice.collectAsStateWithLifecycle()
+    val lastDecryptedUri by viewModel.lastDecryptedUri.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     var showSavePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordListDialog by remember { mutableStateOf(false) }
 
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments(),
-        onResult = { uris ->
-            if (uris.isNotEmpty()) {
-                viewModel.setSelectedUris(context, uris)
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                if (uri != null) {
+                    try {
+                        context.contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    viewModel.setSelectedUris(context, listOf(uri))
+                }
             }
         }
     )
 
-    val directoryPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { uri ->
-            if (uri != null) {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-                viewModel.decryptMultiplePdfs(
-                    context = context,
-                    inputUris = selectedUris,
-                    outputDirectoryUri = uri,
-                    passwordValue = password,
-                    prefix = filePrefix,
-                    deleteOriginal = deleteOriginal
-                )
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                if (destUri != null) {
+                    viewModel.decryptAndSaveAs(context, selectedUris.firstOrNull(), destUri, password)
+                }
             }
         }
     )
@@ -161,7 +162,14 @@ fun PDFDecryptorScreen(
         )
 
         Button(
-            onClick = { filePickerLauncher.launch(arrayOf("application/pdf")) },
+            onClick = { 
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/pdf"
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                }
+                openDocumentLauncher.launch(intent)
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
             Icon(Icons.Default.FileOpen, contentDescription = stringResource(R.string.content_desc_select_pdfs))
@@ -178,44 +186,6 @@ fun PDFDecryptorScreen(
                 onClear = { viewModel.setSelectedUris(context, emptyList()) }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = filePrefix,
-                onValueChange = { filePrefix = it },
-                label = { Text(stringResource(R.string.label_prefix)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { deleteOriginal = !deleteOriginal }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = deleteOriginal,
-                    onCheckedChange = { deleteOriginal = it }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.checkbox_delete_original),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            ConflictSettingsCard(
-                conflictMode = conflictMode,
-                rememberChoice = rememberConflictChoice,
-                onConflictModeChanged = { mode, remember ->
-                    viewModel.updateConflictSettings(mode, remember)
-                }
-            )
-
             Spacer(modifier = Modifier.height(12.dp))
 
             PasswordInputSection(
@@ -229,22 +199,42 @@ fun PDFDecryptorScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = { directoryPickerLauncher.launch(null) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = !isProcessing && password.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                if (isProcessing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(Icons.Default.Folder, contentDescription = stringResource(R.string.content_desc_select_output))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.btn_decrypt))
+            if (isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 4.dp
+                )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { viewModel.decryptAndOverwrite(context, selectedUris.firstOrNull(), password) },
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        enabled = password.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
+                    ) {
+                        Text(stringResource(R.string.btn_overwrite), textAlign = TextAlign.Center)
+                    }
+
+                    Button(
+                        onClick = { 
+                            val fileName = selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_TITLE, fileName)
+                            }
+                            createDocumentLauncher.launch(intent)
+                        },
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        enabled = password.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text(stringResource(R.string.btn_save_as), textAlign = TextAlign.Center)
+                    }
                 }
             }
         }
@@ -260,6 +250,52 @@ fun PDFDecryptorScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            val fallback = Intent(Intent.ACTION_VIEW)
+                            fallback.setDataAndType(Uri.parse("content://"), "*/*")
+                            try {
+                                context.startActivity(fallback)
+                            } catch (e2: Exception) {}
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(48.dp)
+                ) {
+                    Icon(Icons.Default.FolderOpen, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
+                }
+
+                if (lastDecryptedUri != null) {
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(lastDecryptedUri, "application/pdf")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            try {
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
+                            } catch (e: Exception) {}
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp)
+                    ) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
+                    }
+                }
+            }
         }
     }
 
@@ -318,70 +354,6 @@ private fun SelectedFilesCard(
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
-        }
-    }
-}
-
-@Composable
-private fun ConflictSettingsCard(
-    conflictMode: ConflictMode,
-    rememberChoice: Boolean,
-    onConflictModeChanged: (ConflictMode, Boolean) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = stringResource(R.string.title_conflict_mode),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onConflictModeChanged(ConflictMode.SAVE_AS_COPY, rememberChoice) }
-            ) {
-                RadioButton(
-                    selected = conflictMode == ConflictMode.SAVE_AS_COPY,
-                    onClick = { onConflictModeChanged(ConflictMode.SAVE_AS_COPY, rememberChoice) }
-                )
-                Text(
-                    text = stringResource(R.string.option_save_as_copy),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onConflictModeChanged(ConflictMode.OVERWRITE, rememberChoice) }
-            ) {
-                RadioButton(
-                    selected = conflictMode == ConflictMode.OVERWRITE,
-                    onClick = { onConflictModeChanged(ConflictMode.OVERWRITE, rememberChoice) }
-                )
-                Text(
-                    text = stringResource(R.string.option_overwrite),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clickable { onConflictModeChanged(conflictMode, !rememberChoice) }
-                    .padding(top = 2.dp)
-            ) {
-                Checkbox(
-                    checked = rememberChoice,
-                    onCheckedChange = { checked -> onConflictModeChanged(conflictMode, checked) }
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.checkbox_remember_choice),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
         }
     }
 }

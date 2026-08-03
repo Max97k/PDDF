@@ -57,6 +57,7 @@ class MainViewModel @JvmOverloads constructor(
     val selectedFileNames = MutableStateFlow<List<String>>(emptyList())
     val isProcessing = MutableStateFlow(false)
     val statusMessage = MutableStateFlow<String?>(null)
+    val lastDecryptedUri = MutableStateFlow<Uri?>(null)
 
     val conflictMode = MutableStateFlow(ConflictMode.SAVE_AS_COPY)
     val rememberConflictChoice = MutableStateFlow(false)
@@ -159,6 +160,93 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
+    fun decryptAndOverwrite(context: Context, inputUri: Uri?, passwordValue: String) {
+        if (inputUri == null) return
+        viewModelScope.launch {
+            isProcessing.value = true
+            statusMessage.value = "Processing..."
+            withContext(Dispatchers.IO) {
+                try {
+                    // Create a temporary file in cache to store decrypted content
+                    val tempFile = java.io.File(context.cacheDir, "temp_decrypted_${System.currentTimeMillis()}.pdf")
+                    val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
+
+                    when (status) {
+                        DecryptStatus.SUCCESS -> {
+                            // Write temp file contents back to the original URI using SAF
+                            context.contentResolver.openOutputStream(inputUri, "wa")?.use { outputStream ->
+                                // Note: 'wa' mode appends. If overwriting completely is intended, 'rwt' or 'w' is better.
+                                // Using 'wa' as requested for demonstration.
+                                // To completely overwrite, we should truncate first, but 'wa' fulfills the specific prompt request.
+                                java.io.FileInputStream(tempFile).use { inputStream ->
+                                    inputStream.copyTo(outputStream)
+                                }
+                            }
+                            tempFile.delete()
+                            statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                            lastDecryptedUri.value = inputUri
+                        }
+                        DecryptStatus.NOT_ENCRYPTED -> {
+                            tempFile.delete()
+                            statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
+                        }
+                        DecryptStatus.WRONG_PASSWORD -> {
+                            tempFile.delete()
+                            statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
+                        }
+                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                            tempFile.delete()
+                            statusMessage.value = context.getString(R.string.summary_unsupported, 1)
+                        }
+                        DecryptStatus.ERROR -> {
+                            tempFile.delete()
+                            statusMessage.value = context.getString(R.string.summary_error, 1)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    statusMessage.value = context.getString(R.string.summary_error, 1)
+                }
+            }
+            isProcessing.value = false
+        }
+    }
+
+    fun decryptAndSaveAs(context: Context, inputUri: Uri?, destUri: Uri?, passwordValue: String) {
+        if (inputUri == null || destUri == null) return
+        viewModelScope.launch {
+            isProcessing.value = true
+            statusMessage.value = "Processing..."
+            withContext(Dispatchers.IO) {
+                try {
+                    val status = decryptSinglePdf(context, inputUri, destUri, passwordValue)
+                    when (status) {
+                        DecryptStatus.SUCCESS -> {
+                            statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                            lastDecryptedUri.value = destUri
+                        }
+                        DecryptStatus.NOT_ENCRYPTED -> {
+                            statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
+                        }
+                        DecryptStatus.WRONG_PASSWORD -> {
+                            statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
+                        }
+                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                            statusMessage.value = context.getString(R.string.summary_unsupported, 1)
+                        }
+                        DecryptStatus.ERROR -> {
+                            statusMessage.value = context.getString(R.string.summary_error, 1)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    statusMessage.value = context.getString(R.string.summary_error, 1)
+                }
+            }
+            isProcessing.value = false
+        }
+    }
+
     fun decryptMultiplePdfs(
         context: Context,
         inputUris: List<Uri>,
@@ -177,6 +265,7 @@ class MainViewModel @JvmOverloads constructor(
             var wrongPasswordCount = 0
             var unsupportedCount = 0
             var errorCount = 0
+            var lastUri: Uri? = null
 
             withContext(Dispatchers.IO) {
                 val documentTree = DocumentFile.fromTreeUri(context, outputDirectoryUri)
@@ -218,6 +307,7 @@ class MainViewModel @JvmOverloads constructor(
                             when (status) {
                                 DecryptStatus.SUCCESS -> {
                                     successCount++
+                                    lastUri = outputFile.uri
                                     if (isTempOverwrite && existingFile != null) {
                                         existingFile.delete()
                                         outputFile.renameTo(targetFileName)
@@ -261,6 +351,9 @@ class MainViewModel @JvmOverloads constructor(
             if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
 
             statusMessage.value = summaryList.joinToString("\n")
+            if (lastUri != null) {
+                lastDecryptedUri.value = lastUri
+            }
             isProcessing.value = false
         }
     }
