@@ -1,3 +1,38 @@
 <resources>
     <string name="app_name">PDF Decryptor</string>
+    <string name="btn_select_pdfs">Select Encrypted PDFs</string>
+    <string name="content_desc_select_pdfs">Select PDFs</string>
+    <string name="label_selected_files_count">Selected %1$d file(s)</string>
+    <string name="content_desc_clear_selection">Clear Selection</string>
+    <string name="label_prefix">Prefix (Optional - Leave blank to keep original filename)</string>
+    <string name="checkbox_delete_original">Delete original encrypted file after decryption</string>
+    <string name="title_conflict_mode">When Filename Conflicts:</string>
+    <string name="option_save_as_copy">Save as new copy (e.g., file (1).pdf)</string>
+    <string name="option_overwrite">Overwrite existing file</string>
+    <string name="checkbox_remember_choice">Remember my choice</string>
+    <string name="label_password">PDF Password</string>
+    <string name="content_desc_toggle_password">Toggle password visibility</string>
+    <string name="content_desc_saved_passwords">Saved Passwords</string>
+    <string name="content_desc_save_password">Save Password</string>
+    <string name="btn_decrypt">Select Output Folder &amp; Decrypt</string>
+    <string name="content_desc_select_output">Select Output Directory</string>
+    <string name="dialog_title_save_password">Save Password</string>
+    <string name="label_password_name_hint">Password Name (e.g., Bank Statement)</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_close">Close</string>
+    <string name="dialog_title_saved_passwords">Saved Passwords</string>
+    <string name="msg_no_saved_passwords">No saved passwords.</string>
+    <string name="content_desc_delete">Delete</string>
+
+    <string name="msg_notice_all_unencrypted">⚠️ Notice: Selected PDF file(s) are not password-protected and do not need decryption.</string>
+    <string name="msg_notice_some_unencrypted">⚠️ Notice: %1$s is not password-protected.</string>
+    <string name="msg_warning_unsupported">⚠️ Warning: %1$s uses advanced encryption (Certificate/DRM) that standard password cannot decrypt.</string>
+    <string name="msg_processing_count">Decrypting %1$d file(s)...</string>
+    <string name="msg_error_output_dir">Error: Cannot access output directory.</string>
+    <string name="summary_decrypted_saved">✅ Decrypted &amp; Saved: %1$d</string>
+    <string name="summary_not_encrypted">⚠️ Not Encrypted: %1$d (no password needed)</string>
+    <string name="summary_wrong_password">❌ Incorrect Password: %1$d</string>
+    <string name="summary_unsupported">⚠️ Advanced Encryption (DRM/Certificate): %1$d</string>
+    <string name="summary_error">❌ Failed/Read Error: %1$d</string>
 </resources>
