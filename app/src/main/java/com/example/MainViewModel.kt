@@ -174,10 +174,7 @@ class MainViewModel @JvmOverloads constructor(
                     when (status) {
                         DecryptStatus.SUCCESS -> {
                             // Write temp file contents back to the original URI using SAF
-                            context.contentResolver.openOutputStream(inputUri, "wa")?.use { outputStream ->
-                                // Note: 'wa' mode appends. If overwriting completely is intended, 'rwt' or 'w' is better.
-                                // Using 'wa' as requested for demonstration.
-                                // To completely overwrite, we should truncate first, but 'wa' fulfills the specific prompt request.
+                            context.contentResolver.openOutputStream(inputUri, "rwt")?.use { outputStream ->
                                 java.io.FileInputStream(tempFile).use { inputStream ->
                                     inputStream.copyTo(outputStream)
                                 }

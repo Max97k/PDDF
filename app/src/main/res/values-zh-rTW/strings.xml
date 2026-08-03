@@ -39,4 +39,6 @@
     <string name="btn_open_pdf">開啟 PDF 檢視器</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>
+    <string name="version_info">版本 %1$s</string>
+    <string name="github_link">GitHub 專案</string>
 </resources>

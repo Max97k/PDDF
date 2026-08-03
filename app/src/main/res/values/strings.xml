@@ -39,4 +39,6 @@
     <string name="btn_open_pdf">Open PDF App</string>
     <string name="btn_overwrite">Overwrite Original</string>
     <string name="btn_save_as">Save As New</string>
+    <string name="version_info">Version %1$s</string>
+    <string name="github_link">GitHub Source</string>
 </resources>
