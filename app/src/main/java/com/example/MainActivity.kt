@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -175,7 +172,7 @@ fun PDFDecryptorScreen(
             },
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Icon(Icons.Default.FileOpen, contentDescription = stringResource(R.string.content_desc_select_pdfs))
+            Text("📁")
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.btn_select_pdfs))
         }
@@ -275,7 +272,7 @@ fun PDFDecryptorScreen(
                     },
                     modifier = Modifier.weight(1f).height(48.dp)
                 ) {
-                    Icon(Icons.Default.FolderOpen, contentDescription = null)
+                    Text("📂")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
                 }
@@ -293,7 +290,7 @@ fun PDFDecryptorScreen(
                         },
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                        Text("📄")
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
                     }
@@ -384,7 +381,7 @@ private fun SelectedFilesCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(onClick = onClear) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.content_desc_clear_selection))
+                    Text("❌")
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -420,21 +417,20 @@ private fun PasswordInputSection(
             ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                 IconButton(onClick = onTogglePasswordVisible) {
-                    Icon(imageVector = image, contentDescription = stringResource(R.string.content_desc_toggle_password))
+                    Text(if (passwordVisible) "👁️" else "🙈")
                 }
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(onClick = onOpenPasswordList) {
-            Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.content_desc_saved_passwords))
+            Text("📋")
         }
         IconButton(
             onClick = onOpenSavePassword,
             enabled = password.isNotBlank()
         ) {
-            Icon(Icons.Default.Save, contentDescription = stringResource(R.string.content_desc_save_password))
+            Text("💾")
         }
     }
 }
@@ -499,7 +495,7 @@ private fun SavedPasswordListDialog(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             IconButton(onClick = { onDeletePassword(savedPass.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.content_desc_delete))
+                                Text("🗑️")
                             }
                         }
                     }
