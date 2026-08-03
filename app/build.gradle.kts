@@ -39,18 +39,6 @@ android {
         keyPassword = System.getenv("KEY_PASSWORD")
       }
     }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
-  }
-
-  packaging {
-    jniLibs {
-      useLegacyPackaging = false
-    }
   }
 
   buildTypes {
@@ -63,11 +51,10 @@ android {
       if (releaseKeystore.exists()) {
         signingConfig = signingConfigs.getByName("release")
       } else {
-        signingConfig = signingConfigs.getByName("debugConfig")
+        signingConfig = signingConfigs.getByName("debug")
       }
     }
     debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
       enableUnitTestCoverage = true
     }
   }
