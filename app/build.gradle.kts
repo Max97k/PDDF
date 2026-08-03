@@ -19,7 +19,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.pdfdecryptor.gzyvwa"
+    applicationId = "com.max97k.pddf"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
