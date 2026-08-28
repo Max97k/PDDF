@@ -122,12 +122,11 @@ class MainViewModel @JvmOverloads constructor(
             for ((uri, fileName) in pdfPairs) {
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        val doc = try { PDDocument.load(inputStream) } catch (e: Exception) { null }
-                        if (doc != null) {
-                            if (!doc.isEncrypted) {
+                        val doc = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
+                        doc?.use {
+                            if (!it.isEncrypted) {
                                 unencryptedNames.add(fileName)
                             }
-                            doc.close()
                         }
                     }
                 } catch (e: Exception) {
@@ -169,36 +168,35 @@ class MainViewModel @JvmOverloads constructor(
                 try {
                     // Create a temporary file in cache to store decrypted content
                     val tempFile = java.io.File(context.cacheDir, "temp_decrypted_${System.currentTimeMillis()}.pdf")
-                    val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
-
-                    when (status) {
-                        DecryptStatus.SUCCESS -> {
-                            // Write temp file contents back to the original URI using SAF
-                            context.contentResolver.openOutputStream(inputUri, "rwt")?.use { outputStream ->
-                                java.io.FileInputStream(tempFile).use { inputStream ->
-                                    inputStream.copyTo(outputStream)
+                    try {
+                        val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
+    
+                        when (status) {
+                            DecryptStatus.SUCCESS -> {
+                                // Write temp file contents back to the original URI using SAF
+                                context.contentResolver.openOutputStream(inputUri, "rwt")?.buffered()?.use { outputStream ->
+                                    java.io.FileInputStream(tempFile).buffered().use { inputStream ->
+                                        inputStream.copyTo(outputStream)
+                                    }
                                 }
+                                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                                lastDecryptedUri.value = inputUri
                             }
-                            tempFile.delete()
-                            statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                            lastDecryptedUri.value = inputUri
+                            DecryptStatus.NOT_ENCRYPTED -> {
+                                statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
+                            }
+                            DecryptStatus.WRONG_PASSWORD -> {
+                                statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
+                            }
+                            DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                                statusMessage.value = context.getString(R.string.summary_unsupported, 1)
+                            }
+                            DecryptStatus.ERROR -> {
+                                statusMessage.value = context.getString(R.string.summary_error, 1)
+                            }
                         }
-                        DecryptStatus.NOT_ENCRYPTED -> {
-                            tempFile.delete()
-                            statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
-                        }
-                        DecryptStatus.WRONG_PASSWORD -> {
-                            tempFile.delete()
-                            statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
-                        }
-                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                            tempFile.delete()
-                            statusMessage.value = context.getString(R.string.summary_unsupported, 1)
-                        }
-                        DecryptStatus.ERROR -> {
-                            tempFile.delete()
-                            statusMessage.value = context.getString(R.string.summary_error, 1)
-                        }
+                    } finally {
+                        tempFile.delete()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -383,10 +381,9 @@ class MainViewModel @JvmOverloads constructor(
     internal fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
         try {
             context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
-                val docWithoutPass = try { PDDocument.load(inputStream) } catch (e: Exception) { null }
-                if (docWithoutPass != null) {
-                    val isEncrypted = docWithoutPass.isEncrypted
-                    docWithoutPass.close()
+                val docWithoutPass = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
+                docWithoutPass?.use {
+                    val isEncrypted = it.isEncrypted
                     if (!isEncrypted) {
                         return DecryptStatus.NOT_ENCRYPTED
                     }
@@ -398,13 +395,13 @@ class MainViewModel @JvmOverloads constructor(
 
         try {
             context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
-                val document = PDDocument.load(inputStream, passwordValue)
+                val document = PDDocument.load(inputStream.buffered(), passwordValue, com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
                 try {
                     if (!document.isEncrypted) {
                         return DecryptStatus.NOT_ENCRYPTED
                     }
                     document.setAllSecurityToBeRemoved(true)
-                    context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
+                    context.contentResolver.openOutputStream(outputUri)?.buffered()?.use { outputStream ->
                         document.save(outputStream)
                         return DecryptStatus.SUCCESS
                     }
