@@ -1,4 +1,4 @@
-﻿package com.example.ui
+package com.example.ui
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.*
@@ -105,5 +105,14 @@ class ComposeUiTests {
         
         composeTestRule.onNodeWithContentDescription("Clear Selection").performClick()
         assert(cleared)
+    }
+
+    @Test
+    fun mainActivity_launchesWithoutCrash() {
+        val scenario = androidx.test.core.app.ActivityScenario.launch(com.example.MainActivity::class.java)
+        scenario.onActivity { activity ->
+            org.junit.Assert.assertNotNull(activity)
+        }
+        scenario.close()
     }
 }

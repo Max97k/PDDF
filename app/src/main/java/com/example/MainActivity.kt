@@ -77,10 +77,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                     snackbarHost = { SnackbarHost(snackbarHostState) }
                 ) { innerPadding ->
                     PDFDecryptorScreen(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding)
-                            .windowInsetsPadding(WindowInsets.safeDrawing),
+                        modifier = Modifier.padding(innerPadding),
                         viewModel = viewModel,
                         snackbarHostState = snackbarHostState
                     )

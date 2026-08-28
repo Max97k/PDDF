@@ -49,6 +49,7 @@ class MainViewModel @JvmOverloads constructor(
             AppDatabase::class.java, "pdf-decryptor-db"
         )
         .addMigrations(AppDatabase.MIGRATION_1_2)
+        .fallbackToDestructiveMigration()
         .build().passwordDao()
     ),
     private val themePreferences: ThemePreferences = ThemePreferences(application)

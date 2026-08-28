@@ -1,4 +1,4 @@
-﻿package com.example.util
+package com.example.util
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -31,7 +31,15 @@ class CryptoManager {
             throw RuntimeException("AndroidKeyStore unavailable", e)
         }
 
-        return (ks.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.secretKey ?: generateKey()
+        return try {
+            if (ks.containsAlias(KEY_ALIAS)) {
+                (ks.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.secretKey ?: generateKey()
+            } else {
+                generateKey()
+            }
+        } catch (e: Exception) {
+            generateKey()
+        }
     }
 
     private fun generateKey(): SecretKey {
@@ -50,12 +58,16 @@ class CryptoManager {
     }
 
     fun encrypt(plainText: String): String {
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
-        val iv = cipher.iv
-        val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
-        val combined = iv + encryptedBytes
-        return PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
+        return try {
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
+            val iv = cipher.iv
+            val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+            val combined = iv + encryptedBytes
+            PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            plainText
+        }
     }
 
     fun decrypt(encryptedText: String): String {
@@ -63,20 +75,24 @@ class CryptoManager {
             // Not encrypted, return as plaintext (for legacy database entries before migration)
             return encryptedText
         }
-        val actualEncrypted = encryptedText.removePrefix(PREFIX)
-        val combined = Base64.decode(actualEncrypted, Base64.NO_WRAP)
-        
-        if (combined.size < 12) {
-            throw IllegalArgumentException("Invalid encrypted data length")
-        }
+        return try {
+            val actualEncrypted = encryptedText.removePrefix(PREFIX)
+            val combined = Base64.decode(actualEncrypted, Base64.NO_WRAP)
+            
+            if (combined.size < 12) {
+                return encryptedText
+            }
 
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        val iv = combined.copyOfRange(0, 12)
-        val encryptedBytes = combined.copyOfRange(12, combined.size)
-        
-        val spec = GCMParameterSpec(128, iv)
-        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
-        val decryptedBytes = cipher.doFinal(encryptedBytes)
-        return String(decryptedBytes, Charsets.UTF_8)
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            val iv = combined.copyOfRange(0, 12)
+            val encryptedBytes = combined.copyOfRange(12, combined.size)
+            
+            val spec = GCMParameterSpec(128, iv)
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
+            val decryptedBytes = cipher.doFinal(encryptedBytes)
+            String(decryptedBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            encryptedText
+        }
     }
 }

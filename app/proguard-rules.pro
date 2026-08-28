@@ -47,3 +47,25 @@
 -keep class * implements androidx.room.RoomDatabase$Callback {
     <init>();
 }
+-keep class com.example.data.** { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keep @androidx.room.Entity class * { *; }
+
+# ViewModel reflection
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+-keepclassmembers class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(...);
+}
+
+# DataStore & Protobuf
+-keep class androidx.datastore.** { *; }
+-keepclassmembers class * extends androidx.datastore.preferences.protobuf.GeneratedMessageLite {
+    <fields>;
+}
+
+# App Utilities & Models
+-keep class com.example.util.CryptoManager { *; }
+-keep class com.example.PdfMetadata { *; }
+-keep class com.example.data.ThemeMode { *; }
