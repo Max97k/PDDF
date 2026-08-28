@@ -51,11 +51,19 @@ android {
       if (releaseKeystore.exists()) {
         signingConfig = signingConfigs.getByName("release")
       } else {
-        signingConfig = null
+        signingConfig = signingConfigs.getByName("debug")
       }
     }
     debug {
       enableUnitTestCoverage = true
+    }
+  }
+  packaging {
+    resources {
+      excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+    jniLibs {
+      useLegacyPackaging = true
     }
   }
   compileOptions {
