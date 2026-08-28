@@ -72,8 +72,12 @@ class MainViewModel @JvmOverloads constructor(
 
     private val prefs = application.getSharedPreferences("pdf_decryptor_prefs", Context.MODE_PRIVATE)
 
+    private var pdfBoxInitJob: kotlinx.coroutines.Job? = null
+
     init {
-        PDFBoxResourceLoader.init(application)
+        pdfBoxInitJob = viewModelScope.launch(Dispatchers.IO) {
+            PDFBoxResourceLoader.init(application)
+        }
         val savedRemember = prefs.getBoolean("remember_conflict_choice", false)
         rememberConflictChoice.value = savedRemember
         if (savedRemember) {
@@ -84,6 +88,10 @@ class MainViewModel @JvmOverloads constructor(
                 ConflictMode.SAVE_AS_COPY
             }
         }
+    }
+
+    private suspend fun ensurePdfBoxInitialized() {
+        pdfBoxInitJob?.join()
     }
 
     fun updateConflictSettings(mode: ConflictMode, remember: Boolean) {
@@ -124,6 +132,7 @@ class MainViewModel @JvmOverloads constructor(
 
     private fun checkSelectedPdfs(context: Context, pdfPairs: List<Pair<Uri, String>>) {
         viewModelScope.launch(Dispatchers.IO) {
+            ensurePdfBoxInitialized()
             val unencryptedNames = mutableListOf<String>()
             val unsupportedNames = mutableListOf<String>()
 
@@ -392,7 +401,8 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
-    internal fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
+    internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
+        ensurePdfBoxInitialized()
         try {
             context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
                 val docWithoutPass = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }

@@ -118,7 +118,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testDecryptSinglePdf_notEncrypted() {
+    fun testDecryptSinglePdf_notEncrypted() = runTest {
         val doc = PDDocument()
         doc.addPage(PDPage())
         val inputFile = File.createTempFile("unencrypted", ".pdf", application.cacheDir)
@@ -138,7 +138,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testDecryptSinglePdf_encryptedAndCorrectPassword() {
+    fun testDecryptSinglePdf_encryptedAndCorrectPassword() = runTest {
         val doc = PDDocument()
         doc.addPage(PDPage())
         val ap = AccessPermission()
@@ -163,7 +163,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testDecryptSinglePdf_wrongPassword() {
+    fun testDecryptSinglePdf_wrongPassword() = runTest {
         val doc = PDDocument()
         doc.addPage(PDPage())
         val ap = AccessPermission()

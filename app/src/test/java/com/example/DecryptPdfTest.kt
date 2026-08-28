@@ -1,4 +1,4 @@
-package com.example
+﻿package com.example
 
 import android.app.Application
 import android.content.Context
@@ -12,10 +12,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.Shadows
 import java.io.File
-import org.robolectric.shadows.ShadowContentResolver
-import java.io.FileOutputStream
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 
 @RunWith(RobolectricTestRunner::class)
@@ -24,12 +22,10 @@ class DecryptPdfTest {
 
     private lateinit var context: Context
     private lateinit var viewModel: MainViewModel
-
     private lateinit var encryptedUri: Uri
+    private lateinit var invalidPasswordUri: Uri
     private lateinit var unencryptedUri: Uri
     private lateinit var outputUri: Uri
-    private lateinit var invalidPasswordUri: Uri
-
     private lateinit var outputFile: File
 
     @Before
@@ -47,6 +43,7 @@ class DecryptPdfTest {
         encryptedUri = Uri.fromFile(encryptedFile)
         unencryptedUri = Uri.fromFile(unencryptedFile)
         invalidPasswordUri = Uri.fromFile(encryptedFile)
+
         outputUri = Uri.fromFile(outputFile)
     }
 
@@ -56,7 +53,7 @@ class DecryptPdfTest {
     }
 
     @Test
-    fun testDecryptPdf_withCorrectPassword() {
+    fun testDecryptPdf_withCorrectPassword() = runTest {
         val result = viewModel.decryptSinglePdf(context, encryptedUri, outputUri, "password")
 
         assertEquals(DecryptStatus.SUCCESS, result)
@@ -64,13 +61,13 @@ class DecryptPdfTest {
     }
 
     @Test
-    fun testDecryptPdf_withWrongPassword() {
+    fun testDecryptPdf_withWrongPassword() = runTest {
         val result = viewModel.decryptSinglePdf(context, invalidPasswordUri, outputUri, "wrongpassword")
         assertEquals(DecryptStatus.WRONG_PASSWORD, result)
     }
 
     @Test
-    fun testDecryptPdf_withUnencryptedPdf() {
+    fun testDecryptPdf_withUnencryptedPdf() = runTest {
         val result = viewModel.decryptSinglePdf(context, unencryptedUri, outputUri, "")
         assertEquals(DecryptStatus.NOT_ENCRYPTED, result)
     }

@@ -19,6 +19,31 @@
 -dontwarn com.gemalto.jp2.**
 -dontwarn com.tom_roush.pdfbox.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# PDFBox: Reflection requires keeping the constructors of all PDFont subclasses
+-keepclassmembers class * extends com.tom_roush.pdfbox.pdmodel.font.PDFont {
+    <init>(com.tom_roush.pdfbox.cos.COSDictionary);
+}
+
+# PDFBox: Reflection requires keeping PDAnnotation subclasses
+-keepclassmembers class * extends com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotation {
+    <init>(com.tom_roush.pdfbox.cos.COSDictionary);
+}
+
+# Ensure specific PDFont types are kept to allow them to be instantiated
+-keep class com.tom_roush.pdfbox.pdmodel.font.PDType1Font
+-keep class com.tom_roush.pdfbox.pdmodel.font.PDTrueTypeFont
+-keep class com.tom_roush.pdfbox.pdmodel.font.PDType0Font
+-keep class com.tom_roush.pdfbox.pdmodel.font.PDType3Font
+
+# Compose reflection
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable *;
+}
+
+# Room reflections
+-keep class * extends androidx.room.RoomDatabase {
+    <init>();
+}
+-keep class * implements androidx.room.RoomDatabase$Callback {
+    <init>();
+}
