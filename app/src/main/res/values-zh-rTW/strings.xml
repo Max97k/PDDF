@@ -1,8 +1,8 @@
-﻿<resources>
+<resources>
     <string name="app_name">PDF 解密工具</string>
     <string name="btn_select_pdfs">選擇加密的 PDF 檔案</string>
     <string name="content_desc_select_pdfs">選擇 PDF 檔案</string>
-    <string name="label_selected_files_count">已選擇 %1 個檔案</string>
+    <string name="label_selected_files_count">已選擇 %1$d 個檔案</string>
     <string name="content_desc_clear_selection">清除選擇</string>
     <string name="label_prefix">檔名前綴（選填 - 留空即保持原檔名）</string>
     <string name="checkbox_delete_original">解密成功後刪除原始加密檔案</string>
@@ -28,21 +28,21 @@
     <string name="content_desc_delete">刪除</string>
 
     <string name="msg_notice_all_unencrypted">⚠️ 提示：所選的 PDF 檔案未設定密碼，無需解密。</string>
-    <string name="msg_notice_some_unencrypted">⚠️ 提示：%1 未設定密碼。</string>
-    <string name="msg_warning_unsupported">⚠️ 警告：%1 使用高級加密（憑證/DRM），無法使用一般密碼解密。</string>
-    <string name="msg_processing_count">正在解密 %1 個檔案...</string>
+    <string name="msg_notice_some_unencrypted">⚠️ 提示：%1$s 未設定密碼。</string>
+    <string name="msg_warning_unsupported">⚠️ 警告：%1$s 使用高級加密（憑證/DRM），無法使用一般密碼解密。</string>
+    <string name="msg_processing_count">正在解密 %1$d 個檔案...</string>
     <string name="msg_error_output_dir">錯誤：無法存取指定的輸出資料夾。</string>
-    <string name="summary_decrypted_saved">✅ 解密並儲存成功：%1 個</string>
-    <string name="summary_not_encrypted">⚠️ 無加密：%1 個（無需密碼）</string>
-    <string name="summary_wrong_password">❌ 密碼錯誤：%1 個</string>
-    <string name="summary_unsupported">⚠️ 高級加密（DRM/憑證）：%1 個</string>
-    <string name="summary_error">❌ 讀取或解密失敗：%1 個</string>
+    <string name="summary_decrypted_saved">✅ 解密並儲存成功：%1$d 個</string>
+    <string name="summary_not_encrypted">⚠️ 無加密：%1$d 個（無需密碼）</string>
+    <string name="summary_wrong_password">❌ 密碼錯誤：%1$d 個</string>
+    <string name="summary_unsupported">⚠️ 高級加密（DRM/憑證）：%1$d 個</string>
+    <string name="summary_error">❌ 讀取或解密失敗：%1$d 個</string>
     <string name="btn_open_file_manager">開啟檔案管理員</string>
     <string name="btn_open_pdf">開啟 PDF 檢視器</string>
     <string name="btn_share_file">分享檔案</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>
-    <string name="version_info">版本 %1</string>
+    <string name="version_info">版本 %1$s</string>
     <string name="github_link">GitHub 專案</string>
 
     <string name="shortcut_select_pdf_short">選擇 PDF</string>
