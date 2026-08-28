@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.example.data.PasswordEntity
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.FileUtils
@@ -657,7 +660,7 @@ private fun SavedPasswordListDialog(
                                     val annotatedString = if (searchQuery.isNotEmpty() && highlightIndex != -1) {
                                         androidx.compose.ui.text.buildAnnotatedString {
                                             append(name.substring(0, highlightIndex))
-                                            androidx.compose.ui.text.withStyle(
+                                            withStyle(
                                                 style = androidx.compose.ui.text.SpanStyle(background = MaterialTheme.colorScheme.primaryContainer)
                                             ) {
                                                 append(name.substring(highlightIndex, highlightIndex + searchQuery.length))
