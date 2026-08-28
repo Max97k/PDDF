@@ -17,6 +17,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -172,7 +181,7 @@ fun PDFDecryptorScreen(
             },
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Text("📁")
+            Icon(Icons.Default.Folder, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.btn_select_pdfs))
         }
@@ -345,9 +354,7 @@ fun PDFDecryptorScreen(
                 showSavePasswordDialog = false
             }
         )
-    }
-
-    if (showPasswordListDialog) {
+     if (showPasswordListDialog) {
         SavedPasswordListDialog(
             savedPasswords = savedPasswords,
             onDismiss = { showPasswordListDialog = false },
@@ -381,7 +388,10 @@ private fun SelectedFilesCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(onClick = onClear) {
-                    Text("❌")
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.content_desc_clear_selection)
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -417,20 +427,31 @@ private fun PasswordInputSection(
             ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                val description = if (passwordVisible) "Hide password" else "Show password"
                 IconButton(onClick = onTogglePasswordVisible) {
-                    Text(if (passwordVisible) "👁️" else "🙈")
+                    Icon(
+                        imageVector = image,
+                        contentDescription = description
+                    )
                 }
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(onClick = onOpenPasswordList) {
-            Text("📋")
+            Icon(
+                Icons.Default.List,
+                contentDescription = stringResource(R.string.content_desc_saved_passwords)
+            )
         }
         IconButton(
             onClick = onOpenSavePassword,
             enabled = password.isNotBlank()
         ) {
-            Text("💾")
+            Icon(
+                Icons.Default.Save,
+                contentDescription = stringResource(R.string.content_desc_save_password)
+            )
         }
     }
 }
@@ -495,7 +516,10 @@ private fun SavedPasswordListDialog(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             IconButton(onClick = { onDeletePassword(savedPass.id) }) {
-                                Text("🗑️")
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete ${savedPass.name}"
+                                )
                             }
                         }
                     }
@@ -504,6 +528,9 @@ private fun SavedPasswordListDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_close)) }
+        }
+    )
+}lose)) }
         }
     )
 }
