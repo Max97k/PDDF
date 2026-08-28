@@ -1,4 +1,4 @@
-﻿package com.example
+package com.example
 
 import android.app.Application
 import android.content.Context
@@ -17,7 +17,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class DecryptPdfTest {
 
     private lateinit var context: Context

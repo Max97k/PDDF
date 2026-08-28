@@ -1,4 +1,4 @@
-﻿package com.example
+package com.example
 
 import com.example.util.CryptoManager
 import org.junit.Assert.assertEquals
@@ -12,7 +12,7 @@ import javax.crypto.KeyGenerator
 import org.junit.Before
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class CryptoManagerTest {
 
     @Before

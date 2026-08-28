@@ -14,7 +14,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.fakes.RoboCursor
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class MainActivityTest {
 
     @Test
