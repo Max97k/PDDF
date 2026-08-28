@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PDF Decryptor</string>
+    <string name="btn_select_pdfs">Verschlüsselte PDFs auswählen</string>
+    <string name="content_desc_select_pdfs">PDFs auswählen</string>
+    <string name="label_selected_files_count">%1$d Datei(en) ausgewählt</string>
+    <string name="content_desc_clear_selection">Auswahl aufheben</string>
+    <string name="label_prefix">Präfix (Optional - Leer lassen, um den ursprünglichen Dateinamen beizubehalten)</string>
+    <string name="checkbox_delete_original">Originale verschlüsselte Datei nach der Entschlüsselung löschen</string>
+    <string name="title_conflict_mode">Wenn der Dateiname in Konflikt steht:</string>
+    <string name="option_save_as_copy">Als neue Kopie speichern (z.B. Datei (1).pdf)</string>
+    <string name="option_overwrite">Vorhandene Datei überschreiben</string>
+    <string name="checkbox_remember_choice">Meine Auswahl merken</string>
+    <string name="label_password">PDF-Passwort</string>
+    <string name="content_desc_toggle_password">Passwortsichtbarkeit umschalten</string>
+    <string name="content_desc_saved_passwords">Gespeicherte Passwörter</string>
+    <string name="content_desc_save_password">Passwort speichern</string>
+    <string name="btn_decrypt">Ausgabeordner auswählen &amp; Entschlüsseln</string>
+    <string name="content_desc_select_output">Ausgabeverzeichnis auswählen</string>
+    <string name="dialog_title_save_password">Passwort speichern</string>
+    <string name="label_password_name_hint">Passwortname (z.B. Kontoauszug)</string>
+    <string name="btn_save">Speichern</string>
+    <string name="btn_cancel">Abbrechen</string>
+    <string name="btn_close">Schließen</string>
+    <string name="dialog_title_saved_passwords">Gespeicherte Passwörter</string>
+    <string name="msg_no_saved_passwords">Keine gespeicherten Passwörter.</string>
+    <string name="content_desc_delete">Löschen</string>
+
+    <string name="msg_notice_all_unencrypted">⚠️ Hinweis: Die ausgewählte(n) PDF-Datei(en) ist/sind nicht passwortgeschützt und muss/müssen nicht entschlüsselt werden.</string>
+    <string name="msg_notice_some_unencrypted">⚠️ Hinweis: %1$s ist nicht passwortgeschützt.</string>
+    <string name="msg_warning_unsupported">⚠️ Warnung: %1$s verwendet eine erweiterte Verschlüsselung (Zertifikat/DRM), die mit einem Standardpasswort nicht entschlüsselt werden kann.</string>
+    <string name="msg_processing_count">Entschlüssle %1$d Datei(en)...</string>
+    <string name="msg_error_output_dir">Fehler: Kann nicht auf das Ausgabeverzeichnis zugreifen.</string>
+    <string name="summary_decrypted_saved">✅ Entschlüsselt &amp; Gespeichert: %1$d</string>
+    <string name="summary_not_encrypted">⚠️ Nicht verschlüsselt: %1$d (kein Passwort erforderlich)</string>
+    <string name="summary_wrong_password">❌ Falsches Passwort: %1$d</string>
+    <string name="summary_unsupported">⚠️ Erweiterte Verschlüsselung (DRM/Zertifikat): %1$d</string>
+    <string name="summary_error">❌ Fehlgeschlagen/Lesefehler: %1$d</string>
+    <string name="btn_open_file_manager">Dateimanager öffnen</string>
+    <string name="btn_open_pdf">PDF-App öffnen</string>
+    <string name="btn_overwrite">Original überschreiben</string>
+    <string name="btn_save_as">Als neu speichern</string>
+    <string name="version_info">Version %1$s</string>
+    <string name="github_link">GitHub-Quelle</string>
+</resources>

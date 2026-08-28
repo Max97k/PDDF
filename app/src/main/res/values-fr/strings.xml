@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PDF Decryptor</string>
+    <string name="btn_select_pdfs">Sélectionner des PDF chiffrés</string>
+    <string name="content_desc_select_pdfs">Sélectionner des PDF</string>
+    <string name="label_selected_files_count">%1$d fichier(s) sélectionné(s)</string>
+    <string name="content_desc_clear_selection">Effacer la sélection</string>
+    <string name="label_prefix">Préfixe (Optionnel - Laisser vide pour conserver le nom de fichier original)</string>
+    <string name="checkbox_delete_original">Supprimer le fichier chiffré original après le déchiffrement</string>
+    <string name="title_conflict_mode">En cas de conflit de nom de fichier :</string>
+    <string name="option_save_as_copy">Enregistrer comme nouvelle copie (ex., fichier (1).pdf)</string>
+    <string name="option_overwrite">Écraser le fichier existant</string>
+    <string name="checkbox_remember_choice">Se souvenir de mon choix</string>
+    <string name="label_password">Mot de passe du PDF</string>
+    <string name="content_desc_toggle_password">Basculer la visibilité du mot de passe</string>
+    <string name="content_desc_saved_passwords">Mots de passe enregistrés</string>
+    <string name="content_desc_save_password">Enregistrer le mot de passe</string>
+    <string name="btn_decrypt">Sélectionner le dossier de sortie et Déchiffrer</string>
+    <string name="content_desc_select_output">Sélectionner le répertoire de sortie</string>
+    <string name="dialog_title_save_password">Enregistrer le mot de passe</string>
+    <string name="label_password_name_hint">Nom du mot de passe (ex., Relevé bancaire)</string>
+    <string name="btn_save">Enregistrer</string>
+    <string name="btn_cancel">Annuler</string>
+    <string name="btn_close">Fermer</string>
+    <string name="dialog_title_saved_passwords">Mots de passe enregistrés</string>
+    <string name="msg_no_saved_passwords">Aucun mot de passe enregistré.</string>
+    <string name="content_desc_delete">Supprimer</string>
+
+    <string name="msg_notice_all_unencrypted">⚠️ Avis : Le ou les fichiers PDF sélectionnés ne sont pas protégés par mot de passe et n\'ont pas besoin d\'être déchiffrés.</string>
+    <string name="msg_notice_some_unencrypted">⚠️ Avis : %1$s n\'est pas protégé par mot de passe.</string>
+    <string name="msg_warning_unsupported">⚠️ Avertissement : %1$s utilise un chiffrement avancé (Certificat/DRM) qu\'un mot de passe standard ne peut pas déchiffrer.</string>
+    <string name="msg_processing_count">Déchiffrement de %1$d fichier(s)...</string>
+    <string name="msg_error_output_dir">Erreur : Impossible d\'accéder au répertoire de sortie.</string>
+    <string name="summary_decrypted_saved">✅ Déchiffré et enregistré : %1$d</string>
+    <string name="summary_not_encrypted">⚠️ Non chiffré : %1$d (aucun mot de passe requis)</string>
+    <string name="summary_wrong_password">❌ Mot de passe incorrect : %1$d</string>
+    <string name="summary_unsupported">⚠️ Chiffrement avancé (DRM/Certificat) : %1$d</string>
+    <string name="summary_error">❌ Échec/Erreur de lecture : %1$d</string>
+    <string name="btn_open_file_manager">Ouvrir le gestionnaire de fichiers</string>
+    <string name="btn_open_pdf">Ouvrir l\'application PDF</string>
+    <string name="btn_overwrite">Écraser l\'original</string>
+    <string name="btn_save_as">Enregistrer sous un nouveau nom</string>
+    <string name="version_info">Version %1$s</string>
+    <string name="github_link">Source sur GitHub</string>
+</resources>
