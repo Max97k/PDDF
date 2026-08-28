@@ -71,14 +71,14 @@ class MainActivityTest {
     }
 
     @Test
-    fun getFileName_nullPath_returnsNull() {
+    fun getFileName_nullPath_returnsUnknown() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        // A URI with a scheme but no path will return null if we can't extract a name
+        // A URI with a scheme but no path will return "Unknown" as fallback
         val uri = Uri.parse("mailto:someone@example.com")
 
         val result = getFileName(context, uri)
 
-        assertNull(result)
+        assertEquals("Unknown", result)
     }
 
     @Test
