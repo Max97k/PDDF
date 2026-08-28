@@ -28,6 +28,9 @@ object FileUtils {
                 result = result?.substring(cut + 1)
             }
         }
-        return result ?: "Unknown"
+        var finalName = result ?: "Unknown"
+        finalName = finalName.substringAfterLast("/")
+        finalName = finalName.substringAfterLast("\\")
+        return finalName
     }
 }

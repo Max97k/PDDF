@@ -51,4 +51,7 @@
     <string name="shortcut_saved_passwords_short">Contraseñas guardadas</string>
     <string name="shortcut_saved_passwords_long">Gestionar contraseñas guardadas</string>
     <string name="qs_tile_label">Descifrar PDF</string>
+
+    <string name="biometric_prompt_title">Desbloquear contraseñas guardadas</string>
+    <string name="biometric_prompt_subtitle">Confirma tu identidad para acceder a las contraseñas guardadas.</string>
 </resources>

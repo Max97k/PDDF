@@ -49,5 +49,8 @@
     <string name="shortcut_select_pdf_long">選擇已加密的 PDF</string>
     <string name="shortcut_saved_passwords_short">已儲存密碼</string>
     <string name="shortcut_saved_passwords_long">管理已儲存的密碼</string>
-    <string name="qs_tile_label">解密 PDF</string>
+    <string name="qs_tile_label">PDF 解密</string>
+
+    <string name="biometric_prompt_title">解鎖已儲存密碼</string>
+    <string name="biometric_prompt_subtitle">請確認身分以存取已儲存密碼</string>
 </resources>

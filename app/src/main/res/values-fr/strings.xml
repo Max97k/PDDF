@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF Decryptor</string>
     <string name="btn_select_pdfs">Sélectionner des PDF chiffrés</string>
@@ -50,5 +50,8 @@
     <string name="shortcut_select_pdf_long">Sélectionner des fichiers PDF chiffrés</string>
     <string name="shortcut_saved_passwords_short">Mots de passe</string>
     <string name="shortcut_saved_passwords_long">Gérer les mots de passe enregistrés</string>
-    <string name="qs_tile_label">Déchiffrer un PDF</string>
+    <string name="qs_tile_label">Déchiffrer le PDF</string>
+
+    <string name="biometric_prompt_title">Déverrouiller les mots de passe enregistrés</string>
+    <string name="biometric_prompt_subtitle">Confirmez votre identité pour accéder aux mots de passe enregistrés.</string>
 </resources>

@@ -50,4 +50,7 @@
     <string name="shortcut_saved_passwords_short">Saved Passwords</string>
     <string name="shortcut_saved_passwords_long">Manage Saved Passwords</string>
     <string name="qs_tile_label">Decrypt PDF</string>
+
+    <string name="biometric_prompt_title">Unlock Saved Passwords</string>
+    <string name="biometric_prompt_subtitle">Confirm your identity to access saved passwords.</string>
 </resources>

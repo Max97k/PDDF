@@ -44,7 +44,9 @@ class MainViewModel @JvmOverloads constructor(
         Room.databaseBuilder(
             application,
             AppDatabase::class.java, "pdf-decryptor-db"
-        ).build().passwordDao()
+        )
+        .addMigrations(AppDatabase.MIGRATION_1_2)
+        .build().passwordDao()
     )
 ) : AndroidViewModel(application) {
 
@@ -70,6 +72,14 @@ class MainViewModel @JvmOverloads constructor(
     val conflictMode = MutableStateFlow(ConflictMode.SAVE_AS_COPY)
     val rememberConflictChoice = MutableStateFlow(false)
 
+    val password = MutableStateFlow("")
+    val passwordVisible = MutableStateFlow(false)
+    val showSavePasswordDialog = MutableStateFlow(false)
+    val showPasswordListDialog = MutableStateFlow(false)
+
+    private var backgroundTime: Long = 0
+    private val TIMEOUT_MILLIS = 60000L // 60 seconds
+
     private val prefs = application.getSharedPreferences("pdf_decryptor_prefs", Context.MODE_PRIVATE)
 
     private var pdfBoxInitJob: kotlinx.coroutines.Job? = null
@@ -88,6 +98,23 @@ class MainViewModel @JvmOverloads constructor(
                 ConflictMode.SAVE_AS_COPY
             }
         }
+    }
+
+    fun onAppBackgrounded() {
+        backgroundTime = System.currentTimeMillis()
+    }
+
+    fun onAppForegrounded() {
+        if (backgroundTime > 0 && System.currentTimeMillis() - backgroundTime > TIMEOUT_MILLIS) {
+            clearSensitiveData()
+        }
+        backgroundTime = 0
+    }
+
+    private fun clearSensitiveData() {
+        password.value = ""
+        showSavePasswordDialog.value = false
+        showPasswordListDialog.value = false
     }
 
     private suspend fun ensurePdfBoxInitialized() {
@@ -110,10 +137,36 @@ class MainViewModel @JvmOverloads constructor(
 
     fun setSelectedUris(context: Context, uris: List<Uri>) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Release persistable URI permissions for URIs that are no longer selected
+            val currentUris = selectedUris.value
+            val removedUris = currentUris.filter { !uris.contains(it) }
+            val persistedPermissions = try {
+                context.contentResolver.persistedUriPermissions.map { it.uri }
+            } catch (e: Exception) {
+                emptyList()
+            }
+            for (removedUri in removedUris) {
+                if (persistedPermissions.contains(removedUri)) {
+                    try {
+                        context.contentResolver.releasePersistableUriPermission(
+                            removedUri,
+                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
             val pdfPairs = uris.mapNotNull { uri ->
                 val name = FileUtils.getFileName(context, uri)
+                val type = try {
+                    context.contentResolver.getType(uri)
+                } catch (e: SecurityException) {
+                    null
+                }
                 val isPdf = name.endsWith(".pdf", ignoreCase = true) ||
-                        context.contentResolver.getType(uri)?.contains("pdf", ignoreCase = true) == true
+                        type?.contains("pdf", ignoreCase = true) == true
                 if (isPdf) Pair(uri, name) else null
             }
 

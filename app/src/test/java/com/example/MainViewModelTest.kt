@@ -45,10 +45,14 @@ class MainViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         application = ApplicationProvider.getApplicationContext()
+        val keyGen = javax.crypto.KeyGenerator.getInstance("AES")
+        keyGen.init(128)
+        com.example.util.CryptoManager.testKeyOverride = keyGen.generateKey()
+
         database = Room.inMemoryDatabaseBuilder(application, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = PasswordRepository(database.passwordDao())
+        repository = PasswordRepository(database.passwordDao(), com.example.util.CryptoManager())
         viewModel = MainViewModel(application, repository)
     }
 

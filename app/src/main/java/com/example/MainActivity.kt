@@ -52,7 +52,7 @@ import com.example.data.PasswordEntity
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.FileUtils
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -75,6 +75,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.onAppBackgrounded()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.onAppForegrounded()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -124,16 +134,16 @@ fun PDFDecryptorScreen(
     val scope = rememberCoroutineScope()
     val selectedUris by viewModel.selectedUris.collectAsStateWithLifecycle()
     val selectedFileNames by viewModel.selectedFileNames.collectAsStateWithLifecycle()
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+    val password by viewModel.password.collectAsStateWithLifecycle()
+    val passwordVisible by viewModel.passwordVisible.collectAsStateWithLifecycle()
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
     val savedPasswords by viewModel.savedPasswords.collectAsStateWithLifecycle()
     val lastDecryptedUri by viewModel.lastDecryptedUri.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    var showSavePasswordDialog by remember { mutableStateOf(false) }
-    var showPasswordListDialog by remember { mutableStateOf(false) }
+    val showSavePasswordDialog by viewModel.showSavePasswordDialog.collectAsStateWithLifecycle()
+    val showPasswordListDialog by viewModel.showPasswordListDialog.collectAsStateWithLifecycle()
 
     val isSecureModeActive = selectedUris.isNotEmpty() || showPasswordListDialog || showSavePasswordDialog
     val activity = context as? Activity
@@ -158,10 +168,17 @@ fun PDFDecryptorScreen(
                 val uri = result.data?.data
                 if (uri != null) {
                     try {
-                        context.contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                        )
+                        val flags = result.data?.flags ?: 0
+                        val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        if (takeFlags != 0) {
+                            @Suppress("WrongConstant")
+                            context.contentResolver.takePersistableUriPermission(
+                                uri,
+                                takeFlags
+                            )
+                        }
+                    } catch (e: SecurityException) {
+                        e.printStackTrace()
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -224,7 +241,7 @@ fun PDFDecryptorScreen(
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "application/pdf"
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 }
                 openDocumentLauncher.launch(intent)
             },
@@ -248,10 +265,55 @@ fun PDFDecryptorScreen(
             PasswordInputSection(
                 password = password,
                 passwordVisible = passwordVisible,
-                onPasswordChange = { password = it },
-                onTogglePasswordVisible = { passwordVisible = !passwordVisible },
-                onOpenPasswordList = { showPasswordListDialog = true },
-                onOpenSavePassword = { showSavePasswordDialog = true }
+                onPasswordChange = { viewModel.password.value = it },
+                onTogglePasswordVisible = { viewModel.passwordVisible.value = !passwordVisible },
+                onOpenPasswordList = { 
+                    val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
+                    if (fragmentActivity != null) {
+                        val biometricManager = androidx.biometric.BiometricManager.from(context)
+                        val canAuthenticate = biometricManager.canAuthenticate(
+                            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                            androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                        )
+                        if (canAuthenticate == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
+                            val executor = androidx.core.content.ContextCompat.getMainExecutor(context)
+                            val biometricPrompt = androidx.biometric.BiometricPrompt(
+                                fragmentActivity,
+                                executor,
+                                object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                                        super.onAuthenticationError(errorCode, errString)
+                                        if (errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
+                                            errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                            android.widget.Toast.makeText(context, errString, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+
+                                    override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
+                                        super.onAuthenticationSucceeded(result)
+                                        viewModel.showPasswordListDialog.value = true
+                                    }
+                                }
+                            )
+
+                            val promptInfo = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+                                .setTitle(context.getString(R.string.biometric_prompt_title))
+                                .setSubtitle(context.getString(R.string.biometric_prompt_subtitle))
+                                .setAllowedAuthenticators(
+                                    androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                                    androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                                )
+                                .build()
+
+                            biometricPrompt.authenticate(promptInfo)
+                        } else {
+                            viewModel.showPasswordListDialog.value = true
+                        }
+                    } else {
+                        viewModel.showPasswordListDialog.value = true
+                    }
+                },
+                onOpenSavePassword = { viewModel.showSavePasswordDialog.value = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -421,10 +483,10 @@ fun PDFDecryptorScreen(
     if (showSavePasswordDialog) {
         SavePasswordDialog(
             currentPassword = password,
-            onDismiss = { showSavePasswordDialog = false },
+            onDismiss = { viewModel.showSavePasswordDialog.value = false },
             onSave = { name, pass ->
                 viewModel.savePassword(name, pass)
-                showSavePasswordDialog = false
+                viewModel.showSavePasswordDialog.value = false
             }
         )
     }
@@ -432,10 +494,10 @@ fun PDFDecryptorScreen(
     if (showPasswordListDialog) {
         SavedPasswordListDialog(
             savedPasswords = savedPasswords,
-            onDismiss = { showPasswordListDialog = false },
+            onDismiss = { viewModel.showPasswordListDialog.value = false },
             onSelectPassword = { selectedPass ->
-                password = selectedPass
-                showPasswordListDialog = false
+                viewModel.password.value = selectedPass
+                viewModel.showPasswordListDialog.value = false
             },
             onDeletePassword = { savedPass ->
                 viewModel.deletePassword(savedPass.id)

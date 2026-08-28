@@ -26,11 +26,15 @@ class PasswordRepositoryTest {
 
     @Before
     fun setUp() {
+        val keyGen = javax.crypto.KeyGenerator.getInstance("AES")
+        keyGen.init(128)
+        com.example.util.CryptoManager.testKeyOverride = keyGen.generateKey()
+
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = PasswordRepository(database.passwordDao())
+        repository = PasswordRepository(database.passwordDao(), com.example.util.CryptoManager())
     }
 
     @After

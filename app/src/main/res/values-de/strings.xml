@@ -49,4 +49,7 @@
     <string name="shortcut_saved_passwords_short">Gespeicherte Passwörter</string>
     <string name="shortcut_saved_passwords_long">Gespeicherte Passwörter verwalten</string>
     <string name="qs_tile_label">PDF entschlüsseln</string>
+
+    <string name="biometric_prompt_title">Gespeicherte Passwörter entsperren</string>
+    <string name="biometric_prompt_subtitle">Bestätigen Sie Ihre Identität, um auf gespeicherte Passwörter zuzugreifen.</string>
 </resources>
