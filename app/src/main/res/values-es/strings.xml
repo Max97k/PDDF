@@ -37,7 +37,8 @@
     <string name="summary_unsupported">⚠️ Cifrado avanzado (DRM/Certificado): %1$d</string>
     <string name="summary_error">❌ Error/Error de lectura: %1$d</string>
     <string name="btn_open_file_manager">Abrir gestor de archivos</string>
-    <string name="btn_open_pdf">Abrir app de PDF</string>
+    <string name="btn_open_pdf">Abrir visor de PDF</string>
+    <string name="btn_share_file">Compartir archivo</string>
     <string name="btn_overwrite">Sobrescribir original</string>
     <string name="btn_save_as">Guardar como nuevo</string>
     <string name="version_info">Versión %1$s</string>

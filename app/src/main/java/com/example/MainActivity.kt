@@ -347,6 +347,25 @@ fun PDFDecryptorScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
                     }
+
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_STREAM, lastDecryptedUri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            try {
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
+                            } catch (e: Exception) {}
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.btn_share_file), textAlign = TextAlign.Center)
+                    }
                 }
             }
         }

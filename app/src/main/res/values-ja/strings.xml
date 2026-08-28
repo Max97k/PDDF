@@ -38,6 +38,7 @@
     <string name="summary_error">❌ 失敗/読み取りエラー: %1$d</string>
     <string name="btn_open_file_manager">ファイルマネージャーを開く</string>
     <string name="btn_open_pdf">PDFアプリを開く</string>
+    <string name="btn_share_file">ファイルを共有</string>
     <string name="btn_overwrite">元ファイルを上書き</string>
     <string name="btn_save_as">新しく保存</string>
     <string name="version_info">バージョン %1$s</string>

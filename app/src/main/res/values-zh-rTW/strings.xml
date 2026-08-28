@@ -37,6 +37,7 @@
     <string name="summary_error">❌ 讀取或解密失敗：%1$d 個</string>
     <string name="btn_open_file_manager">開啟檔案管理員</string>
     <string name="btn_open_pdf">開啟 PDF 檢視器</string>
+    <string name="btn_share_file">分享檔案</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>
     <string name="version_info">版本 %1$s</string>

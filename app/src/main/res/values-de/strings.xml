@@ -37,7 +37,8 @@
     <string name="summary_unsupported">⚠️ Erweiterte Verschlüsselung (DRM/Zertifikat): %1$d</string>
     <string name="summary_error">❌ Fehlgeschlagen/Lesefehler: %1$d</string>
     <string name="btn_open_file_manager">Dateimanager öffnen</string>
-    <string name="btn_open_pdf">PDF-App öffnen</string>
+    <string name="btn_open_pdf">PDF-Viewer öffnen</string>
+    <string name="btn_share_file">Datei teilen</string>
     <string name="btn_overwrite">Original überschreiben</string>
     <string name="btn_save_as">Als neu speichern</string>
     <string name="version_info">Version %1$s</string>
