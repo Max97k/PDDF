@@ -23,6 +23,8 @@
     <string name="btn_close">Close</string>
     <string name="dialog_title_saved_passwords">Saved Passwords</string>
     <string name="msg_no_saved_passwords">No saved passwords.</string>
+    <string name="msg_password_deleted">Password deleted</string>
+    <string name="btn_undo">UNDO</string>
     <string name="content_desc_delete">Delete</string>
 
     <string name="msg_notice_all_unencrypted">⚠️ Notice: Selected PDF file(s) are not password-protected and do not need decryption.</string>

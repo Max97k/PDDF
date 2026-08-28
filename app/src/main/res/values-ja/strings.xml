@@ -24,6 +24,8 @@
     <string name="btn_close">閉じる</string>
     <string name="dialog_title_saved_passwords">保存されたパスワード</string>
     <string name="msg_no_saved_passwords">保存されたパスワードはありません。</string>
+    <string name="msg_password_deleted">パスワードを削除しました</string>
+    <string name="btn_undo">元に戻す</string>
     <string name="content_desc_delete">削除</string>
 
     <string name="msg_notice_all_unencrypted">⚠️ 注意: 選択されたPDFファイルはパスワードで保護されていないため、復号化の必要はありません。</string>
@@ -37,10 +39,16 @@
     <string name="summary_unsupported">⚠️ 高度な暗号化 (DRM/証明書): %1$d</string>
     <string name="summary_error">❌ 失敗/読み取りエラー: %1$d</string>
     <string name="btn_open_file_manager">ファイルマネージャーを開く</string>
-    <string name="btn_open_pdf">PDFアプリを開く</string>
+    <string name="btn_open_pdf">PDFビューアを開く</string>
     <string name="btn_share_file">ファイルを共有</string>
-    <string name="btn_overwrite">元ファイルを上書き</string>
+    <string name="btn_overwrite">元のファイルを上書き</string>
     <string name="btn_save_as">新しく保存</string>
     <string name="version_info">バージョン %1$s</string>
     <string name="github_link">GitHubソース</string>
+
+    <string name="shortcut_select_pdf_short">PDFを選択</string>
+    <string name="shortcut_select_pdf_long">暗号化されたPDFファイルを選択</string>
+    <string name="shortcut_saved_passwords_short">保存されたパスワード</string>
+    <string name="shortcut_saved_passwords_long">保存されたパスワードを管理</string>
+    <string name="qs_tile_label">PDFを復号化</string>
 </resources>

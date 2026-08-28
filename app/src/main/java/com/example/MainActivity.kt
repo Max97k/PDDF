@@ -59,10 +59,15 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         setContent {
             MyApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                val snackbarHostState = remember { SnackbarHostState() }
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    snackbarHost = { SnackbarHost(snackbarHostState) }
+                ) { innerPadding ->
                     PDFDecryptorScreen(
                         modifier = Modifier.padding(innerPadding),
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        snackbarHostState = snackbarHostState
                     )
                 }
             }
@@ -83,21 +88,21 @@ class MainActivity : ComponentActivity() {
         if (Intent.ACTION_VIEW == action) {
             intent.data?.let { uris.add(it) }
         } else if (Intent.ACTION_SEND == action) {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val uri = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
             }
             uri?.let { uris.add(it) }
         } else if (Intent.ACTION_SEND_MULTIPLE == action) {
-            val uriList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val streamUris = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
             }
-            uriList?.let { uris.addAll(it) }
+            streamUris?.let { uris.addAll(it) }
         }
 
         if (uris.isNotEmpty()) {
@@ -110,8 +115,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PDFDecryptorScreen(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
+    val scope = rememberCoroutineScope()
     val selectedUris by viewModel.selectedUris.collectAsStateWithLifecycle()
     val selectedFileNames by viewModel.selectedFileNames.collectAsStateWithLifecycle()
     var password by remember { mutableStateOf("") }
@@ -427,7 +434,19 @@ fun PDFDecryptorScreen(
                 password = selectedPass
                 showPasswordListDialog = false
             },
-            onDeletePassword = { id -> viewModel.deletePassword(id) }
+            onDeletePassword = { savedPass ->
+                viewModel.deletePassword(savedPass.id)
+                scope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.msg_password_deleted),
+                        actionLabel = context.getString(R.string.btn_undo),
+                        duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.restorePassword(savedPass)
+                    }
+                }
+            }
         )
     }
 }
@@ -578,7 +597,7 @@ private fun SavedPasswordListDialog(
     savedPasswords: List<PasswordEntity>,
     onDismiss: () -> Unit,
     onSelectPassword: (String) -> Unit,
-    onDeletePassword: (Int) -> Unit
+    onDeletePassword: (PasswordEntity) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     AlertDialog(
@@ -609,7 +628,7 @@ private fun SavedPasswordListDialog(
                             )
                             IconButton(onClick = { 
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onDeletePassword(savedPass.id) 
+                                onDeletePassword(savedPass) 
                             }) {
                                 Icon(
                                     Icons.Default.Delete,

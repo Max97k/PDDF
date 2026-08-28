@@ -24,8 +24,9 @@
     <string name="btn_close">Schließen</string>
     <string name="dialog_title_saved_passwords">Gespeicherte Passwörter</string>
     <string name="msg_no_saved_passwords">Keine gespeicherten Passwörter.</string>
+    <string name="msg_password_deleted">Passwort gelöscht</string>
+    <string name="btn_undo">RÜCKGÄNGIG</string>
     <string name="content_desc_delete">Löschen</string>
-
     <string name="msg_notice_all_unencrypted">⚠️ Hinweis: Die ausgewählte(n) PDF-Datei(en) ist/sind nicht passwortgeschützt und muss/müssen nicht entschlüsselt werden.</string>
     <string name="msg_notice_some_unencrypted">⚠️ Hinweis: %1$s ist nicht passwortgeschützt.</string>
     <string name="msg_warning_unsupported">⚠️ Warnung: %1$s verwendet eine erweiterte Verschlüsselung (Zertifikat/DRM), die mit einem Standardpasswort nicht entschlüsselt werden kann.</string>
@@ -43,4 +44,9 @@
     <string name="btn_save_as">Als neu speichern</string>
     <string name="version_info">Version %1$s</string>
     <string name="github_link">GitHub-Quelle</string>
+    <string name="shortcut_select_pdf_short">PDFs auswählen</string>
+    <string name="shortcut_select_pdf_long">Verschlüsselte PDF-Dateien auswählen</string>
+    <string name="shortcut_saved_passwords_short">Gespeicherte Passwörter</string>
+    <string name="shortcut_saved_passwords_long">Gespeicherte Passwörter verwalten</string>
+    <string name="qs_tile_label">PDF entschlüsseln</string>
 </resources>

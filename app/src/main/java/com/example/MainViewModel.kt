@@ -159,6 +159,12 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
+    fun restorePassword(password: PasswordEntity) {
+        viewModelScope.launch {
+            repository.insert(password)
+        }
+    }
+
     fun decryptAndOverwrite(context: Context, inputUri: Uri?, passwordValue: String) {
         if (inputUri == null) return
         viewModelScope.launch {

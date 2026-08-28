@@ -24,10 +24,12 @@
     <string name="btn_close">Fermer</string>
     <string name="dialog_title_saved_passwords">Mots de passe enregistrés</string>
     <string name="msg_no_saved_passwords">Aucun mot de passe enregistré.</string>
+    <string name="msg_password_deleted">Mot de passe supprimé</string>
+    <string name="btn_undo">ANNULER</string>
     <string name="content_desc_delete">Supprimer</string>
 
-    <string name="msg_notice_all_unencrypted">⚠️ Avis : Le ou les fichiers PDF sélectionnés ne sont pas protégés par mot de passe et n\'ont pas besoin d\'être déchiffrés.</string>
-    <string name="msg_notice_some_unencrypted">⚠️ Avis : %1$s n\'est pas protégé par mot de passe.</string>
+    <string name="msg_notice_all_unencrypted">⚠️ Remarque : Les fichiers PDF sélectionnés ne sont pas protégés par mot de passe et n\'ont pas besoin d\'être déchiffrés.</string>
+    <string name="msg_notice_some_unencrypted">⚠️ Remarque : %1$s n\'est pas protégé par mot de passe.</string>
     <string name="msg_warning_unsupported">⚠️ Avertissement : %1$s utilise un chiffrement avancé (Certificat/DRM) qu\'un mot de passe standard ne peut pas déchiffrer.</string>
     <string name="msg_processing_count">Déchiffrement de %1$d fichier(s)...</string>
     <string name="msg_error_output_dir">Erreur : Impossible d\'accéder au répertoire de sortie.</string>
@@ -42,5 +44,11 @@
     <string name="btn_overwrite">Écraser l\'original</string>
     <string name="btn_save_as">Enregistrer sous un nouveau nom</string>
     <string name="version_info">Version %1$s</string>
-    <string name="github_link">Source sur GitHub</string>
+    <string name="github_link">Source GitHub</string>
+
+    <string name="shortcut_select_pdf_short">Sélectionner des PDF</string>
+    <string name="shortcut_select_pdf_long">Sélectionner des fichiers PDF chiffrés</string>
+    <string name="shortcut_saved_passwords_short">Mots de passe</string>
+    <string name="shortcut_saved_passwords_long">Gérer les mots de passe enregistrés</string>
+    <string name="qs_tile_label">Déchiffrer un PDF</string>
 </resources>

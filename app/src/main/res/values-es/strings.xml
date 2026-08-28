@@ -24,6 +24,8 @@
     <string name="btn_close">Cerrar</string>
     <string name="dialog_title_saved_passwords">Contraseñas guardadas</string>
     <string name="msg_no_saved_passwords">No hay contraseñas guardadas.</string>
+    <string name="msg_password_deleted">Contraseña eliminada</string>
+    <string name="btn_undo">DESHACER</string>
     <string name="content_desc_delete">Eliminar</string>
 
     <string name="msg_notice_all_unencrypted">⚠️ Aviso: Los archivos PDF seleccionados no están protegidos con contraseña y no necesitan descifrado.</string>
@@ -43,4 +45,10 @@
     <string name="btn_save_as">Guardar como nuevo</string>
     <string name="version_info">Versión %1$s</string>
     <string name="github_link">Código en GitHub</string>
+
+    <string name="shortcut_select_pdf_short">Seleccionar PDFs</string>
+    <string name="shortcut_select_pdf_long">Seleccionar archivos PDF cifrados</string>
+    <string name="shortcut_saved_passwords_short">Contraseñas guardadas</string>
+    <string name="shortcut_saved_passwords_long">Gestionar contraseñas guardadas</string>
+    <string name="qs_tile_label">Descifrar PDF</string>
 </resources>

@@ -22,7 +22,9 @@
     <string name="btn_cancel">取消</string>
     <string name="btn_close">關閉</string>
     <string name="dialog_title_saved_passwords">已儲存的密碼</string>
-    <string name="msg_no_saved_passwords">尚未儲存任何密碼。</string>
+    <string name="msg_no_saved_passwords">尚無儲存的密碼。</string>
+    <string name="msg_password_deleted">密碼已刪除</string>
+    <string name="btn_undo">復原</string>
     <string name="content_desc_delete">刪除</string>
 
     <string name="msg_notice_all_unencrypted">⚠️ 提示：所選的 PDF 檔案未設定密碼，無需解密。</string>
