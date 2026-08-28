@@ -544,6 +544,8 @@ private fun SavePasswordDialog(
     var passwordName by remember { mutableStateOf("") }
     val haptic = LocalHapticFeedback.current
     AlertDialog(
+        modifier = Modifier.padding(24.dp).wrapContentWidth().wrapContentHeight(),
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_save_password)) },
         text = {
@@ -580,6 +582,8 @@ private fun SavedPasswordListDialog(
 ) {
     val haptic = LocalHapticFeedback.current
     AlertDialog(
+        modifier = Modifier.padding(24.dp).wrapContentWidth().wrapContentHeight(),
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_saved_passwords)) },
         text = {
