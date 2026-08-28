@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 import com.example.data.PasswordEntity
 import com.example.data.ThemeMode
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.PdfViewerDialog
 import com.example.util.FileUtils
 
 class MainActivity : androidx.fragment.app.FragmentActivity() {
@@ -175,7 +176,7 @@ fun PDFDecryptorScreen(
         }
     }
 
-    val isSecureModeActive = selectedUris.isNotEmpty() || showPasswordListDialog || showSavePasswordDialog
+    val isSecureModeActive = showPasswordListDialog || showSavePasswordDialog
     val activity = context as? Activity
     DisposableEffect(isSecureModeActive) {
         if (isSecureModeActive) {
@@ -237,6 +238,7 @@ fun PDFDecryptorScreen(
     )
 
     var isDragging by remember { mutableStateOf(false) }
+    var previewPdfUri by remember { mutableStateOf<Uri?>(null) }
 
     val dragAndDropTarget = remember {
         object : DragAndDropTarget {
@@ -405,7 +407,12 @@ fun PDFDecryptorScreen(
 
             if (selectedMetadata != null) {
                 Spacer(modifier = Modifier.height(12.dp))
-                DocumentDetailsCard(metadata = selectedMetadata!!)
+                DocumentDetailsCard(
+                    metadata = selectedMetadata!!,
+                    onPreview = if (selectedUris.isNotEmpty()) {
+                        { previewPdfUri = selectedUris.first() }
+                    } else null
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -527,6 +534,25 @@ fun PDFDecryptorScreen(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                val previewUri = lastDecryptedUri ?: (if (selectedMetadata?.isEncrypted == false) selectedUris.firstOrNull() else null)
+                if (previewUri != null) {
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            previewPdfUri = previewUri
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("👁️")
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_preview_pdf), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -554,7 +580,7 @@ fun PDFDecryptorScreen(
                     }
 
                     if (lastDecryptedUri != null) {
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -572,7 +598,7 @@ fun PDFDecryptorScreen(
                             Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
                         }
 
-                        Button(
+                        IconButton(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 val intent = Intent(Intent.ACTION_SEND).apply {
@@ -584,11 +610,9 @@ fun PDFDecryptorScreen(
                                     context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
                                 } catch (e: Exception) {}
                             },
-                            modifier = Modifier.weight(1f).height(48.dp)
+                            modifier = Modifier.size(48.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.btn_share_file), textAlign = TextAlign.Center)
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.btn_share_file))
                         }
                     }
                 }
@@ -733,6 +757,24 @@ fun PDFDecryptorScreen(
                 TextButton(onClick = { showWhatsNewDialog = false }) {
                     Text(stringResource(R.string.btn_close))
                 }
+            }
+        )
+    }
+
+    if (previewPdfUri != null) {
+        PdfViewerDialog(
+            uri = previewPdfUri!!,
+            title = lastDecryptedUri?.lastPathSegment?.substringAfterLast('/') ?: stringResource(R.string.app_name),
+            onDismiss = { previewPdfUri = null },
+            onShare = {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, previewPdfUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                try {
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
+                } catch (_: Exception) {}
             }
         )
     }
@@ -990,7 +1032,7 @@ fun getFileName(context: Context, uri: Uri): String {
 }
 
 @Composable
-fun DocumentDetailsCard(metadata: PdfMetadata) {
+fun DocumentDetailsCard(metadata: PdfMetadata, onPreview: (() -> Unit)? = null) {
     var expanded by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
@@ -1003,10 +1045,17 @@ fun DocumentDetailsCard(metadata: PdfMetadata) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Document Details", style = MaterialTheme.typography.titleMedium)
-                Icon(
-                    imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (expanded) "Collapse" else "Expand"
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onPreview != null) {
+                        TextButton(onClick = onPreview) {
+                            Text("👁️ " + stringResource(R.string.btn_preview_pdf))
+                        }
+                    }
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (expanded) "Collapse" else "Expand"
+                    )
+                }
             }
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))

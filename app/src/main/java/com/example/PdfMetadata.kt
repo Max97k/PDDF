@@ -1,4 +1,4 @@
-﻿package com.example
+package com.example
 
 data class PdfMetadata(
     val title: String,
@@ -8,4 +8,7 @@ data class PdfMetadata(
     val encryptionMethod: String,
     val canPrint: Boolean,
     val canCopy: Boolean
-)
+) {
+    val isEncrypted: Boolean
+        get() = encryptionMethod.isNotBlank() && encryptionMethod != "None"
+}

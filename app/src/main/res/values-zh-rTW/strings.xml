@@ -38,7 +38,10 @@
     <string name="summary_unsupported">⚠️ 高級加密（DRM/憑證）：%1$d 個</string>
     <string name="summary_error">❌ 讀取或解密失敗：%1$d 個</string>
     <string name="btn_open_file_manager">開啟檔案管理員</string>
-    <string name="btn_open_pdf">開啟 PDF 檢視器</string>
+    <string name="btn_open_pdf">開啟外部 PDF App</string>
+    <string name="btn_preview_pdf">內建預覽 PDF</string>
+    <string name="label_page_indicator">第 %1$d / %2$d 頁</string>
+    <string name="error_pdf_preview">無法預覽此 PDF 文件。</string>
     <string name="btn_share_file">分享檔案</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>

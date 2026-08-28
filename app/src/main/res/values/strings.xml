@@ -39,6 +39,9 @@
     <string name="summary_error">❌ Failed/Read Error: %1$d</string>
     <string name="btn_open_file_manager">Open File Manager</string>
     <string name="btn_open_pdf">Open PDF App</string>
+    <string name="btn_preview_pdf">Preview PDF</string>
+    <string name="label_page_indicator">Page %1$d / %2$d</string>
+    <string name="error_pdf_preview">Unable to preview this PDF document.</string>
     <string name="btn_share_file">Share File</string>
     <string name="btn_overwrite">Overwrite Original</string>
     <string name="btn_save_as">Save As New</string>

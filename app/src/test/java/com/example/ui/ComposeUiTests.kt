@@ -115,4 +115,20 @@ class ComposeUiTests {
         }
         scenario.close()
     }
+
+    @Test
+    fun pdfViewerScreen_handlesInvalidUriGracefully() {
+        var closed = false
+        composeTestRule.setContent {
+            PdfViewerScreen(
+                uri = android.net.Uri.parse("file:///nonexistent.pdf"),
+                title = "Test PDF",
+                onClose = { closed = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Test PDF").assertExists()
+        composeTestRule.onNodeWithContentDescription("Close").performClick()
+        assert(closed)
+    }
 }

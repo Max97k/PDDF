@@ -38,8 +38,11 @@
     <string name="summary_wrong_password">❌ Contraseña incorrecta: %1$d</string>
     <string name="summary_unsupported">⚠️ Cifrado avanzado (DRM/Certificado): %1$d</string>
     <string name="summary_error">❌ Error/Error de lectura: %1$d</string>
-    <string name="btn_open_file_manager">Abrir gestor de archivos</string>
-    <string name="btn_open_pdf">Abrir visor de PDF</string>
+    <string name="btn_open_file_manager">Abrir Administrador de Archivos</string>
+    <string name="btn_open_pdf">Abrir App PDF</string>
+    <string name="btn_preview_pdf">Vista previa PDF</string>
+    <string name="label_page_indicator">Página %1$d / %2$d</string>
+    <string name="error_pdf_preview">No se puede obtener la vista previa de este documento PDF.</string>
     <string name="btn_share_file">Compartir archivo</string>
     <string name="btn_overwrite">Sobrescribir original</string>
     <string name="btn_save_as">Guardar como nuevo</string>

@@ -39,10 +39,13 @@
     <string name="summary_unsupported">⚠️ 高度な暗号化 (DRM/証明書): %1$d</string>
     <string name="summary_error">❌ 失敗/読み取りエラー: %1$d</string>
     <string name="btn_open_file_manager">ファイルマネージャーを開く</string>
-    <string name="btn_open_pdf">PDFビューアを開く</string>
+    <string name="btn_open_pdf">外部 PDF アプリで開く</string>
+    <string name="btn_preview_pdf">PDF をプレビュー</string>
+    <string name="label_page_indicator">%1$d / %2$d ページ</string>
+    <string name="error_pdf_preview">この PDF ドキュメントをプレビューできません。</string>
     <string name="btn_share_file">ファイルを共有</string>
     <string name="btn_overwrite">元のファイルを上書き</string>
-    <string name="btn_save_as">新しく保存</string>
+    <string name="btn_save_as">別名で保存</string>
     <string name="version_info">バージョン %1$s</string>
     <string name="github_link">GitHubソース</string>
 
