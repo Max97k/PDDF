@@ -96,6 +96,13 @@ class MainViewModel @JvmOverloads constructor(
     val showSavePasswordDialog = MutableStateFlow(false)
     val showPasswordListDialog = MutableStateFlow(false)
 
+    val isAutoUnlocking = MutableStateFlow(false)
+    val showAutoUnlockPasswordPrompt = MutableStateFlow(false)
+    val autoUnlockTargetUri = MutableStateFlow<Uri?>(null)
+    val autoUnlockFileName = MutableStateFlow("")
+    val autoUnlockErrorMessage = MutableStateFlow<String?>(null)
+    val previewPdfUri = MutableStateFlow<Uri?>(null)
+
     data class BatchState(
         val isProcessing: Boolean = false,
         val progress: Int = 0,
@@ -293,6 +300,170 @@ class MainViewModel @JvmOverloads constructor(
     fun restorePassword(password: PasswordEntity) {
         viewModelScope.launch {
             repository.insert(password)
+        }
+    }
+
+    fun startAutoUnlockFlow(context: Context, uri: Uri, onViewerReady: (Uri) -> Unit) {
+        viewModelScope.launch {
+            isAutoUnlocking.value = true
+            autoUnlockTargetUri.value = uri
+            autoUnlockErrorMessage.value = null
+            val fileName = FileUtils.getFileName(context, uri)
+            autoUnlockFileName.value = fileName
+
+            ensurePdfBoxInitialized()
+
+            var isEncrypted = true
+            withContext(Dispatchers.IO) {
+                try {
+                    openSafeInputStream(context, uri)?.use { input ->
+                        try {
+                            val doc = PDDocument.load(input.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
+                            if (doc != null) {
+                                isEncrypted = doc.isEncrypted
+                                doc.close()
+                            }
+                        } catch (e: InvalidPasswordException) {
+                            isEncrypted = true
+                        } catch (e: Exception) {
+                            val msg = e.message?.lowercase() ?: ""
+                            isEncrypted = msg.contains("password") || msg.contains("encrypted") || msg.contains("security") || !msg.contains("syntax")
+                        }
+                    }
+                } catch (e: Exception) {
+                    isEncrypted = true
+                }
+            }
+
+            if (!isEncrypted) {
+                // Not encrypted: immediately open in viewer
+                isAutoUnlocking.value = false
+                showAutoUnlockPasswordPrompt.value = false
+                lastDecryptedUri.value = uri
+                previewPdfUri.value = uri
+                onViewerReady(uri)
+                return@launch
+            }
+
+            // Encrypted: Try matching with all saved passwords
+            val savedPasswordsList = repository.getAllDecryptedPasswords()
+            var matchedUri: Uri? = null
+
+            withContext(Dispatchers.IO) {
+                for (saved in savedPasswordsList) {
+                    var tempFile: java.io.File? = null
+                    try {
+                        tempFile = java.io.File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
+                        val status = decryptSinglePdf(context, uri, Uri.fromFile(tempFile), saved.passwordValue)
+                        if (status == DecryptStatus.SUCCESS) {
+                            matchedUri = Uri.fromFile(tempFile)
+                            break
+                        } else {
+                            tempFile.delete()
+                        }
+                    } catch (e: Exception) {
+                        tempFile?.delete()
+                    }
+                }
+            }
+
+            isAutoUnlocking.value = false
+            if (matchedUri != null) {
+                lastDecryptedUri.value = matchedUri
+                previewPdfUri.value = matchedUri
+                showAutoUnlockPasswordPrompt.value = false
+                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                onViewerReady(matchedUri!!)
+            } else {
+                // No saved password matched, prompt user
+                showAutoUnlockPasswordPrompt.value = true
+            }
+        }
+    }
+
+    fun unlockWithManualPassword(
+        context: Context,
+        uri: Uri,
+        enteredPassword: String,
+        rememberPassword: Boolean,
+        onViewerReady: (Uri) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            isProcessing.value = true
+            autoUnlockErrorMessage.value = null
+            var resultUri: Uri? = null
+            var resultStatus: DecryptStatus = DecryptStatus.ERROR
+
+            withContext(Dispatchers.IO) {
+                var tempFile: java.io.File? = null
+                try {
+                    tempFile = java.io.File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
+                    val status = decryptSinglePdf(context, uri, Uri.fromFile(tempFile), enteredPassword)
+                    resultStatus = status
+                    if (status == DecryptStatus.SUCCESS) {
+                        resultUri = Uri.fromFile(tempFile)
+                        if (rememberPassword && enteredPassword.isNotBlank()) {
+                            val name = autoUnlockFileName.value.ifBlank { "PDF Password" }
+                            repository.insert(PasswordEntity(name = name, passwordValue = enteredPassword))
+                        }
+                    } else {
+                        tempFile.delete()
+                    }
+                } catch (e: Exception) {
+                    tempFile?.delete()
+                }
+            }
+
+            isProcessing.value = false
+            when (resultStatus) {
+                DecryptStatus.SUCCESS -> {
+                    if (resultUri != null) {
+                        lastDecryptedUri.value = resultUri
+                        previewPdfUri.value = resultUri
+                        showAutoUnlockPasswordPrompt.value = false
+                        autoUnlockErrorMessage.value = null
+                        statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                        onViewerReady(resultUri!!)
+                    }
+                }
+                DecryptStatus.WRONG_PASSWORD -> {
+                    autoUnlockErrorMessage.value = context.getString(R.string.msg_wrong_password_try_again)
+                }
+                DecryptStatus.NOT_ENCRYPTED -> {
+                    lastDecryptedUri.value = uri
+                    previewPdfUri.value = uri
+                    showAutoUnlockPasswordPrompt.value = false
+                    onViewerReady(uri)
+                }
+                else -> {
+                    autoUnlockErrorMessage.value = context.getString(R.string.summary_error, 1)
+                }
+            }
+        }
+    }
+
+    fun dismissAutoUnlockPrompt() {
+        showAutoUnlockPasswordPrompt.value = false
+        autoUnlockErrorMessage.value = null
+    }
+
+    fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val inputStream = if (sourceUri.scheme == "file" && sourceUri.path != null) {
+                    java.io.FileInputStream(java.io.File(sourceUri.path!!))
+                } else {
+                    context.contentResolver.openInputStream(sourceUri)
+                }
+                inputStream?.use { input ->
+                    context.contentResolver.openOutputStream(destUri)?.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -600,10 +771,36 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
+    private fun openSafeInputStream(context: Context, uri: Uri): java.io.InputStream? {
+        return try {
+            context.contentResolver.openInputStream(uri)
+        } catch (e: Exception) {
+            try {
+                if (uri.scheme == "file" && uri.path != null) {
+                    java.io.FileInputStream(java.io.File(uri.path!!))
+                } else null
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    private fun openSafeOutputStream(context: Context, uri: Uri): java.io.OutputStream? {
+        return try {
+            if (uri.scheme == "file" && uri.path != null) {
+                java.io.FileOutputStream(java.io.File(uri.path!!))
+            } else {
+                context.contentResolver.openOutputStream(uri)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
         ensurePdfBoxInitialized()
         try {
-            context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
+            openSafeInputStream(context, inputUri)?.use { inputStream ->
                 val docWithoutPass = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
                 docWithoutPass?.use {
                     val isEncrypted = it.isEncrypted
@@ -617,14 +814,14 @@ class MainViewModel @JvmOverloads constructor(
         }
 
         try {
-            context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
+            openSafeInputStream(context, inputUri)?.use { inputStream ->
                 val document = PDDocument.load(inputStream.buffered(), passwordValue, com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
                 try {
                     if (!document.isEncrypted) {
                         return DecryptStatus.NOT_ENCRYPTED
                     }
                     document.setAllSecurityToBeRemoved(true)
-                    context.contentResolver.openOutputStream(outputUri)?.buffered()?.use { outputStream ->
+                    openSafeOutputStream(context, outputUri)?.buffered()?.use { outputStream ->
                         document.save(outputStream)
                         return DecryptStatus.SUCCESS
                     }

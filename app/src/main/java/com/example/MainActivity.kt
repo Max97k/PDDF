@@ -27,6 +27,9 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -130,6 +133,9 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
         if (uris.isNotEmpty()) {
             viewModel.setSelectedUris(this, uris)
+            if (uris.size == 1 && (Intent.ACTION_VIEW == action || Intent.ACTION_SEND == action)) {
+                viewModel.startAutoUnlockFlow(this, uris.first()) {}
+            }
         }
     }
 }
@@ -152,6 +158,12 @@ fun PDFDecryptorScreen(
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
     val savedPasswords by viewModel.savedPasswords.collectAsStateWithLifecycle()
     val lastDecryptedUri by viewModel.lastDecryptedUri.collectAsStateWithLifecycle()
+    val previewPdfUri by viewModel.previewPdfUri.collectAsStateWithLifecycle()
+    val isAutoUnlocking by viewModel.isAutoUnlocking.collectAsStateWithLifecycle()
+    val showAutoUnlockPasswordPrompt by viewModel.showAutoUnlockPasswordPrompt.collectAsStateWithLifecycle()
+    val autoUnlockTargetUri by viewModel.autoUnlockTargetUri.collectAsStateWithLifecycle()
+    val autoUnlockFileName by viewModel.autoUnlockFileName.collectAsStateWithLifecycle()
+    val autoUnlockErrorMessage by viewModel.autoUnlockErrorMessage.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val showSavePasswordDialog by viewModel.showSavePasswordDialog.collectAsStateWithLifecycle()
@@ -238,7 +250,19 @@ fun PDFDecryptorScreen(
     )
 
     var isDragging by remember { mutableStateOf(false) }
-    var previewPdfUri by remember { mutableStateOf<Uri?>(null) }
+
+    val saveDecryptedPdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                val sourceUri = previewPdfUri ?: lastDecryptedUri
+                if (destUri != null && sourceUri != null) {
+                    viewModel.copyUriStream(context, sourceUri, destUri)
+                }
+            }
+        }
+    )
 
     val dragAndDropTarget = remember {
         object : DragAndDropTarget {
@@ -410,7 +434,7 @@ fun PDFDecryptorScreen(
                 DocumentDetailsCard(
                     metadata = selectedMetadata!!,
                     onPreview = if (selectedUris.isNotEmpty()) {
-                        { previewPdfUri = selectedUris.first() }
+                        { viewModel.previewPdfUri.value = selectedUris.first() }
                     } else null
                 )
             }
@@ -540,7 +564,7 @@ fun PDFDecryptorScreen(
                     Button(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            previewPdfUri = previewUri
+                            viewModel.previewPdfUri.value = previewUri
                         },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -761,11 +785,121 @@ fun PDFDecryptorScreen(
         )
     }
 
+    if (isAutoUnlocking) {
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.label_auto_unlocking),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+
+    if (showAutoUnlockPasswordPrompt && autoUnlockTargetUri != null) {
+        var inputPass by remember { mutableStateOf("") }
+        var passVisible by remember { mutableStateOf(false) }
+        var rememberPass by remember { mutableStateOf(true) }
+
+        val unlockAction = {
+            if (inputPass.isNotBlank()) {
+                viewModel.unlockWithManualPassword(
+                    context = context,
+                    uri = autoUnlockTargetUri!!,
+                    enteredPassword = inputPass,
+                    rememberPassword = rememberPass
+                )
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissAutoUnlockPrompt() },
+            properties = DialogProperties(dismissOnClickOutside = false),
+            title = { Text(stringResource(R.string.title_unlock_pdf)) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = autoUnlockFileName.ifBlank { "Document" },
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = inputPass,
+                        onValueChange = { inputPass = it },
+                        label = { Text(stringResource(R.string.label_password)) },
+                        singleLine = true,
+                        isError = autoUnlockErrorMessage != null,
+                        supportingText = if (autoUnlockErrorMessage != null) {
+                            { Text(autoUnlockErrorMessage!!, color = MaterialTheme.colorScheme.error) }
+                        } else null,
+                        visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { unlockAction() }),
+                        trailingIcon = {
+                            val img = if (passVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            IconButton(onClick = { passVisible = !passVisible }) {
+                                Icon(img, contentDescription = if (passVisible) "Hide password" else "Show password")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { rememberPass = !rememberPass }
+                    ) {
+                        Checkbox(
+                            checked = rememberPass,
+                            onCheckedChange = { rememberPass = it }
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.label_remember_password),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = unlockAction,
+                    enabled = inputPass.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.btn_unlock_pdf))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissAutoUnlockPrompt() }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
     if (previewPdfUri != null) {
+        val displayTitle = autoUnlockFileName.ifBlank {
+            selectedFileNames.firstOrNull() ?: previewPdfUri?.lastPathSegment?.substringAfterLast('/') ?: stringResource(R.string.app_name)
+        }
         PdfViewerDialog(
             uri = previewPdfUri!!,
-            title = lastDecryptedUri?.lastPathSegment?.substringAfterLast('/') ?: stringResource(R.string.app_name),
-            onDismiss = { previewPdfUri = null },
+            title = displayTitle,
+            onDismiss = { viewModel.previewPdfUri.value = null },
             onShare = {
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "application/pdf"
@@ -775,6 +909,15 @@ fun PDFDecryptorScreen(
                 try {
                     context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
                 } catch (_: Exception) {}
+            },
+            onSaveAs = {
+                val fileName = "decrypted_${displayTitle.ifBlank { "document.pdf" }}"
+                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_TITLE, fileName)
+                }
+                saveDecryptedPdfLauncher.launch(intent)
             }
         )
     }

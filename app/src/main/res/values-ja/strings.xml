@@ -40,9 +40,14 @@
     <string name="summary_error">❌ 失敗/読み取りエラー: %1$d</string>
     <string name="btn_open_file_manager">ファイルマネージャーを開く</string>
     <string name="btn_open_pdf">外部 PDF アプリで開く</string>
-    <string name="btn_preview_pdf">PDF をプレビュー</string>
+    <string name="btn_preview_pdf">PDFプレビュー</string>
     <string name="label_page_indicator">%1$d / %2$d ページ</string>
-    <string name="error_pdf_preview">この PDF ドキュメントをプレビューできません。</string>
+    <string name="error_pdf_preview">PDFプレビューを表示できません</string>
+    <string name="title_unlock_pdf">PDFのロック解除</string>
+    <string name="label_auto_unlocking">保存されたパスワードで自動解除中…</string>
+    <string name="label_remember_password">このパスワードを保存する</string>
+    <string name="btn_unlock_pdf">ロック解除して表示</string>
+    <string name="msg_wrong_password_try_again">パスワードが間違っています。もう一度お試しください。</string>
     <string name="btn_share_file">ファイルを共有</string>
     <string name="btn_overwrite">元のファイルを上書き</string>
     <string name="btn_save_as">別名で保存</string>

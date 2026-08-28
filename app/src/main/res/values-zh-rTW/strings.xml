@@ -42,6 +42,11 @@
     <string name="btn_preview_pdf">內建預覽 PDF</string>
     <string name="label_page_indicator">第 %1$d / %2$d 頁</string>
     <string name="error_pdf_preview">無法預覽此 PDF 文件。</string>
+    <string name="title_unlock_pdf">解鎖 PDF</string>
+    <string name="label_auto_unlocking">正在嘗試已儲存的密碼自動解鎖…</string>
+    <string name="label_remember_password">記住此密碼（日後自動解鎖）</string>
+    <string name="btn_unlock_pdf">解鎖並檢視</string>
+    <string name="msg_wrong_password_try_again">密碼錯誤，請重新輸入。</string>
     <string name="btn_share_file">分享檔案</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>

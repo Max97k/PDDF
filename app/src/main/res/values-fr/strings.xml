@@ -43,6 +43,11 @@
     <string name="btn_preview_pdf">Aperçu PDF</string>
     <string name="label_page_indicator">Page %1$d / %2$d</string>
     <string name="error_pdf_preview">Impossible d\'afficher l\'aperçu de ce document PDF.</string>
+    <string name="title_unlock_pdf">Déverrouiller le PDF</string>
+    <string name="label_auto_unlocking">Déverrouillage automatique avec les mots de passe enregistrés…</string>
+    <string name="label_remember_password">Mémoriser ce mot de passe</string>
+    <string name="btn_unlock_pdf">Déverrouiller et Afficher</string>
+    <string name="msg_wrong_password_try_again">Mot de passe incorrect. Veuillez réessayer.</string>
     <string name="btn_share_file">Partager le fichier</string>
     <string name="btn_overwrite">Écraser l\'original</string>
     <string name="btn_save_as">Enregistrer sous un nouveau nom</string>

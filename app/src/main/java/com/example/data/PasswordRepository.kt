@@ -19,6 +19,17 @@ class PasswordRepository(
         }
         .catch { e -> emit(Result.Error(e)) }
 
+    suspend fun getAllDecryptedPasswords(): List<PasswordEntity> {
+        return try {
+            val list = passwordDao.getAllPasswordsList()
+            list.map { entity ->
+                entity.copy(passwordValue = cryptoManager.decrypt(entity.passwordValue))
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     suspend fun insert(password: PasswordEntity): Result<Unit> {
         return try {
             val encryptedPassword = cryptoManager.encrypt(password.passwordValue)

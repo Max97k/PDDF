@@ -41,7 +41,12 @@
     <string name="btn_open_pdf">PDF-App öffnen</string>
     <string name="btn_preview_pdf">PDF Vorschau</string>
     <string name="label_page_indicator">Seite %1$d / %2$d</string>
-    <string name="error_pdf_preview">Dieses PDF-Dokument kann nicht angezeigt werden.</string>
+    <string name="error_pdf_preview">PDF-Vorschau nicht möglich</string>
+    <string name="title_unlock_pdf">PDF entsperren</string>
+    <string name="label_auto_unlocking">Automatische Entsperrung mit gespeicherten Passwörtern…</string>
+    <string name="label_remember_password">Passwort speichern</string>
+    <string name="btn_unlock_pdf">Entsperren &amp; Anzeigen</string>
+    <string name="msg_wrong_password_try_again">Falsches Passwort. Bitte erneut versuchen.</string>
     <string name="btn_share_file">Datei teilen</string>
     <string name="btn_overwrite">Original überschreiben</string>
     <string name="btn_save_as">Als neue Datei speichern</string>

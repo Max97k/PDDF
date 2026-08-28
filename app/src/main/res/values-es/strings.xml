@@ -40,9 +40,14 @@
     <string name="summary_error">❌ Error/Error de lectura: %1$d</string>
     <string name="btn_open_file_manager">Abrir Administrador de Archivos</string>
     <string name="btn_open_pdf">Abrir App PDF</string>
-    <string name="btn_preview_pdf">Vista previa PDF</string>
+    <string name="btn_preview_pdf">Vista previa de PDF</string>
     <string name="label_page_indicator">Página %1$d / %2$d</string>
-    <string name="error_pdf_preview">No se puede obtener la vista previa de este documento PDF.</string>
+    <string name="error_pdf_preview">No se puede obtener la vista previa</string>
+    <string name="title_unlock_pdf">Desbloquear PDF</string>
+    <string name="label_auto_unlocking">Desbloqueando con contraseñas guardadas…</string>
+    <string name="label_remember_password">Recordar esta contraseña</string>
+    <string name="btn_unlock_pdf">Desbloquear y Ver</string>
+    <string name="msg_wrong_password_try_again">Contraseña incorrecta. Inténtelo de nuevo.</string>
     <string name="btn_share_file">Compartir archivo</string>
     <string name="btn_overwrite">Sobrescribir original</string>
     <string name="btn_save_as">Guardar como nuevo</string>

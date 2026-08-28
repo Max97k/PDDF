@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,7 +52,8 @@ fun PdfViewerDialog(
     uri: Uri,
     title: String = "",
     onDismiss: () -> Unit,
-    onShare: (() -> Unit)? = null
+    onShare: (() -> Unit)? = null,
+    onSaveAs: (() -> Unit)? = null
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,7 +66,8 @@ fun PdfViewerDialog(
             uri = uri,
             title = title,
             onClose = onDismiss,
-            onShare = onShare
+            onShare = onShare,
+            onSaveAs = onSaveAs
         )
     }
 }
@@ -75,7 +78,8 @@ fun PdfViewerScreen(
     uri: Uri,
     title: String = "",
     onClose: () -> Unit,
-    onShare: (() -> Unit)? = null
+    onShare: (() -> Unit)? = null,
+    onSaveAs: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var pfd by remember { mutableStateOf<ParcelFileDescriptor?>(null) }
@@ -107,13 +111,15 @@ fun PdfViewerScreen(
                 // Guaranteed fallback: Copy stream to app's private cache directory
                 val temp = java.io.File(context.cacheDir, "preview_temp_${System.currentTimeMillis()}.pdf")
                 val inputStream = try {
-                    if (uri.scheme == "file" && uri.path != null) {
-                        java.io.FileInputStream(java.io.File(uri.path!!))
-                    } else {
-                        context.contentResolver.openInputStream(uri)
-                    }
-                } catch (_: Exception) {
                     context.contentResolver.openInputStream(uri)
+                } catch (_: Exception) {
+                    try {
+                        if (uri.scheme == "file" && uri.path != null) {
+                            java.io.FileInputStream(java.io.File(uri.path!!))
+                        } else null
+                    } catch (_: Exception) {
+                        null
+                    }
                 }
 
                 inputStream?.use { input ->
@@ -167,6 +173,7 @@ fun PdfViewerScreen(
     var offsetY by remember { mutableFloatStateOf(0f) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = {
@@ -196,6 +203,14 @@ fun PdfViewerScreen(
                     }
                 },
                 actions = {
+                    if (onSaveAs != null) {
+                        IconButton(onClick = onSaveAs) {
+                            Icon(
+                                imageVector = Icons.Default.Save,
+                                contentDescription = stringResource(R.string.btn_save_as)
+                            )
+                        }
+                    }
                     if (onShare != null) {
                         IconButton(onClick = onShare) {
                             Icon(
@@ -268,7 +283,12 @@ fun PdfViewerScreen(
                         LazyColumn(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 16.dp,
+                                bottom = 88.dp
+                            ),
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -285,14 +305,15 @@ fun PdfViewerScreen(
                         }
                     }
 
-                    // Floating page badge
+                    // Floating page badge with navigationBarsPadding
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f),
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        shadowElevation = 4.dp,
+                        shadowElevation = 6.dp,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .navigationBarsPadding()
                             .padding(bottom = 24.dp)
                     ) {
                         Text(
