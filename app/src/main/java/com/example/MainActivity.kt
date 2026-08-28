@@ -568,7 +568,7 @@ private fun SavedPasswordListDialog(
                 Text(stringResource(R.string.msg_no_saved_passwords))
             } else {
                 LazyColumn {
-                    items(savedPasswords) { savedPass ->
+                    items(savedPasswords, key = { it.id }) { savedPass ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
