@@ -36,6 +36,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -120,6 +124,9 @@ fun PDFDecryptorScreen(
     var showSavePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordListDialog by remember { mutableStateOf(false) }
 
+    val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
+
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { result ->
@@ -139,6 +146,24 @@ fun PDFDecryptorScreen(
             }
         }
     )
+
+    LaunchedEffect(statusMessage) {
+        statusMessage?.let { msg ->
+            if (msg.startsWith("Error") || msg.startsWith("Failed") || msg.contains("❌")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+                } else {
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                }
+            } else if (msg.contains("✅") || msg.contains("Decrypted & Saved")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                } else {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                }
+            }
+        }
+    }
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -171,6 +196,7 @@ fun PDFDecryptorScreen(
 
         Button(
             onClick = { 
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "application/pdf"
@@ -218,7 +244,10 @@ fun PDFDecryptorScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { viewModel.decryptAndOverwrite(context, selectedUris.firstOrNull(), password) },
+                        onClick = { 
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            viewModel.decryptAndOverwrite(context, selectedUris.firstOrNull(), password) 
+                        },
                         modifier = Modifier.weight(1f).height(56.dp),
                         enabled = password.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
@@ -228,6 +257,7 @@ fun PDFDecryptorScreen(
 
                     Button(
                         onClick = { 
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             val fileName = selectedFileNames.firstOrNull() ?: "decrypted.pdf"
                             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -265,6 +295,7 @@ fun PDFDecryptorScreen(
             ) {
                 OutlinedButton(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         try {
@@ -287,6 +318,7 @@ fun PDFDecryptorScreen(
                 if (lastDecryptedUri != null) {
                     Button(
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             val intent = Intent(Intent.ACTION_VIEW).apply {
                                 setDataAndType(lastDecryptedUri, "application/pdf")
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -373,6 +405,7 @@ private fun SelectedFilesCard(
     fileCount: Int,
     onClear: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -387,7 +420,10 @@ private fun SelectedFilesCard(
                     text = stringResource(R.string.label_selected_files_count, fileCount),
                     style = MaterialTheme.typography.titleMedium
                 )
-                IconButton(onClick = onClear) {
+                IconButton(onClick = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClear() 
+                }) {
                     Icon(
                         Icons.Default.Close,
                         contentDescription = stringResource(R.string.content_desc_clear_selection)
@@ -414,6 +450,7 @@ private fun PasswordInputSection(
     onOpenPasswordList: () -> Unit,
     onOpenSavePassword: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
             value = password,
@@ -429,7 +466,10 @@ private fun PasswordInputSection(
             trailingIcon = {
                 val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                 val description = if (passwordVisible) "Hide password" else "Show password"
-                IconButton(onClick = onTogglePasswordVisible) {
+                IconButton(onClick = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onTogglePasswordVisible() 
+                }) {
                     Icon(
                         imageVector = image,
                         contentDescription = description
@@ -438,14 +478,20 @@ private fun PasswordInputSection(
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
-        IconButton(onClick = onOpenPasswordList) {
+        IconButton(onClick = { 
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onOpenPasswordList() 
+        }) {
             Icon(
                 Icons.Default.List,
                 contentDescription = stringResource(R.string.content_desc_saved_passwords)
             )
         }
         IconButton(
-            onClick = onOpenSavePassword,
+            onClick = { 
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onOpenSavePassword() 
+            },
             enabled = password.isNotBlank()
         ) {
             Icon(
@@ -463,6 +509,7 @@ private fun SavePasswordDialog(
     onSave: (name: String, pass: String) -> Unit
 ) {
     var passwordName by remember { mutableStateOf("") }
+    val haptic = LocalHapticFeedback.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_save_password)) },
@@ -476,13 +523,17 @@ private fun SavePasswordDialog(
         },
         confirmButton = {
             TextButton(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 if (passwordName.isNotBlank()) {
                     onSave(passwordName, currentPassword)
                 }
             }) { Text(stringResource(R.string.btn_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel)) }
+            TextButton(onClick = { 
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onDismiss() 
+            }) { Text(stringResource(R.string.btn_cancel)) }
         }
     )
 }
@@ -494,6 +545,7 @@ private fun SavedPasswordListDialog(
     onSelectPassword: (String) -> Unit,
     onDeletePassword: (Int) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_saved_passwords)) },
@@ -506,7 +558,10 @@ private fun SavedPasswordListDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onSelectPassword(savedPass.passwordValue) }
+                                .clickable { 
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSelectPassword(savedPass.passwordValue) 
+                                }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -515,7 +570,10 @@ private fun SavedPasswordListDialog(
                                 modifier = Modifier.weight(1f),
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            IconButton(onClick = { onDeletePassword(savedPass.id) }) {
+                            IconButton(onClick = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onDeletePassword(savedPass.id) 
+                            }) {
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "Delete ${savedPass.name}"
@@ -527,7 +585,10 @@ private fun SavedPasswordListDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_close)) }
+            TextButton(onClick = { 
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onDismiss() 
+            }) { Text(stringResource(R.string.btn_close)) }
         }
     )
 }
