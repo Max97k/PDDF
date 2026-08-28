@@ -455,7 +455,7 @@ fun PDFDecryptorScreen(
 }
 
 @Composable
-private fun SelectedFilesCard(
+fun SelectedFilesCard(
     fileNames: List<String>,
     fileCount: Int,
     onClear: () -> Unit
@@ -497,7 +497,7 @@ private fun SelectedFilesCard(
 }
 
 @Composable
-private fun PasswordInputSection(
+fun PasswordInputSection(
     password: String,
     passwordVisible: Boolean,
     onPasswordChange: (String) -> Unit,
@@ -558,7 +558,7 @@ private fun PasswordInputSection(
 }
 
 @Composable
-private fun SavePasswordDialog(
+fun SavePasswordDialog(
     currentPassword: String,
     onDismiss: () -> Unit,
     onSave: (name: String, pass: String) -> Unit

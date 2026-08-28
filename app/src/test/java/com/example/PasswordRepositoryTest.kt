@@ -40,8 +40,8 @@ class PasswordRepositoryTest {
 
     @Test
     fun insertAndGetAllPasswords() = runBlocking {
-        val initialPasswords = repository.allPasswords.first()
-        assertTrue(initialPasswords.isEmpty())
+        val initialResult = repository.allPasswords.first()
+        assertTrue(initialResult is com.example.util.Result.Success && initialResult.data.isEmpty())
 
         val pass1 = PasswordEntity(id = 1, name = "Bank", passwordValue = "123456", timestamp = 1000L)
         val pass2 = PasswordEntity(id = 2, name = "PDF Pass", passwordValue = "secret", timestamp = 2000L)
@@ -49,7 +49,9 @@ class PasswordRepositoryTest {
         repository.insert(pass1)
         repository.insert(pass2)
 
-        val updatedPasswords = repository.allPasswords.first()
+        val updatedResult = repository.allPasswords.first()
+        assertTrue(updatedResult is com.example.util.Result.Success)
+        val updatedPasswords = (updatedResult as com.example.util.Result.Success).data
         assertEquals(2, updatedPasswords.size)
         // Ordered by timestamp desc
         assertEquals("PDF Pass", updatedPasswords[0].name)
@@ -61,12 +63,12 @@ class PasswordRepositoryTest {
         val pass = PasswordEntity(id = 10, name = "Work", passwordValue = "work123")
         repository.insert(pass)
 
-        var list = repository.allPasswords.first()
-        assertEquals(1, list.size)
+        var result = repository.allPasswords.first()
+        assertTrue(result is com.example.util.Result.Success && (result as com.example.util.Result.Success).data.size == 1)
 
         repository.deleteById(10)
 
-        list = repository.allPasswords.first()
-        assertTrue(list.isEmpty())
+        result = repository.allPasswords.first()
+        assertTrue(result is com.example.util.Result.Success && (result as com.example.util.Result.Success).data.isEmpty())
     }
 }

@@ -15,10 +15,12 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import com.example.util.FileUtils
+import com.example.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,6 +49,12 @@ class MainViewModel @JvmOverloads constructor(
 ) : AndroidViewModel(application) {
 
     val savedPasswords: StateFlow<List<PasswordEntity>> = repository.allPasswords
+        .map { result ->
+            when (result) {
+                is Result.Success -> result.data
+                else -> emptyList()
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

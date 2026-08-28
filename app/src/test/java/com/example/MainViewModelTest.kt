@@ -89,14 +89,17 @@ class MainViewModelTest {
         viewModel.savePassword("Tax Return", "pass123")
         advanceUntilIdle()
 
-        var passwords = repository.allPasswords.first()
+        var passwordsResult = repository.allPasswords.first()
+        assertTrue(passwordsResult is com.example.util.Result.Success)
+        var passwords = (passwordsResult as com.example.util.Result.Success).data
         assertTrue(passwords.any { it.name == "Tax Return" && it.passwordValue == "pass123" })
 
         val savedEntity = passwords.first { it.name == "Tax Return" }
         viewModel.deletePassword(savedEntity.id)
         advanceUntilIdle()
 
-        passwords = repository.allPasswords.first()
+        passwordsResult = repository.allPasswords.first()
+        passwords = (passwordsResult as com.example.util.Result.Success).data
         assertFalse(passwords.any { it.id == savedEntity.id })
     }
 
