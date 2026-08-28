@@ -52,6 +52,11 @@
     <string name="shortcut_saved_passwords_long">保存されたパスワードを管理</string>
     <string name="qs_tile_label">PDF を復号</string>
 
-    <string name="biometric_prompt_title">保存されたパスワードのロックを解除</string>
-    <string name="biometric_prompt_subtitle">保存されたパスワードにアクセスするには本人確認を行ってください。</string>
+    <string name="biometric_prompt_title">保存されたパスワードのロック解除</string>
+    <string name="biometric_prompt_subtitle">保存されたパスワードにアクセスするには生体認証を行ってください。</string>
+
+    <string name="dialog_title_whats_new">新機能</string>
+    <string name="changelog_content">- AMOLED 純黒＆Material 3 ダイナミックテーマ\n- 一括復号の進捗表示とキャンセル対応\n- PDF メタデータ＆セキュリティ権限インスペクター\n- タブレット・折りたたみ端末向けドラッグ＆ドロップ対応\n- Keystore ハードウェア暗号化データベース\n- パスワード金庫の生体認証ロック解除</string>
+    <string name="title_empty_state">PDF が選択されていません</string>
+    <string name="desc_empty_state">暗号化された PDF ファイルを選択してください。ファイルマネージャーや他のアプリから直接共有することもできます。</string>
 </resources>

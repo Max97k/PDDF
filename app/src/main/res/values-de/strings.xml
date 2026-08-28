@@ -52,4 +52,9 @@
 
     <string name="biometric_prompt_title">Gespeicherte Passwörter entsperren</string>
     <string name="biometric_prompt_subtitle">Bestätigen Sie Ihre Identität, um auf gespeicherte Passwörter zuzugreifen.</string>
+
+    <string name="dialog_title_whats_new">Neuigkeiten</string>
+    <string name="changelog_content">- AMOLED reines Schwarz &amp; dynamisches Design\n- Stapel-Entschlüsselungsfortschritt &amp; Abbrechen\n- PDF-Sicherheits- &amp; Metadaten-Inspektor\n- Tablet / Foldable Drag-and-Drop-Unterstützung\n- Hardware-gestützte Keystore-Verschlüsselung\n- Biometrische Entsperrung des Passworttresors</string>
+    <string name="title_empty_state">Keine PDF ausgewählt</string>
+    <string name="desc_empty_state">Wählen Sie eine oder mehrere verschlüsselte PDFs aus, um zu beginnen. Sie können Dateien auch direkt aus dem Dateimanager teilen.</string>
 </resources>

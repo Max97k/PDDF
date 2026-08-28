@@ -53,4 +53,9 @@
 
     <string name="biometric_prompt_title">Unlock Saved Passwords</string>
     <string name="biometric_prompt_subtitle">Confirm your identity to access saved passwords.</string>
+
+    <string name="dialog_title_whats_new">What\'s New</string>
+    <string name="changelog_content">- AMOLED pure black &amp; dynamic theme\n- Batch decryption progress &amp; cancellation\n- PDF security &amp; metadata inspector\n- Tablet / foldable drag-and-drop support\n- Hardware-backed Keystore DB encryption\n- Biometric unlock for password vault</string>
+    <string name="title_empty_state">No PDF Selected</string>
+    <string name="desc_empty_state">Select one or more encrypted PDFs to begin. You can also share files directly from your file manager or other apps.</string>
 </resources>

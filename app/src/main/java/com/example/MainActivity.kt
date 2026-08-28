@@ -77,7 +77,10 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                     snackbarHost = { SnackbarHost(snackbarHostState) }
                 ) { innerPadding ->
                     PDFDecryptorScreen(
-                        modifier = Modifier.padding(innerPadding),
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding)
+                            .windowInsetsPadding(WindowInsets.safeDrawing),
                         viewModel = viewModel,
                         snackbarHostState = snackbarHostState
                     )
@@ -155,6 +158,25 @@ fun PDFDecryptorScreen(
     val context = LocalContext.current
     val showSavePasswordDialog by viewModel.showSavePasswordDialog.collectAsStateWithLifecycle()
     val showPasswordListDialog by viewModel.showPasswordListDialog.collectAsStateWithLifecycle()
+    var showWhatsNewDialog by remember { mutableStateOf(false) }
+
+    val versionName = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        } catch (e: Exception) {
+            "0.1.0"
+        }
+    }
+
+    LaunchedEffect(versionName) {
+        val sharedPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val lastSeenVersion = sharedPrefs.getString("last_seen_version", null)
+        
+        if (lastSeenVersion != versionName) {
+            showWhatsNewDialog = true
+            sharedPrefs.edit().putString("last_seen_version", versionName).apply()
+        }
+    }
 
     val isSecureModeActive = selectedUris.isNotEmpty() || showPasswordListDialog || showSavePasswordDialog
     val activity = context as? Activity
@@ -176,24 +198,30 @@ fun PDFDecryptorScreen(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                if (uri != null) {
-                    try {
-                        val flags = result.data?.flags ?: 0
-                        val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        if (takeFlags != 0) {
-                            @Suppress("WrongConstant")
-                            context.contentResolver.takePersistableUriPermission(
-                                uri,
-                                takeFlags
-                            )
-                        }
-                    } catch (e: SecurityException) {
-                        e.printStackTrace()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                val uris = mutableListOf<Uri>()
+                result.data?.clipData?.let { clipData ->
+                    for (i in 0 until clipData.itemCount) {
+                        uris.add(clipData.getItemAt(i).uri)
                     }
-                    viewModel.setSelectedUris(context, listOf(uri))
+                } ?: result.data?.data?.let { uris.add(it) }
+
+                if (uris.isNotEmpty()) {
+                    val flags = result.data?.flags ?: 0
+                    val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    if (takeFlags != 0) {
+                        uris.forEach { uri ->
+                            try {
+                                @Suppress("WrongConstant")
+                                context.contentResolver.takePersistableUriPermission(
+                                    uri,
+                                    takeFlags
+                                )
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                    viewModel.setSelectedUris(context, uris)
                 }
             }
         }
@@ -358,6 +386,7 @@ fun PDFDecryptorScreen(
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "application/pdf"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 }
                 openDocumentLauncher.launch(intent)
@@ -487,95 +516,119 @@ fun PDFDecryptorScreen(
                     }
                 }
             }
-        }
 
-        if (statusMessage != null) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = statusMessage!!,
-                color = if (statusMessage!!.startsWith("Error") || statusMessage!!.startsWith("Failed") || statusMessage!!.contains("❌"))
-                    MaterialTheme.colorScheme.error
-                else
-                    MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
+            if (statusMessage != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = statusMessage!!,
+                    color = if (statusMessage!!.startsWith("Error") || statusMessage!!.startsWith("Failed") || statusMessage!!.contains("❌"))
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            val fallback = Intent(Intent.ACTION_VIEW)
-                            fallback.setDataAndType(Uri.parse("content://"), "*/*")
-                            try {
-                                context.startActivity(fallback)
-                            } catch (e2: Exception) {}
-                        }
-                    },
-                    modifier = Modifier.weight(1f).height(48.dp)
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("📂")
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
-                }
-
-                if (lastDecryptedUri != null) {
-                    Button(
+                    OutlinedButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(lastDecryptedUri, "application/pdf")
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
+                            val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             try {
-                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
-                            } catch (e: Exception) {}
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                val fallback = Intent(Intent.ACTION_VIEW)
+                                fallback.setDataAndType(Uri.parse("content://"), "*/*")
+                                try {
+                                    context.startActivity(fallback)
+                                } catch (e2: Exception) {}
+                            }
                         },
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
-                        Text("📄")
+                        Text("📂")
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
                     }
 
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "application/pdf"
-                                putExtra(Intent.EXTRA_STREAM, lastDecryptedUri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            try {
-                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
-                            } catch (e: Exception) {}
-                        },
-                        modifier = Modifier.weight(1f).height(48.dp)
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.btn_share_file), textAlign = TextAlign.Center)
+                    if (lastDecryptedUri != null) {
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(lastDecryptedUri, "application/pdf")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                try {
+                                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
+                                } catch (e: Exception) {}
+                            },
+                            modifier = Modifier.weight(1f).height(48.dp)
+                        ) {
+                            Text("📄")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
+                        }
+
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/pdf"
+                                    putExtra(Intent.EXTRA_STREAM, lastDecryptedUri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                try {
+                                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
+                                } catch (e: Exception) {}
+                            },
+                            modifier = Modifier.weight(1f).height(48.dp)
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.btn_share_file), textAlign = TextAlign.Center)
+                        }
                     }
                 }
             }
+        } else {
+            Spacer(modifier = Modifier.height(32.dp))
+            Surface(
+                modifier = Modifier.size(80.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.title_empty_state),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.desc_empty_state),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
 
         } // Close Column
-
-        val versionName = try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        } catch (e: Exception) {
-            "0.1.0"
-        }
 
         Row(
             modifier = Modifier
@@ -587,7 +640,8 @@ fun PDFDecryptorScreen(
             Text(
                 text = stringResource(R.string.version_info, versionName ?: "0.1.0"),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.clickable { showWhatsNewDialog = true }
             )
             TextButton(
                 onClick = {
@@ -668,6 +722,19 @@ fun PDFDecryptorScreen(
             confirmButton = {
                 TextButton(onClick = { viewModel.cancelBatch() }) {
                     Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    if (showWhatsNewDialog) {
+        AlertDialog(
+            onDismissRequest = { showWhatsNewDialog = false },
+            title = { Text(stringResource(R.string.dialog_title_whats_new)) },
+            text = { Text(stringResource(R.string.changelog_content)) },
+            confirmButton = {
+                TextButton(onClick = { showWhatsNewDialog = false }) {
+                    Text(stringResource(R.string.btn_close))
                 }
             }
         )

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF Decryptor</string>
     <string name="btn_select_pdfs">Sélectionner des PDF chiffrés</string>
@@ -54,4 +54,9 @@
 
     <string name="biometric_prompt_title">Déverrouiller les mots de passe enregistrés</string>
     <string name="biometric_prompt_subtitle">Confirmez votre identité pour accéder aux mots de passe enregistrés.</string>
+
+    <string name="dialog_title_whats_new">Nouveautés</string>
+    <string name="changelog_content">- Thème noir pur AMOLED et thème dynamique\n- Progression du déchiffrement par lots et annulation\n- Inspecteur de métadonnées et sécurité PDF\n- Prise en charge du glisser-déposer\n- Chiffrement matériel de la base avec Keystore\n- Déverrouillage biométrique du coffre de mots de passe</string>
+    <string name="title_empty_state">Aucun PDF sélectionné</string>
+    <string name="desc_empty_state">Sélectionnez un ou plusieurs fichiers PDF chiffrés pour commencer. Vous pouvez également partager des fichiers depuis votre gestionnaire de fichiers.</string>
 </resources>

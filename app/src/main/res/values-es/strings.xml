@@ -54,4 +54,9 @@
 
     <string name="biometric_prompt_title">Desbloquear contraseñas guardadas</string>
     <string name="biometric_prompt_subtitle">Confirma tu identidad para acceder a las contraseñas guardadas.</string>
+
+    <string name="dialog_title_whats_new">Novedades</string>
+    <string name="changelog_content">- Modo negro puro AMOLED y tema dinámico\n- Progreso de descifrado por lotes y cancelación\n- Inspector de metadatos y seguridad PDF\n- Compatibilidad con arrastrar y soltar\n- Cifrado de base de datos con Keystore por hardware\n- Desbloqueo biométrico para el baúl de contraseñas</string>
+    <string name="title_empty_state">No hay PDF seleccionado</string>
+    <string name="desc_empty_state">Selecciona uno o más archivos PDF cifrados para comenzar. También puedes compartir archivos directamente desde tu administrador de archivos.</string>
 </resources>
