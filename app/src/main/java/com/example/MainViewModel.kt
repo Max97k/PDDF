@@ -14,9 +14,12 @@ import com.example.data.PasswordRepository
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
+import com.example.data.ThemeMode
+import com.example.data.ThemePreferences
 import com.example.util.FileUtils
 import com.example.util.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,8 +50,22 @@ class MainViewModel @JvmOverloads constructor(
         )
         .addMigrations(AppDatabase.MIGRATION_1_2)
         .build().passwordDao()
-    )
+    ),
+    private val themePreferences: ThemePreferences = ThemePreferences(application)
 ) : AndroidViewModel(application) {
+
+    val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ThemeMode.SYSTEM
+        )
+
+    fun setTheme(mode: ThemeMode) {
+        viewModelScope.launch {
+            themePreferences.saveThemeMode(mode)
+        }
+    }
 
     val savedPasswords: StateFlow<List<PasswordEntity>> = repository.allPasswords
         .map { result ->
@@ -65,6 +82,7 @@ class MainViewModel @JvmOverloads constructor(
 
     val selectedUris = MutableStateFlow<List<Uri>>(emptyList())
     val selectedFileNames = MutableStateFlow<List<String>>(emptyList())
+    val selectedMetadata = MutableStateFlow<PdfMetadata?>(null)
     val isProcessing = MutableStateFlow(false)
     val statusMessage = MutableStateFlow<String?>(null)
     val lastDecryptedUri = MutableStateFlow<Uri?>(null)
@@ -76,6 +94,18 @@ class MainViewModel @JvmOverloads constructor(
     val passwordVisible = MutableStateFlow(false)
     val showSavePasswordDialog = MutableStateFlow(false)
     val showPasswordListDialog = MutableStateFlow(false)
+
+    data class BatchState(
+        val isProcessing: Boolean = false,
+        val progress: Int = 0,
+        val total: Int = 0
+    )
+    val batchState = MutableStateFlow(BatchState())
+    private var batchJob: kotlinx.coroutines.Job? = null
+
+    fun cancelBatch() {
+        batchJob?.cancel()
+    }
 
     private var backgroundTime: Long = 0
     private val TIMEOUT_MILLIS = 60000L // 60 seconds
@@ -175,6 +205,7 @@ class MainViewModel @JvmOverloads constructor(
 
             selectedUris.value = pdfUris
             selectedFileNames.value = pdfNames
+            selectedMetadata.value = null
             statusMessage.value = null
 
             if (pdfUris.isNotEmpty()) {
@@ -188,8 +219,35 @@ class MainViewModel @JvmOverloads constructor(
             ensurePdfBoxInitialized()
             val unencryptedNames = mutableListOf<String>()
             val unsupportedNames = mutableListOf<String>()
+            var extractedMetadata: PdfMetadata? = null
 
             for ((uri, fileName) in pdfPairs) {
+                if (extractedMetadata == null) {
+                    var sizeMb = 0.0
+                    try {
+                        context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
+                            sizeMb = fd.statSize.toDouble() / (1024 * 1024)
+                        }
+                    } catch (e: Exception) {}
+                    try {
+                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                            val doc = PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
+                            val info = doc.documentInformation
+                            val title = info?.title ?: "Unknown"
+                            val author = info?.author ?: "Unknown"
+                            val pages = doc.numberOfPages
+                            val enc = doc.encryption
+                            val encMethod = if (enc != null) "${enc.filter} ${enc.length}-bit" else "None"
+                            val perm = doc.currentAccessPermission
+                            val canPrint = perm?.canPrint() ?: true
+                            val canCopy = perm?.canExtractContent() ?: true
+                            extractedMetadata = PdfMetadata(title, author, pages, sizeMb, encMethod, canPrint, canCopy)
+                            doc.close()
+                        }
+                    } catch (e: Exception) {
+                        extractedMetadata = PdfMetadata("Unknown (Encrypted)", "Unknown (Encrypted)", 0, sizeMb, "Encrypted", false, false)
+                    }
+                }
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
                         val doc = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
@@ -206,6 +264,8 @@ class MainViewModel @JvmOverloads constructor(
                     }
                 }
             }
+
+            selectedMetadata.value = extractedMetadata
 
             if (unencryptedNames.size == pdfPairs.size) {
                 statusMessage.value = context.getString(R.string.msg_notice_all_unencrypted)
@@ -237,49 +297,113 @@ class MainViewModel @JvmOverloads constructor(
 
     fun decryptAndOverwrite(context: Context, inputUri: Uri?, passwordValue: String) {
         if (inputUri == null) return
-        viewModelScope.launch {
+        decryptAndOverwrite(context, listOf(inputUri), passwordValue)
+    }
+
+    fun decryptAndOverwrite(context: Context, inputUris: List<Uri>, passwordValue: String) {
+        if (inputUris.isEmpty()) return
+        batchJob = viewModelScope.launch {
             isProcessing.value = true
-            statusMessage.value = "Processing..."
-            withContext(Dispatchers.IO) {
-                try {
-                    // Create a temporary file in cache to store decrypted content
-                    val tempFile = java.io.File(context.cacheDir, "temp_decrypted_${System.currentTimeMillis()}.pdf")
-                    try {
-                        val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
-    
-                        when (status) {
-                            DecryptStatus.SUCCESS -> {
-                                // Write temp file contents back to the original URI using SAF
-                                context.contentResolver.openOutputStream(inputUri, "rwt")?.buffered()?.use { outputStream ->
-                                    java.io.FileInputStream(tempFile).buffered().use { inputStream ->
-                                        inputStream.copyTo(outputStream)
-                                    }
-                                }
-                                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                                lastDecryptedUri.value = inputUri
-                            }
-                            DecryptStatus.NOT_ENCRYPTED -> {
-                                statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
-                            }
-                            DecryptStatus.WRONG_PASSWORD -> {
-                                statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
-                            }
-                            DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                                statusMessage.value = context.getString(R.string.summary_unsupported, 1)
-                            }
-                            DecryptStatus.ERROR -> {
-                                statusMessage.value = context.getString(R.string.summary_error, 1)
-                            }
-                        }
-                    } finally {
-                        tempFile.delete()
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    statusMessage.value = context.getString(R.string.summary_error, 1)
-                }
+            val isBatch = inputUris.size > 1
+            if (isBatch) {
+                batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+                statusMessage.value = context.getString(R.string.msg_processing_count, inputUris.size)
+            } else {
+                statusMessage.value = "Processing..."
             }
-            isProcessing.value = false
+
+            var successCount = 0
+            var notEncryptedCount = 0
+            var wrongPasswordCount = 0
+            var unsupportedCount = 0
+            var errorCount = 0
+            var cancelledCount = 0
+            var lastUri: Uri? = null
+
+            try {
+                withContext(Dispatchers.IO) {
+                    for (inputUri in inputUris) {
+                        ensureActive()
+                        var tempFile: java.io.File? = null
+                        try {
+                            tempFile = java.io.File(context.cacheDir, "temp_decrypted_${System.currentTimeMillis()}.pdf")
+                            val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
+
+                            when (status) {
+                                DecryptStatus.SUCCESS -> {
+                                    context.contentResolver.openOutputStream(inputUri, "rwt")?.buffered()?.use { outputStream ->
+                                        java.io.FileInputStream(tempFile).buffered().use { inputStream ->
+                                            inputStream.copyTo(outputStream)
+                                        }
+                                    }
+                                    tempFile.delete()
+                                    successCount++
+                                    lastUri = inputUri
+                                }
+                                DecryptStatus.NOT_ENCRYPTED -> {
+                                    tempFile.delete()
+                                    notEncryptedCount++
+                                }
+                                DecryptStatus.WRONG_PASSWORD -> {
+                                    tempFile.delete()
+                                    wrongPasswordCount++
+                                }
+                                DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                                    tempFile.delete()
+                                    unsupportedCount++
+                                }
+                                DecryptStatus.ERROR -> {
+                                    tempFile.delete()
+                                    errorCount++
+                                }
+                            }
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) {
+                                tempFile?.delete()
+                                throw e
+                            }
+                            e.printStackTrace()
+                            errorCount++
+                        }
+                        if (isBatch) {
+                            batchState.value = batchState.value.copy(progress = batchState.value.progress + 1)
+                        }
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                cancelledCount = inputUris.size - (successCount + notEncryptedCount + wrongPasswordCount + unsupportedCount + errorCount)
+            } finally {
+                if (isBatch) {
+                    val summaryList = mutableListOf<String>()
+                    if (successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, successCount))
+                    if (notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, notEncryptedCount))
+                    if (wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, wrongPasswordCount))
+                    if (unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, unsupportedCount))
+                    if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
+                    if (cancelledCount > 0) summaryList.add("Cancelled: $cancelledCount files")
+
+                    statusMessage.value = summaryList.joinToString("\n")
+                } else {
+                    if (cancelledCount > 0) {
+                        statusMessage.value = "Cancelled"
+                    } else if (successCount > 0) {
+                        statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                    } else if (notEncryptedCount > 0) {
+                        statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
+                    } else if (wrongPasswordCount > 0) {
+                        statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
+                    } else if (unsupportedCount > 0) {
+                        statusMessage.value = context.getString(R.string.summary_unsupported, 1)
+                    } else if (errorCount > 0) {
+                        statusMessage.value = context.getString(R.string.summary_error, 1)
+                    }
+                }
+                if (lastUri != null) {
+                    lastDecryptedUri.value = lastUri
+                }
+                isProcessing.value = false
+                batchState.value = BatchState()
+            }
         }
     }
 
@@ -327,8 +451,9 @@ class MainViewModel @JvmOverloads constructor(
         deleteOriginal: Boolean,
         mode: ConflictMode = conflictMode.value
     ) {
-        viewModelScope.launch {
+        batchJob = viewModelScope.launch {
             isProcessing.value = true
+            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
             statusMessage.value = context.getString(R.string.msg_processing_count, inputUris.size)
 
             var successCount = 0
@@ -336,96 +461,116 @@ class MainViewModel @JvmOverloads constructor(
             var wrongPasswordCount = 0
             var unsupportedCount = 0
             var errorCount = 0
+            var cancelledCount = 0
             var lastUri: Uri? = null
 
-            withContext(Dispatchers.IO) {
-                val documentTree = DocumentFile.fromTreeUri(context, outputDirectoryUri)
-                if (documentTree == null) {
-                    statusMessage.value = context.getString(R.string.msg_error_output_dir)
-                    isProcessing.value = false
-                    return@withContext
-                }
+            try {
+                withContext(Dispatchers.IO) {
+                    val documentTree = DocumentFile.fromTreeUri(context, outputDirectoryUri)
+                    if (documentTree == null) {
+                        statusMessage.value = context.getString(R.string.msg_error_output_dir)
+                        isProcessing.value = false
+                        batchState.value = BatchState()
+                        return@withContext
+                    }
 
-                for (uri in inputUris) {
-                    try {
-                        val rawFileName = getFileName(context, uri) ?: "decrypted.pdf"
-                        val targetFileName = if (prefix.isNotBlank()) {
-                            "${prefix}_$rawFileName"
-                        } else {
-                            rawFileName
-                        }
-
-                        val existingFile = documentTree.findFile(targetFileName)
+                    for (uri in inputUris) {
+                        ensureActive()
                         var outputFile: DocumentFile? = null
-                        var isTempOverwrite = false
-
-                        if (existingFile != null) {
-                            if (mode == ConflictMode.SAVE_AS_COPY) {
-                                val uniqueName = getUniqueFileName(documentTree, targetFileName)
-                                outputFile = documentTree.createFile("application/pdf", uniqueName)
+                        try {
+                            val rawFileName = getFileName(context, uri) ?: "decrypted.pdf"
+                            val targetFileName = if (prefix.isNotBlank()) {
+                                "${prefix}_$rawFileName"
                             } else {
-                                // OVERWRITE: create temp file first to avoid overwriting before password verification succeeds
-                                val tempName = "_temp_decrypted_${System.currentTimeMillis()}.pdf"
-                                outputFile = documentTree.createFile("application/pdf", tempName)
-                                isTempOverwrite = true
+                                rawFileName
                             }
-                        } else {
-                            outputFile = documentTree.createFile("application/pdf", targetFileName)
-                        }
 
-                        if (outputFile != null) {
-                            val status = decryptSinglePdf(context, uri, outputFile.uri, passwordValue)
-                            when (status) {
-                                DecryptStatus.SUCCESS -> {
-                                    successCount++
-                                    lastUri = outputFile.uri
-                                    if (isTempOverwrite && existingFile != null) {
-                                        existingFile.delete()
-                                        outputFile.renameTo(targetFileName)
-                                    }
-                                    if (deleteOriginal) {
-                                        deleteOriginalFile(context, uri)
-                                    }
+                            val existingFile = documentTree.findFile(targetFileName)
+                            var isTempOverwrite = false
+
+                            if (existingFile != null) {
+                                if (mode == ConflictMode.SAVE_AS_COPY) {
+                                    val uniqueName = getUniqueFileName(documentTree, targetFileName)
+                                    outputFile = documentTree.createFile("application/pdf", uniqueName)
+                                } else {
+                                    // OVERWRITE: create temp file first to avoid overwriting before password verification succeeds
+                                    val tempName = "_temp_decrypted_${System.currentTimeMillis()}.pdf"
+                                    outputFile = documentTree.createFile("application/pdf", tempName)
+                                    isTempOverwrite = true
                                 }
-                                DecryptStatus.NOT_ENCRYPTED -> {
-                                    notEncryptedCount++
-                                    outputFile.delete()
-                                }
-                                DecryptStatus.WRONG_PASSWORD -> {
-                                    wrongPasswordCount++
-                                    outputFile.delete()
-                                }
-                                DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                                    unsupportedCount++
-                                    outputFile.delete()
-                                }
-                                DecryptStatus.ERROR -> {
-                                    errorCount++
-                                    outputFile.delete()
-                                }
+                            } else {
+                                outputFile = documentTree.createFile("application/pdf", targetFileName)
                             }
-                        } else {
+
+                            if (outputFile != null) {
+                                val status = decryptSinglePdf(context, uri, outputFile.uri, passwordValue)
+                                when (status) {
+                                    DecryptStatus.SUCCESS -> {
+                                        successCount++
+                                        lastUri = outputFile.uri
+                                        if (isTempOverwrite && existingFile != null) {
+                                            existingFile.delete()
+                                            outputFile.renameTo(targetFileName)
+                                        }
+                                        if (deleteOriginal) {
+                                            deleteOriginalFile(context, uri)
+                                        }
+                                    }
+                                    DecryptStatus.NOT_ENCRYPTED -> {
+                                        notEncryptedCount++
+                                        outputFile.delete()
+                                    }
+                                    DecryptStatus.WRONG_PASSWORD -> {
+                                        wrongPasswordCount++
+                                        outputFile.delete()
+                                    }
+                                    DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                                        unsupportedCount++
+                                        outputFile.delete()
+                                    }
+                                    DecryptStatus.ERROR -> {
+                                        errorCount++
+                                        outputFile.delete()
+                                    }
+                                }
+                            } else {
+                                errorCount++
+                            }
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) {
+                                outputFile?.delete()
+                                throw e
+                            }
+                            e.printStackTrace()
                             errorCount++
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        errorCount++
+                        batchState.value = batchState.value.copy(progress = batchState.value.progress + 1)
                     }
                 }
-            }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                cancelledCount = inputUris.size - (successCount + notEncryptedCount + wrongPasswordCount + unsupportedCount + errorCount)
+            } finally {
+                if (statusMessage.value == context.getString(R.string.msg_error_output_dir)) {
+                    isProcessing.value = false
+                    batchState.value = BatchState()
+                    return@launch
+                }
 
-            val summaryList = mutableListOf<String>()
-            if (successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, successCount))
-            if (notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, notEncryptedCount))
-            if (wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, wrongPasswordCount))
-            if (unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, unsupportedCount))
-            if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
+                val summaryList = mutableListOf<String>()
+                if (successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, successCount))
+                if (notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, notEncryptedCount))
+                if (wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, wrongPasswordCount))
+                if (unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, unsupportedCount))
+                if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
+                if (cancelledCount > 0) summaryList.add("Cancelled: $cancelledCount files")
 
-            statusMessage.value = summaryList.joinToString("\n")
-            if (lastUri != null) {
-                lastDecryptedUri.value = lastUri
+                statusMessage.value = summaryList.joinToString("\n")
+                if (lastUri != null) {
+                    lastDecryptedUri.value = lastUri
+                }
+                isProcessing.value = false
+                batchState.value = BatchState()
             }
-            isProcessing.value = false
         }
     }
 

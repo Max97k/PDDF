@@ -47,8 +47,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.ui.draganddrop.DragAndDropEvent
+import androidx.compose.ui.draganddrop.DragAndDropTarget
+import androidx.compose.ui.draganddrop.toAndroidDragEvent
+import androidx.compose.material.icons.filled.Palette
 import kotlinx.coroutines.launch
 import com.example.data.PasswordEntity
+import com.example.data.ThemeMode
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.FileUtils
 
@@ -61,7 +69,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
-            MyApplicationTheme {
+            val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+            MyApplicationTheme(themeMode = themeMode) {
                 val snackbarHostState = remember { SnackbarHostState() }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -124,7 +133,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PDFDecryptorScreen(
     modifier: Modifier = Modifier,
@@ -134,6 +143,8 @@ fun PDFDecryptorScreen(
     val scope = rememberCoroutineScope()
     val selectedUris by viewModel.selectedUris.collectAsStateWithLifecycle()
     val selectedFileNames by viewModel.selectedFileNames.collectAsStateWithLifecycle()
+    val selectedMetadata by viewModel.selectedMetadata.collectAsStateWithLifecycle()
+    val batchState by viewModel.batchState.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
     val passwordVisible by viewModel.passwordVisible.collectAsStateWithLifecycle()
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
@@ -188,6 +199,56 @@ fun PDFDecryptorScreen(
         }
     )
 
+    val openDocumentTreeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                if (destUri != null) {
+                    viewModel.decryptMultiplePdfs(context, selectedUris, destUri, password, "", false)
+                }
+            }
+        }
+    )
+
+    var isDragging by remember { mutableStateOf(false) }
+
+    val dragAndDropTarget = remember {
+        object : DragAndDropTarget {
+            override fun onStarted(event: DragAndDropEvent) {}
+            override fun onEntered(event: DragAndDropEvent) {
+                isDragging = true
+            }
+            override fun onExited(event: DragAndDropEvent) {
+                isDragging = false
+            }
+            override fun onEnded(event: DragAndDropEvent) {
+                isDragging = false
+            }
+            override fun onDrop(event: DragAndDropEvent): Boolean {
+                isDragging = false
+                val dragEvent = event.toAndroidDragEvent()
+                val clipData = dragEvent.clipData ?: return false
+                val act = context as? Activity
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    act?.requestDragAndDropPermissions(dragEvent)
+                }
+                val uris = mutableListOf<Uri>()
+                for (i in 0 until clipData.itemCount) {
+                    val uri = clipData.getItemAt(i).uri
+                    if (uri != null) {
+                        uris.add(uri)
+                    }
+                }
+                if (uris.isNotEmpty()) {
+                    viewModel.setSelectedUris(context, uris)
+                    return true
+                }
+                return false
+            }
+        }
+    }
+
     LaunchedEffect(statusMessage) {
         statusMessage?.let { msg ->
             if (msg.startsWith("Error") || msg.startsWith("Failed") || msg.contains("❌")) {
@@ -219,7 +280,18 @@ fun PDFDecryptorScreen(
     )
 
     Box(
-        modifier = modifier.fillMaxSize().padding(24.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .dragAndDropTarget(
+                shouldStartDragAndDrop = { event ->
+                    val dragEvent = event.toAndroidDragEvent()
+                    val clipDescription = dragEvent.clipDescription
+                    clipDescription != null && clipDescription.hasMimeType("application/pdf")
+                },
+                target = dragAndDropTarget
+            )
+            .background(if (isDragging) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.background)
+            .padding(24.dp)
     ) {
         Column(
             modifier = Modifier
@@ -228,12 +300,57 @@ fun PDFDecryptorScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(48.dp))
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                var expanded by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(Icons.Default.Palette, contentDescription = "Theme Settings")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("System Default") },
+                            onClick = {
+                                viewModel.setTheme(ThemeMode.SYSTEM)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Light") },
+                            onClick = {
+                                viewModel.setTheme(ThemeMode.LIGHT)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Dark") },
+                            onClick = {
+                                viewModel.setTheme(ThemeMode.DARK)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("AMOLED Black") },
+                            onClick = {
+                                viewModel.setTheme(ThemeMode.AMOLED)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
         Button(
             onClick = { 
@@ -259,6 +376,11 @@ fun PDFDecryptorScreen(
                 fileCount = selectedUris.size,
                 onClear = { viewModel.setSelectedUris(context, emptyList()) }
             )
+
+            if (selectedMetadata != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                DocumentDetailsCard(metadata = selectedMetadata!!)
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -318,13 +440,13 @@ fun PDFDecryptorScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (isProcessing) {
+            if (isProcessing && !batchState.isProcessing) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(48.dp),
                     color = MaterialTheme.colorScheme.primary,
                     strokeWidth = 4.dp
                 )
-            } else {
+            } else if (!isProcessing) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -332,7 +454,7 @@ fun PDFDecryptorScreen(
                     Button(
                         onClick = { 
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            viewModel.decryptAndOverwrite(context, selectedUris.firstOrNull(), password) 
+                            viewModel.decryptAndOverwrite(context, selectedUris, password) 
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
                         enabled = password.isNotEmpty(),
@@ -344,13 +466,18 @@ fun PDFDecryptorScreen(
                     Button(
                         onClick = { 
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            val fileName = selectedFileNames.firstOrNull() ?: "decrypted.pdf"
-                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "application/pdf"
-                                putExtra(Intent.EXTRA_TITLE, fileName)
+                            if (selectedUris.size > 1) {
+                                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                openDocumentTreeLauncher.launch(intent)
+                            } else {
+                                val fileName = selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = "application/pdf"
+                                    putExtra(Intent.EXTRA_TITLE, fileName)
+                                }
+                                createDocumentLauncher.launch(intent)
                             }
-                            createDocumentLauncher.launch(intent)
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
                         enabled = password.isNotEmpty(),
@@ -510,6 +637,37 @@ fun PDFDecryptorScreen(
                     if (result == SnackbarResult.ActionPerformed) {
                         viewModel.restorePassword(savedPass)
                     }
+                }
+            }
+        )
+    }
+
+    if (batchState.isProcessing) {
+        AlertDialog(
+            onDismissRequest = { /* No dismiss by clicking outside */ },
+            title = { Text("Processing Batch") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "${batchState.progress} of ${batchState.total} completed",
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = if (batchState.total > 0) batchState.progress.toFloat() / batchState.total else 0f,
+                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
+                    )
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.cancelBatch() }) {
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -765,4 +923,36 @@ private fun SavedPasswordListDialog(
 
 fun getFileName(context: Context, uri: Uri): String {
     return FileUtils.getFileName(context, uri)
+}
+
+@Composable
+fun DocumentDetailsCard(metadata: PdfMetadata) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Document Details", style = MaterialTheme.typography.titleMedium)
+                Icon(
+                    imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (expanded) "Collapse" else "Expand"
+                )
+            }
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Title: ${metadata.title}", style = MaterialTheme.typography.bodySmall)
+                Text("Author: ${metadata.author}", style = MaterialTheme.typography.bodySmall)
+                Text("Pages: ${if (metadata.pageCount > 0) metadata.pageCount else "Unknown"}", style = MaterialTheme.typography.bodySmall)
+                Text("File Size: ${String.format(java.util.Locale.US, "%.2f", metadata.fileSizeMb)} MB", style = MaterialTheme.typography.bodySmall)
+                Text("Encryption: ${metadata.encryptionMethod}", style = MaterialTheme.typography.bodySmall)
+                Text("Permissions: ${if (metadata.canPrint) "Printing allowed" else "Printing denied"}, ${if (metadata.canCopy) "Copying allowed" else "Copying denied"}", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
 }

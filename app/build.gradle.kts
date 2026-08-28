@@ -129,6 +129,7 @@ dependencies {
   implementation(libs.pdfbox.android)
   implementation("androidx.biometric:biometric:1.1.0")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
+  implementation("androidx.datastore:datastore-preferences:1.1.1")
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
