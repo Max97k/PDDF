@@ -599,7 +599,9 @@ private fun SavedPasswordListDialog(
     onSelectPassword: (String) -> Unit,
     onDeletePassword: (PasswordEntity) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf("") }
     val haptic = LocalHapticFeedback.current
+
     AlertDialog(
         modifier = Modifier.padding(24.dp).wrapContentWidth().wrapContentHeight(),
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
@@ -609,31 +611,78 @@ private fun SavedPasswordListDialog(
             if (savedPasswords.isEmpty()) {
                 Text(stringResource(R.string.msg_no_saved_passwords))
             } else {
-                LazyColumn {
-                    items(savedPasswords, key = { it.id }) { savedPass ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onSelectPassword(savedPass.passwordValue) 
+                Column {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        label = { Text("Search") },
+                        singleLine = true,
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear search")
                                 }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = savedPass.name,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            IconButton(onClick = { 
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onDeletePassword(savedPass) 
-                            }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Delete ${savedPass.name}"
-                                )
+                            }
+                        }
+                    )
+
+                    val filteredPasswords = savedPasswords.filter {
+                        it.name.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    if (filteredPasswords.isEmpty()) {
+                        Text(
+                            text = "No matching passwords",
+                            modifier = Modifier.padding(top = 8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                            items(filteredPasswords, key = { it.id }) { savedPass ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { 
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onSelectPassword(savedPass.passwordValue) 
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val name = savedPass.name
+                                    val highlightIndex = name.indexOf(searchQuery, ignoreCase = true)
+                                    val annotatedString = if (searchQuery.isNotEmpty() && highlightIndex != -1) {
+                                        androidx.compose.ui.text.buildAnnotatedString {
+                                            append(name.substring(0, highlightIndex))
+                                            androidx.compose.ui.text.withStyle(
+                                                style = androidx.compose.ui.text.SpanStyle(background = MaterialTheme.colorScheme.primaryContainer)
+                                            ) {
+                                                append(name.substring(highlightIndex, highlightIndex + searchQuery.length))
+                                            }
+                                            append(name.substring(highlightIndex + searchQuery.length))
+                                        }
+                                    } else {
+                                        androidx.compose.ui.text.buildAnnotatedString { append(name) }
+                                    }
+
+                                    Text(
+                                        text = annotatedString,
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    IconButton(onClick = { 
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onDeletePassword(savedPass) 
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Delete ${savedPass.name}"
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
