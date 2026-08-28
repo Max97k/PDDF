@@ -41,4 +41,10 @@
     <string name="btn_save_as">另存新檔</string>
     <string name="version_info">版本 %1$s</string>
     <string name="github_link">GitHub 專案</string>
+
+    <string name="shortcut_select_pdf_short">選擇 PDF</string>
+    <string name="shortcut_select_pdf_long">選擇已加密的 PDF</string>
+    <string name="shortcut_saved_passwords_short">已儲存密碼</string>
+    <string name="shortcut_saved_passwords_long">管理已儲存的密碼</string>
+    <string name="qs_tile_label">解密 PDF</string>
 </resources>

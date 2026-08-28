@@ -41,4 +41,10 @@
     <string name="btn_save_as">Save As New</string>
     <string name="version_info">Version %1$s</string>
     <string name="github_link">GitHub Source</string>
+
+    <string name="shortcut_select_pdf_short">Select PDF</string>
+    <string name="shortcut_select_pdf_long">Select Encrypted PDF Files</string>
+    <string name="shortcut_saved_passwords_short">Saved Passwords</string>
+    <string name="shortcut_saved_passwords_long">Manage Saved Passwords</string>
+    <string name="qs_tile_label">Decrypt PDF</string>
 </resources>
