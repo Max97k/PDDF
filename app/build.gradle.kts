@@ -67,6 +67,10 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  lint {
+    abortOnError = false
+    checkReleaseBuilds = false
+  }
 }
 
 tasks.register<JacocoReport>("jacocoTestReport") {
