@@ -40,6 +40,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
+import android.view.WindowManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -123,6 +124,19 @@ fun PDFDecryptorScreen(
     val context = LocalContext.current
     var showSavePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordListDialog by remember { mutableStateOf(false) }
+
+    val isSecureModeActive = selectedUris.isNotEmpty() || showPasswordListDialog || showSavePasswordDialog
+    val activity = context as? Activity
+    DisposableEffect(isSecureModeActive) {
+        if (isSecureModeActive) {
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val haptic = LocalHapticFeedback.current
     val view = LocalView.current
