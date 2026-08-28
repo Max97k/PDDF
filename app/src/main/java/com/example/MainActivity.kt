@@ -111,7 +111,6 @@ fun PDFDecryptorScreen(
     val selectedFileNames by viewModel.selectedFileNames.collectAsStateWithLifecycle()
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
     val savedPasswords by viewModel.savedPasswords.collectAsStateWithLifecycle()
@@ -188,7 +187,6 @@ fun PDFDecryptorScreen(
 
         if (selectedUris.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
-
             SelectedFilesCard(
                 fileNames = selectedFileNames,
                 fileCount = selectedUris.size,
