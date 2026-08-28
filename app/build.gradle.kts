@@ -74,7 +74,19 @@ android {
     compose = true
     buildConfig = true
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      isReturnDefaultValues = true
+      all {
+        it.jvmArgs(
+          "-Drobolectric.dependency.repo.url=https://repo1.maven.org/maven2/",
+          "--add-opens=java.base/java.lang=ALL-UNNAMED",
+          "--add-opens=java.base/java.util=ALL-UNNAMED"
+        )
+      }
+    }
+  }
   lint {
     abortOnError = false
     checkReleaseBuilds = false

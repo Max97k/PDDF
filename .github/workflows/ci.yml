@@ -31,7 +31,7 @@ jobs:
         run: ./gradlew lint
 
       - name: Run Unit Tests & JaCoCo Report
-        run: ./gradlew testDebugUnitTest jacocoTestReport
+        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace
 
       - name: Upload Test Results & Coverage
         if: always()
