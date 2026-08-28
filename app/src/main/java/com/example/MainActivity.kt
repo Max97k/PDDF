@@ -352,7 +352,9 @@ fun PDFDecryptorScreen(
                 showSavePasswordDialog = false
             }
         )
-     if (showPasswordListDialog) {
+    }
+
+    if (showPasswordListDialog) {
         SavedPasswordListDialog(
             savedPasswords = savedPasswords,
             onDismiss = { showPasswordListDialog = false },
@@ -526,9 +528,6 @@ private fun SavedPasswordListDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_close)) }
-        }
-    )
-}lose)) }
         }
     )
 }
