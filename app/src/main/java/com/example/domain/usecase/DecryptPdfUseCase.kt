@@ -80,7 +80,7 @@ class DecryptPdfUseCase(
         DecryptStatus.ERROR
     }
 
-    suspend fun extractMetadata(context: Context, uri: Uri): PdfMetadata? = withContext(ioDispatcher) {
+    suspend fun extractMetadata(context: Context, uri: Uri, passwordValue: String = ""): PdfMetadata? = withContext(ioDispatcher) {
         var sizeMb = 0.0
         try {
             context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
@@ -90,17 +90,22 @@ class DecryptPdfUseCase(
 
         try {
             openSafeInputStream(context, uri)?.use { inputStream ->
-                val doc = PDDocument.load(
-                    inputStream.buffered(),
-                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
-                )
-                doc.use {
+                val doc = try {
+                    PDDocument.load(
+                        inputStream.buffered(),
+                        passwordValue,
+                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                    )
+                } catch (_: Exception) {
+                    null
+                }
+                doc?.use {
                     val info = it.documentInformation
                     val title = info?.title ?: "Unknown"
                     val author = info?.author ?: "Unknown"
                     val pages = it.numberOfPages
                     val enc = it.encryption
-                    val encMethod = if (enc != null) "${enc.filter} ${enc.length}-bit" else "None"
+                    val encMethod = if (enc != null) "${enc.filter} ${enc.length}-bit" else if (it.isEncrypted) "Standard Encrypted" else "None"
                     val perm = it.currentAccessPermission
                     val canPrint = perm?.canPrint() ?: true
                     val canCopy = perm?.canExtractContent() ?: true
