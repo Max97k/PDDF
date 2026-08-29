@@ -31,4 +31,16 @@ class FileUtilsTest {
         val fileName = FileUtils.getFileName(context, uri)
         assertEquals("report.pdf", fileName)
     }
+
+    @Test
+    fun testSecureDelete() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val testFile = java.io.File(context.cacheDir, "test_shred.pdf")
+        testFile.writeText("sensitive pdf content to be shredded")
+        org.junit.Assert.assertTrue(testFile.exists())
+
+        val deleted = FileUtils.secureDelete(testFile)
+        org.junit.Assert.assertTrue(deleted)
+        org.junit.Assert.assertFalse(testFile.exists())
+    }
 }

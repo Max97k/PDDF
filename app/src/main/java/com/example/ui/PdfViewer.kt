@@ -155,8 +155,14 @@ fun PdfViewerScreen(
             try {
                 pfd?.close()
             } catch (_: Exception) {}
-            tempFile?.delete()
+            com.example.util.FileUtils.secureDelete(tempFile)
+            val snapshot = pageBitmapCache.snapshot()
             pageBitmapCache.evictAll()
+            snapshot.values.forEach { bmp ->
+                if (bmp != null && !bmp.isRecycled) {
+                    bmp.recycle()
+                }
+            }
         }
     }
 

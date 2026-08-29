@@ -57,6 +57,9 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import kotlinx.coroutines.launch
 import com.example.data.PasswordEntity
 import com.example.data.ThemeMode
@@ -68,11 +71,13 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
             MyApplicationTheme(themeMode = themeMode) {
                 val snackbarHostState = remember { SnackbarHostState() }
@@ -83,7 +88,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                     PDFDecryptorScreen(
                         modifier = Modifier.padding(innerPadding),
                         viewModel = viewModel,
-                        snackbarHostState = snackbarHostState
+                        snackbarHostState = snackbarHostState,
+                        windowWidthSizeClass = windowSizeClass.widthSizeClass
                     )
                 }
             }
@@ -145,7 +151,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 fun PDFDecryptorScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
 ) {
     val scope = rememberCoroutineScope()
     val selectedUris by viewModel.selectedUris.collectAsStateWithLifecycle()

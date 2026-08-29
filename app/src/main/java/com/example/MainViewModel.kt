@@ -3,31 +3,31 @@ package com.example
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.provider.DocumentsContract
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import com.example.data.AppDatabase
 import com.example.data.PasswordEntity
 import com.example.data.PasswordRepository
-import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import com.example.data.ThemeMode
 import com.example.data.ThemePreferences
+import com.example.domain.model.PdfUiState
+import com.example.domain.usecase.AutoUnlockUseCase
+import com.example.domain.usecase.BatchProcessUseCase
+import com.example.domain.usecase.DecryptPdfUseCase
+import com.example.domain.usecase.PasswordVaultUseCase
 import com.example.util.FileUtils
 import com.example.util.Result
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 enum class DecryptStatus {
     SUCCESS,
@@ -54,7 +54,11 @@ class MainViewModel @JvmOverloads constructor(
         .build().passwordDao()
     ),
     private val themePreferences: ThemePreferences = ThemePreferences(application),
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(ioDispatcher),
+    private val passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
+    private val autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
+    private val batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(decryptPdfUseCase, ioDispatcher)
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -70,7 +74,7 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
-    val savedPasswords: StateFlow<List<PasswordEntity>> = repository.allPasswords
+    val savedPasswords: StateFlow<List<PasswordEntity>> = passwordVaultUseCase.allPasswords
         .map { result ->
             when (result) {
                 is Result.Success -> result.data
@@ -105,13 +109,16 @@ class MainViewModel @JvmOverloads constructor(
     val autoUnlockErrorMessage = MutableStateFlow<String?>(null)
     val previewPdfUri = MutableStateFlow<Uri?>(null)
 
+    // Unified UDF UI state
+    val pdfUiState = MutableStateFlow<PdfUiState>(PdfUiState.Idle)
+
     data class BatchState(
         val isProcessing: Boolean = false,
         val progress: Int = 0,
         val total: Int = 0
     )
     val batchState = MutableStateFlow(BatchState())
-    private var batchJob: kotlinx.coroutines.Job? = null
+    private var batchJob: Job? = null
 
     fun cancelBatch() {
         batchJob?.cancel()
@@ -122,7 +129,7 @@ class MainViewModel @JvmOverloads constructor(
 
     private val prefs = application.getSharedPreferences("pdf_decryptor_prefs", Context.MODE_PRIVATE)
 
-    private var pdfBoxInitJob: kotlinx.coroutines.Job? = null
+    private var pdfBoxInitJob: Job? = null
 
     init {
         pdfBoxInitJob = viewModelScope.launch(ioDispatcher) {
@@ -134,7 +141,7 @@ class MainViewModel @JvmOverloads constructor(
             val savedModeStr = prefs.getString("conflict_mode", ConflictMode.SAVE_AS_COPY.name)
             conflictMode.value = try {
                 ConflictMode.valueOf(savedModeStr!!)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 ConflictMode.SAVE_AS_COPY
             }
         }
@@ -177,12 +184,11 @@ class MainViewModel @JvmOverloads constructor(
 
     fun setSelectedUris(context: Context, uris: List<Uri>) {
         viewModelScope.launch(ioDispatcher) {
-            // Release persistable URI permissions for URIs that are no longer selected
             val currentUris = selectedUris.value
             val removedUris = currentUris.filter { !uris.contains(it) }
             val persistedPermissions = try {
                 context.contentResolver.persistedUriPermissions.map { it.uri }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 emptyList()
             }
             for (removedUri in removedUris) {
@@ -202,7 +208,7 @@ class MainViewModel @JvmOverloads constructor(
                 val name = FileUtils.getFileName(context, uri)
                 val type = try {
                     context.contentResolver.getType(uri)
-                } catch (e: SecurityException) {
+                } catch (_: SecurityException) {
                     null
                 }
                 val isPdf = name.endsWith(".pdf", ignoreCase = true) ||
@@ -233,35 +239,16 @@ class MainViewModel @JvmOverloads constructor(
 
             for ((uri, fileName) in pdfPairs) {
                 if (extractedMetadata == null) {
-                    var sizeMb = 0.0
-                    try {
-                        context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
-                            sizeMb = fd.statSize.toDouble() / (1024 * 1024)
-                        }
-                    } catch (e: Exception) {}
-                    try {
-                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                            val doc = PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
-                            val info = doc.documentInformation
-                            val title = info?.title ?: "Unknown"
-                            val author = info?.author ?: "Unknown"
-                            val pages = doc.numberOfPages
-                            val enc = doc.encryption
-                            val encMethod = if (enc != null) "${enc.filter} ${enc.length}-bit" else "None"
-                            val perm = doc.currentAccessPermission
-                            val canPrint = perm?.canPrint() ?: true
-                            val canCopy = perm?.canExtractContent() ?: true
-                            extractedMetadata = PdfMetadata(title, author, pages, sizeMb, encMethod, canPrint, canCopy)
-                            doc.close()
-                        }
-                    } catch (e: Exception) {
-                        extractedMetadata = PdfMetadata("Unknown (Encrypted)", "Unknown (Encrypted)", 0, sizeMb, "Encrypted", false, false)
-                    }
+                    extractedMetadata = decryptPdfUseCase.extractMetadata(context, uri)
                 }
+
                 try {
-                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        val doc = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
-                        doc?.use {
+                    decryptPdfUseCase.openSafeInputStream(context, uri)?.use { inputStream ->
+                        val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                            inputStream.buffered(),
+                            com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                        )
+                        doc.use {
                             if (!it.isEncrypted) {
                                 unencryptedNames.add(fileName)
                             }
@@ -269,7 +256,7 @@ class MainViewModel @JvmOverloads constructor(
                     }
                 } catch (e: Exception) {
                     val msg = e.message?.lowercase() ?: ""
-                    if (msg.contains("security handler") || msg.contains("certificate") || msg.contains("cryptfilter") || msg.contains("public key")) {
+                    if (msg.contains("security handler") || msg.contains("cryptfilter") || msg.contains("certificate") || msg.contains("public key") || msg.contains("unsupported")) {
                         unsupportedNames.add(fileName)
                     }
                 }
@@ -277,110 +264,63 @@ class MainViewModel @JvmOverloads constructor(
 
             selectedMetadata.value = extractedMetadata
 
-            if (unencryptedNames.size == pdfPairs.size) {
-                statusMessage.value = context.getString(R.string.msg_notice_all_unencrypted)
-            } else if (unencryptedNames.isNotEmpty()) {
-                statusMessage.value = context.getString(R.string.msg_notice_some_unencrypted, unencryptedNames.joinToString(", "))
-            } else if (unsupportedNames.isNotEmpty()) {
-                statusMessage.value = context.getString(R.string.msg_warning_unsupported, unsupportedNames.joinToString(", "))
+            val warnings = mutableListOf<String>()
+            if (unencryptedNames.isNotEmpty()) {
+                warnings.add(context.getString(R.string.msg_notice_some_unencrypted, unencryptedNames.joinToString(", ")))
+            }
+            if (unsupportedNames.isNotEmpty()) {
+                warnings.add(context.getString(R.string.msg_warning_unsupported, unsupportedNames.joinToString(", ")))
+            }
+
+            if (warnings.isNotEmpty()) {
+                statusMessage.value = warnings.joinToString("\n")
             }
         }
     }
 
-    fun savePassword(name: String, passwordValue: String) {
-        viewModelScope.launch {
-            repository.insert(PasswordEntity(name = name, passwordValue = passwordValue))
-        }
-    }
-
-    fun deletePassword(id: Int) {
-        viewModelScope.launch {
-            repository.deleteById(id)
-        }
-    }
-
-    fun restorePassword(password: PasswordEntity) {
-        viewModelScope.launch {
-            repository.insert(password)
-        }
-    }
-
-    fun startAutoUnlockFlow(context: Context, uri: Uri, onViewerReady: (Uri) -> Unit) {
+    fun handleExternalPdfIntent(
+        context: Context,
+        uri: Uri,
+        onViewerReady: (Uri) -> Unit = {}
+    ) {
         viewModelScope.launch {
             isAutoUnlocking.value = true
             autoUnlockTargetUri.value = uri
-            autoUnlockErrorMessage.value = null
             val fileName = FileUtils.getFileName(context, uri)
             autoUnlockFileName.value = fileName
+            autoUnlockErrorMessage.value = null
 
             ensurePdfBoxInitialized()
 
-            var isEncrypted = true
-            withContext(ioDispatcher) {
-                try {
-                    openSafeInputStream(context, uri)?.use { input ->
-                        try {
-                            val doc = PDDocument.load(input.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
-                            if (doc != null) {
-                                isEncrypted = doc.isEncrypted
-                                doc.close()
-                            }
-                        } catch (e: InvalidPasswordException) {
-                            isEncrypted = true
-                        } catch (e: Exception) {
-                            val msg = e.message?.lowercase() ?: ""
-                            isEncrypted = msg.contains("password") || msg.contains("encrypted") || msg.contains("security") || !msg.contains("syntax")
-                        }
-                    }
-                } catch (e: Exception) {
-                    isEncrypted = true
+            when (val result = autoUnlockUseCase.tryAutoUnlock(context, uri)) {
+                is AutoUnlockUseCase.AutoUnlockResult.NotEncrypted -> {
+                    isAutoUnlocking.value = false
+                    lastDecryptedUri.value = uri
+                    previewPdfUri.value = uri
+                    onViewerReady(uri)
                 }
-            }
-
-            if (!isEncrypted) {
-                // Not encrypted: immediately open in viewer
-                isAutoUnlocking.value = false
-                showAutoUnlockPasswordPrompt.value = false
-                lastDecryptedUri.value = uri
-                previewPdfUri.value = uri
-                onViewerReady(uri)
-                return@launch
-            }
-
-            // Encrypted: Try matching with all saved passwords
-            val savedPasswordsList = repository.getAllDecryptedPasswords()
-            var matchedUri: Uri? = null
-
-            withContext(ioDispatcher) {
-                for (saved in savedPasswordsList) {
-                    var tempFile: java.io.File? = null
-                    try {
-                        tempFile = java.io.File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
-                        val status = decryptSinglePdf(context, uri, Uri.fromFile(tempFile), saved.passwordValue)
-                        if (status == DecryptStatus.SUCCESS) {
-                            matchedUri = Uri.fromFile(tempFile)
-                            break
-                        } else {
-                            tempFile.delete()
-                        }
-                    } catch (e: Exception) {
-                        tempFile?.delete()
-                    }
+                is AutoUnlockUseCase.AutoUnlockResult.UnlockedWithSavedPassword -> {
+                    isAutoUnlocking.value = false
+                    lastDecryptedUri.value = result.outputUri
+                    previewPdfUri.value = result.outputUri
+                    statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                    onViewerReady(result.outputUri)
                 }
-            }
-
-            isAutoUnlocking.value = false
-            if (matchedUri != null) {
-                lastDecryptedUri.value = matchedUri
-                previewPdfUri.value = matchedUri
-                showAutoUnlockPasswordPrompt.value = false
-                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                onViewerReady(matchedUri!!)
-            } else {
-                // No saved password matched, prompt user
-                showAutoUnlockPasswordPrompt.value = true
+                is AutoUnlockUseCase.AutoUnlockResult.RequireManualPassword -> {
+                    isAutoUnlocking.value = false
+                    showAutoUnlockPasswordPrompt.value = true
+                }
+                is AutoUnlockUseCase.AutoUnlockResult.Error -> {
+                    isAutoUnlocking.value = false
+                    showAutoUnlockPasswordPrompt.value = true
+                }
             }
         }
+    }
+
+    // Legacy alias for compatibility
+    fun startAutoUnlockFlow(context: Context, uri: Uri, onViewerReady: (Uri) -> Unit = {}) {
+        handleExternalPdfIntent(context, uri, onViewerReady)
     }
 
     fun unlockWithManualPassword(
@@ -393,31 +333,19 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             isProcessing.value = true
             autoUnlockErrorMessage.value = null
-            var resultUri: Uri? = null
-            var resultStatus: DecryptStatus = DecryptStatus.ERROR
 
-            withContext(ioDispatcher) {
-                var tempFile: java.io.File? = null
-                try {
-                    tempFile = java.io.File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
-                    val status = decryptSinglePdf(context, uri, Uri.fromFile(tempFile), enteredPassword)
-                    resultStatus = status
-                    if (status == DecryptStatus.SUCCESS) {
-                        resultUri = Uri.fromFile(tempFile)
-                        if (rememberPassword && enteredPassword.isNotBlank()) {
-                            val name = autoUnlockFileName.value.ifBlank { "PDF Password" }
-                            repository.insert(PasswordEntity(name = name, passwordValue = enteredPassword))
-                        }
-                    } else {
-                        tempFile.delete()
-                    }
-                } catch (e: Exception) {
-                    tempFile?.delete()
-                }
-            }
+            ensurePdfBoxInitialized()
+
+            val (status, resultUri) = autoUnlockUseCase.unlockWithManualPassword(
+                context = context,
+                uri = uri,
+                enteredPassword = enteredPassword,
+                rememberPassword = rememberPassword,
+                fileName = autoUnlockFileName.value
+            )
 
             isProcessing.value = false
-            when (resultStatus) {
+            when (status) {
                 DecryptStatus.SUCCESS -> {
                     if (resultUri != null) {
                         lastDecryptedUri.value = resultUri
@@ -425,7 +353,7 @@ class MainViewModel @JvmOverloads constructor(
                         showAutoUnlockPasswordPrompt.value = false
                         autoUnlockErrorMessage.value = null
                         statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                        onViewerReady(resultUri!!)
+                        onViewerReady(resultUri)
                     }
                 }
                 DecryptStatus.WRONG_PASSWORD -> {
@@ -452,167 +380,127 @@ class MainViewModel @JvmOverloads constructor(
     fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
         viewModelScope.launch(ioDispatcher) {
             try {
-                val inputStream = if (sourceUri.scheme == "file" && sourceUri.path != null) {
-                    java.io.FileInputStream(java.io.File(sourceUri.path!!))
-                } else {
-                    context.contentResolver.openInputStream(sourceUri)
-                }
-                inputStream?.use { input ->
-                    context.contentResolver.openOutputStream(destUri)?.use { output ->
+                decryptPdfUseCase.openSafeInputStream(context, sourceUri)?.use { input ->
+                    decryptPdfUseCase.openSafeOutputStream(context, destUri)?.use { output ->
                         input.copyTo(output)
                     }
                 }
-                statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    fun decryptAndOverwrite(context: Context, inputUri: Uri?, passwordValue: String) {
-        if (inputUri == null) return
-        decryptAndOverwrite(context, listOf(inputUri), passwordValue)
-    }
-
-    fun decryptAndOverwrite(context: Context, inputUris: List<Uri>, passwordValue: String) {
-        if (inputUris.isEmpty()) return
+    fun decryptPdfsInPlace(context: Context, inputUris: List<Uri>, passwordValue: String) {
         batchJob = viewModelScope.launch {
             isProcessing.value = true
-            val isBatch = inputUris.size > 1
-            if (isBatch) {
-                batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
-                statusMessage.value = context.getString(R.string.msg_processing_count, inputUris.size)
-            } else {
-                statusMessage.value = "Processing..."
+            statusMessage.value = "Processing..."
+            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+
+            ensurePdfBoxInitialized()
+
+            val result = batchProcessUseCase.processInPlace(
+                context = context,
+                inputUris = inputUris,
+                passwordValue = passwordValue,
+                onProgress = { current, _ ->
+                    batchState.value = batchState.value.copy(progress = current)
+                }
+            )
+
+            val summaryList = mutableListOf<String>()
+            if (result.successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, result.successCount))
+            if (result.notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, result.notEncryptedCount))
+            if (result.wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, result.wrongPasswordCount))
+            if (result.unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, result.unsupportedCount))
+            if (result.errorCount > 0) summaryList.add(context.getString(R.string.summary_error, result.errorCount))
+            if (result.cancelledCount > 0) summaryList.add("Cancelled: ${result.cancelledCount} files")
+
+            statusMessage.value = summaryList.joinToString("\n")
+            if (result.lastDecryptedUri != null) {
+                lastDecryptedUri.value = result.lastDecryptedUri
             }
-
-            var successCount = 0
-            var notEncryptedCount = 0
-            var wrongPasswordCount = 0
-            var unsupportedCount = 0
-            var errorCount = 0
-            var cancelledCount = 0
-            var lastUri: Uri? = null
-
-            try {
-                withContext(ioDispatcher) {
-                    for (inputUri in inputUris) {
-                        ensureActive()
-                        var tempFile: java.io.File? = null
-                        try {
-                            tempFile = java.io.File(context.cacheDir, "temp_decrypted_${System.currentTimeMillis()}.pdf")
-                            val status = decryptSinglePdf(context, inputUri, android.net.Uri.fromFile(tempFile), passwordValue)
-
-                            when (status) {
-                                DecryptStatus.SUCCESS -> {
-                                    context.contentResolver.openOutputStream(inputUri, "rwt")?.buffered()?.use { outputStream ->
-                                        java.io.FileInputStream(tempFile).buffered().use { inputStream ->
-                                            inputStream.copyTo(outputStream)
-                                        }
-                                    }
-                                    tempFile.delete()
-                                    successCount++
-                                    lastUri = inputUri
-                                }
-                                DecryptStatus.NOT_ENCRYPTED -> {
-                                    tempFile.delete()
-                                    notEncryptedCount++
-                                }
-                                DecryptStatus.WRONG_PASSWORD -> {
-                                    tempFile.delete()
-                                    wrongPasswordCount++
-                                }
-                                DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                                    tempFile.delete()
-                                    unsupportedCount++
-                                }
-                                DecryptStatus.ERROR -> {
-                                    tempFile.delete()
-                                    errorCount++
-                                }
-                            }
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) {
-                                tempFile?.delete()
-                                throw e
-                            }
-                            e.printStackTrace()
-                            errorCount++
-                        }
-                        if (isBatch) {
-                            batchState.value = batchState.value.copy(progress = batchState.value.progress + 1)
-                        }
-                    }
-                }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                cancelledCount = inputUris.size - (successCount + notEncryptedCount + wrongPasswordCount + unsupportedCount + errorCount)
-            } finally {
-                if (isBatch) {
-                    val summaryList = mutableListOf<String>()
-                    if (successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, successCount))
-                    if (notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, notEncryptedCount))
-                    if (wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, wrongPasswordCount))
-                    if (unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, unsupportedCount))
-                    if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
-                    if (cancelledCount > 0) summaryList.add("Cancelled: $cancelledCount files")
-
-                    statusMessage.value = summaryList.joinToString("\n")
-                } else {
-                    if (cancelledCount > 0) {
-                        statusMessage.value = "Cancelled"
-                    } else if (successCount > 0) {
-                        statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                    } else if (notEncryptedCount > 0) {
-                        statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
-                    } else if (wrongPasswordCount > 0) {
-                        statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
-                    } else if (unsupportedCount > 0) {
-                        statusMessage.value = context.getString(R.string.summary_unsupported, 1)
-                    } else if (errorCount > 0) {
-                        statusMessage.value = context.getString(R.string.summary_error, 1)
-                    }
-                }
-                if (lastUri != null) {
-                    lastDecryptedUri.value = lastUri
-                }
-                isProcessing.value = false
-                batchState.value = BatchState()
-            }
+            isProcessing.value = false
+            batchState.value = BatchState()
         }
     }
 
-    fun decryptAndSaveAs(context: Context, inputUri: Uri?, destUri: Uri?, passwordValue: String) {
-        if (inputUri == null || destUri == null) return
+    fun decryptAndOverwrite(context: Context, inputUris: List<Uri>, passwordValue: String) {
+        decryptPdfsInPlace(context, inputUris, passwordValue)
+    }
+
+    fun decryptPdfToUri(context: Context, inputUri: Uri, destUri: Uri, passwordValue: String) {
         viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
-            withContext(ioDispatcher) {
-                try {
-                    val status = decryptSinglePdf(context, inputUri, destUri, passwordValue)
-                    when (status) {
-                        DecryptStatus.SUCCESS -> {
-                            statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                            lastDecryptedUri.value = destUri
-                        }
-                        DecryptStatus.NOT_ENCRYPTED -> {
-                            statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
-                        }
-                        DecryptStatus.WRONG_PASSWORD -> {
-                            statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
-                        }
-                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                            statusMessage.value = context.getString(R.string.summary_unsupported, 1)
-                        }
-                        DecryptStatus.ERROR -> {
-                            statusMessage.value = context.getString(R.string.summary_error, 1)
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    statusMessage.value = context.getString(R.string.summary_error, 1)
+            ensurePdfBoxInitialized()
+            val status = decryptPdfUseCase.decrypt(context, inputUri, destUri, passwordValue)
+            when (status) {
+                DecryptStatus.SUCCESS -> {
+                    statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                    lastDecryptedUri.value = destUri
                 }
+                DecryptStatus.NOT_ENCRYPTED -> statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
+                DecryptStatus.WRONG_PASSWORD -> statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
+                DecryptStatus.UNSUPPORTED_ENCRYPTION -> statusMessage.value = context.getString(R.string.summary_unsupported, 1)
+                DecryptStatus.ERROR -> statusMessage.value = context.getString(R.string.summary_error, 1)
             }
             isProcessing.value = false
+        }
+    }
+
+    fun decryptAndSaveAs(context: Context, inputUri: Uri?, destUri: Uri, passwordValue: String) {
+        if (inputUri != null) {
+            decryptPdfToUri(context, inputUri, destUri, passwordValue)
+        }
+    }
+
+    fun decryptPdfsToDirectory(
+        context: Context,
+        inputUris: List<Uri>,
+        outputDirectoryUri: Uri,
+        passwordValue: String,
+        conflictMode: ConflictMode
+    ) {
+        batchJob = viewModelScope.launch {
+            isProcessing.value = true
+            statusMessage.value = "Processing..."
+            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+
+            ensurePdfBoxInitialized()
+
+            val result = batchProcessUseCase.processToDirectory(
+                context = context,
+                inputUris = inputUris,
+                outputDirectoryUri = outputDirectoryUri,
+                passwordValue = passwordValue,
+                conflictMode = conflictMode,
+                onProgress = { current, _ ->
+                    batchState.value = batchState.value.copy(progress = current)
+                }
+            )
+
+            if (result.errorOutputDir) {
+                statusMessage.value = context.getString(R.string.msg_error_output_dir)
+                isProcessing.value = false
+                batchState.value = BatchState()
+                return@launch
+            }
+
+            val summaryList = mutableListOf<String>()
+            if (result.successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, result.successCount))
+            if (result.notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, result.notEncryptedCount))
+            if (result.wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, result.wrongPasswordCount))
+            if (result.unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, result.unsupportedCount))
+            if (result.errorCount > 0) summaryList.add(context.getString(R.string.summary_error, result.errorCount))
+            if (result.cancelledCount > 0) summaryList.add("Cancelled: ${result.cancelledCount} files")
+
+            statusMessage.value = summaryList.joinToString("\n")
+            if (result.lastDecryptedUri != null) {
+                lastDecryptedUri.value = result.lastDecryptedUri
+            }
+            isProcessing.value = false
+            batchState.value = BatchState()
         }
     }
 
@@ -621,241 +509,33 @@ class MainViewModel @JvmOverloads constructor(
         inputUris: List<Uri>,
         outputDirectoryUri: Uri,
         passwordValue: String,
-        prefix: String,
-        deleteOriginal: Boolean,
-        mode: ConflictMode = conflictMode.value
+        prefix: String = "",
+        overwrite: Boolean = false
     ) {
-        batchJob = viewModelScope.launch {
-            isProcessing.value = true
-            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
-            statusMessage.value = context.getString(R.string.msg_processing_count, inputUris.size)
+        val mode = if (overwrite) ConflictMode.OVERWRITE else ConflictMode.SAVE_AS_COPY
+        decryptPdfsToDirectory(context, inputUris, outputDirectoryUri, passwordValue, mode)
+    }
 
-            var successCount = 0
-            var notEncryptedCount = 0
-            var wrongPasswordCount = 0
-            var unsupportedCount = 0
-            var errorCount = 0
-            var cancelledCount = 0
-            var lastUri: Uri? = null
-
-            try {
-                withContext(ioDispatcher) {
-                    val documentTree = DocumentFile.fromTreeUri(context, outputDirectoryUri)
-                    if (documentTree == null) {
-                        statusMessage.value = context.getString(R.string.msg_error_output_dir)
-                        isProcessing.value = false
-                        batchState.value = BatchState()
-                        return@withContext
-                    }
-
-                    for (uri in inputUris) {
-                        ensureActive()
-                        var outputFile: DocumentFile? = null
-                        try {
-                            val rawFileName = getFileName(context, uri) ?: "decrypted.pdf"
-                            val targetFileName = if (prefix.isNotBlank()) {
-                                "${prefix}_$rawFileName"
-                            } else {
-                                rawFileName
-                            }
-
-                            val existingFile = documentTree.findFile(targetFileName)
-                            var isTempOverwrite = false
-
-                            if (existingFile != null) {
-                                if (mode == ConflictMode.SAVE_AS_COPY) {
-                                    val uniqueName = getUniqueFileName(documentTree, targetFileName)
-                                    outputFile = documentTree.createFile("application/pdf", uniqueName)
-                                } else {
-                                    // OVERWRITE: create temp file first to avoid overwriting before password verification succeeds
-                                    val tempName = "_temp_decrypted_${System.currentTimeMillis()}.pdf"
-                                    outputFile = documentTree.createFile("application/pdf", tempName)
-                                    isTempOverwrite = true
-                                }
-                            } else {
-                                outputFile = documentTree.createFile("application/pdf", targetFileName)
-                            }
-
-                            if (outputFile != null) {
-                                val status = decryptSinglePdf(context, uri, outputFile.uri, passwordValue)
-                                when (status) {
-                                    DecryptStatus.SUCCESS -> {
-                                        successCount++
-                                        lastUri = outputFile.uri
-                                        if (isTempOverwrite && existingFile != null) {
-                                            existingFile.delete()
-                                            outputFile.renameTo(targetFileName)
-                                        }
-                                        if (deleteOriginal) {
-                                            deleteOriginalFile(context, uri)
-                                        }
-                                    }
-                                    DecryptStatus.NOT_ENCRYPTED -> {
-                                        notEncryptedCount++
-                                        outputFile.delete()
-                                    }
-                                    DecryptStatus.WRONG_PASSWORD -> {
-                                        wrongPasswordCount++
-                                        outputFile.delete()
-                                    }
-                                    DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
-                                        unsupportedCount++
-                                        outputFile.delete()
-                                    }
-                                    DecryptStatus.ERROR -> {
-                                        errorCount++
-                                        outputFile.delete()
-                                    }
-                                }
-                            } else {
-                                errorCount++
-                            }
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) {
-                                outputFile?.delete()
-                                throw e
-                            }
-                            e.printStackTrace()
-                            errorCount++
-                        }
-                        batchState.value = batchState.value.copy(progress = batchState.value.progress + 1)
-                    }
-                }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                cancelledCount = inputUris.size - (successCount + notEncryptedCount + wrongPasswordCount + unsupportedCount + errorCount)
-            } finally {
-                if (statusMessage.value == context.getString(R.string.msg_error_output_dir)) {
-                    isProcessing.value = false
-                    batchState.value = BatchState()
-                    return@launch
-                }
-
-                val summaryList = mutableListOf<String>()
-                if (successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, successCount))
-                if (notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, notEncryptedCount))
-                if (wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, wrongPasswordCount))
-                if (unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, unsupportedCount))
-                if (errorCount > 0) summaryList.add(context.getString(R.string.summary_error, errorCount))
-                if (cancelledCount > 0) summaryList.add("Cancelled: $cancelledCount files")
-
-                statusMessage.value = summaryList.joinToString("\n")
-                if (lastUri != null) {
-                    lastDecryptedUri.value = lastUri
-                }
-                isProcessing.value = false
-                batchState.value = BatchState()
-            }
+    fun savePassword(name: String, passwordValue: String) {
+        viewModelScope.launch(ioDispatcher) {
+            passwordVaultUseCase.insertPassword(name, passwordValue)
         }
     }
 
-    private fun getUniqueFileName(documentTree: DocumentFile, targetFileName: String): String {
-        if (documentTree.findFile(targetFileName) == null) {
-            return targetFileName
-        }
-        val baseName = if (targetFileName.contains(".")) {
-            targetFileName.substringBeforeLast(".")
-        } else {
-            targetFileName
-        }
-        val ext = if (targetFileName.contains(".")) {
-            "." + targetFileName.substringAfterLast(".")
-        } else {
-            ""
-        }
-
-        var index = 1
-        while (true) {
-            val candidate = "$baseName ($index)$ext"
-            if (documentTree.findFile(candidate) == null) {
-                return candidate
-            }
-            index++
+    fun restorePassword(entity: PasswordEntity) {
+        viewModelScope.launch(ioDispatcher) {
+            passwordVaultUseCase.insertPassword(entity.name, entity.passwordValue)
         }
     }
 
-    private fun openSafeInputStream(context: Context, uri: Uri): java.io.InputStream? {
-        return try {
-            context.contentResolver.openInputStream(uri)
-        } catch (e: Exception) {
-            try {
-                if (uri.scheme == "file" && uri.path != null) {
-                    java.io.FileInputStream(java.io.File(uri.path!!))
-                } else null
-            } catch (_: Exception) {
-                null
-            }
-        }
-    }
-
-    private fun openSafeOutputStream(context: Context, uri: Uri): java.io.OutputStream? {
-        return try {
-            if (uri.scheme == "file" && uri.path != null) {
-                java.io.FileOutputStream(java.io.File(uri.path!!))
-            } else {
-                context.contentResolver.openOutputStream(uri)
-            }
-        } catch (e: Exception) {
-            null
+    fun deletePassword(id: Int) {
+        viewModelScope.launch(ioDispatcher) {
+            passwordVaultUseCase.deletePassword(id)
         }
     }
 
     internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
         ensurePdfBoxInitialized()
-        try {
-            openSafeInputStream(context, inputUri)?.use { inputStream ->
-                val docWithoutPass = try { PDDocument.load(inputStream.buffered(), com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)) } catch (e: Exception) { null }
-                docWithoutPass?.use {
-                    val isEncrypted = it.isEncrypted
-                    if (!isEncrypted) {
-                        return DecryptStatus.NOT_ENCRYPTED
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            // Ignore pre-check exception
-        }
-
-        try {
-            openSafeInputStream(context, inputUri)?.use { inputStream ->
-                val document = PDDocument.load(inputStream.buffered(), passwordValue, com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024))
-                try {
-                    if (!document.isEncrypted) {
-                        return DecryptStatus.NOT_ENCRYPTED
-                    }
-                    document.setAllSecurityToBeRemoved(true)
-                    openSafeOutputStream(context, outputUri)?.buffered()?.use { outputStream ->
-                        document.save(outputStream)
-                        return DecryptStatus.SUCCESS
-                    }
-                } finally {
-                    document.close()
-                }
-            }
-        } catch (e: InvalidPasswordException) {
-            return DecryptStatus.WRONG_PASSWORD
-        } catch (e: Exception) {
-            val msg = e.message?.lowercase() ?: ""
-            return if (msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required")) {
-                DecryptStatus.WRONG_PASSWORD
-            } else if (msg.contains("security handler") || msg.contains("cryptfilter") || msg.contains("certificate") || msg.contains("public key") || msg.contains("unsupported")) {
-                DecryptStatus.UNSUPPORTED_ENCRYPTION
-            } else {
-                DecryptStatus.ERROR
-            }
-        }
-        return DecryptStatus.ERROR
-    }
-
-    private fun deleteOriginalFile(context: Context, uri: Uri): Boolean {
-        return try {
-            if (DocumentsContract.isDocumentUri(context, uri)) {
-                DocumentsContract.deleteDocument(context.contentResolver, uri)
-            } else {
-                context.contentResolver.delete(uri, null, null) > 0
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
+        return decryptPdfUseCase.decrypt(context, inputUri, outputUri, passwordValue)
     }
 }
