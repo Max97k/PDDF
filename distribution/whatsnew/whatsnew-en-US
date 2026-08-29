@@ -1,1 +1,1 @@
-v0.2.1 Release: Fixed hardware Keystore & R8 Proguard compatibility and startup stability on various devices.
+v0.2.2 Release: Added native in-app PDF viewer, intent auto-unlock support with saved passwords, and enhanced stability.
