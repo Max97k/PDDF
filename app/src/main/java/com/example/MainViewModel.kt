@@ -18,6 +18,7 @@ import com.example.data.ThemeMode
 import com.example.data.ThemePreferences
 import com.example.util.FileUtils
 import com.example.util.Result
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +53,8 @@ class MainViewModel @JvmOverloads constructor(
         .fallbackToDestructiveMigration()
         .build().passwordDao()
     ),
-    private val themePreferences: ThemePreferences = ThemePreferences(application)
+    private val themePreferences: ThemePreferences = ThemePreferences(application),
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -123,7 +125,7 @@ class MainViewModel @JvmOverloads constructor(
     private var pdfBoxInitJob: kotlinx.coroutines.Job? = null
 
     init {
-        pdfBoxInitJob = viewModelScope.launch(Dispatchers.IO) {
+        pdfBoxInitJob = viewModelScope.launch(ioDispatcher) {
             PDFBoxResourceLoader.init(application)
         }
         val savedRemember = prefs.getBoolean("remember_conflict_choice", false)
@@ -174,7 +176,7 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     fun setSelectedUris(context: Context, uris: List<Uri>) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             // Release persistable URI permissions for URIs that are no longer selected
             val currentUris = selectedUris.value
             val removedUris = currentUris.filter { !uris.contains(it) }
@@ -223,7 +225,7 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     private fun checkSelectedPdfs(context: Context, pdfPairs: List<Pair<Uri, String>>) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             ensurePdfBoxInitialized()
             val unencryptedNames = mutableListOf<String>()
             val unsupportedNames = mutableListOf<String>()
@@ -314,7 +316,7 @@ class MainViewModel @JvmOverloads constructor(
             ensurePdfBoxInitialized()
 
             var isEncrypted = true
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 try {
                     openSafeInputStream(context, uri)?.use { input ->
                         try {
@@ -349,7 +351,7 @@ class MainViewModel @JvmOverloads constructor(
             val savedPasswordsList = repository.getAllDecryptedPasswords()
             var matchedUri: Uri? = null
 
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 for (saved in savedPasswordsList) {
                     var tempFile: java.io.File? = null
                     try {
@@ -394,7 +396,7 @@ class MainViewModel @JvmOverloads constructor(
             var resultUri: Uri? = null
             var resultStatus: DecryptStatus = DecryptStatus.ERROR
 
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 var tempFile: java.io.File? = null
                 try {
                     tempFile = java.io.File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
@@ -448,7 +450,7 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 val inputStream = if (sourceUri.scheme == "file" && sourceUri.path != null) {
                     java.io.FileInputStream(java.io.File(sourceUri.path!!))
@@ -493,7 +495,7 @@ class MainViewModel @JvmOverloads constructor(
             var lastUri: Uri? = null
 
             try {
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     for (inputUri in inputUris) {
                         ensureActive()
                         var tempFile: java.io.File? = null
@@ -584,7 +586,7 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 try {
                     val status = decryptSinglePdf(context, inputUri, destUri, passwordValue)
                     when (status) {
@@ -637,7 +639,7 @@ class MainViewModel @JvmOverloads constructor(
             var lastUri: Uri? = null
 
             try {
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     val documentTree = DocumentFile.fromTreeUri(context, outputDirectoryUri)
                     if (documentTree == null) {
                         statusMessage.value = context.getString(R.string.msg_error_output_dir)

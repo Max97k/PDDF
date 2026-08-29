@@ -53,7 +53,7 @@ class MainViewModelTest {
             .allowMainThreadQueries()
             .build()
         repository = PasswordRepository(database.passwordDao(), com.example.util.CryptoManager())
-        viewModel = MainViewModel(application, repository)
+        viewModel = MainViewModel(application, repository, ioDispatcher = testDispatcher)
     }
 
     @After
@@ -79,7 +79,7 @@ class MainViewModelTest {
         assertTrue(viewModel.rememberConflictChoice.value)
 
         // Verify persistence in another ViewModel instance
-        val newViewModel = MainViewModel(application, repository)
+        val newViewModel = MainViewModel(application, repository, ioDispatcher = testDispatcher)
         assertEquals(ConflictMode.OVERWRITE, newViewModel.conflictMode.value)
         assertTrue(newViewModel.rememberConflictChoice.value)
 
