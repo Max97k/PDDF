@@ -1,0 +1,18 @@
+=== APP NAME ===
+PDF Decryptor - PDDF
+
+=== SHORT DESCRIPTION ===
+Easily batch decrypt password-protected PDF files locally on your device.
+
+=== FULL DESCRIPTION ===
+PDF Decryptor (PDDF) is a fast, lightweight, and privacy-first tool designed to batch unlock and decrypt password-protected PDF documents on Android.
+
+Whether you need to remove passwords from a single bank statement or process multiple encrypted PDF documents at once, PDF Decryptor handles everything 100% locally on your device. Your sensitive files and passwords never leave your phone.
+
+Key Features:
+• Batch PDF Decryption: Select and unlock multiple password-protected PDFs at once with fast, asynchronous background processing.
+• Saved Password Vault: Securely store frequently used passwords in an encrypted local database for one-tap autofill.
+• Quick Settings Tile & Direct Share: Open PDFs directly from file managers, email attachments, or messaging apps, or trigger decryption instantly from the Quick Settings tile.
+• Flexible Output Options: Choose between saving decrypted files as a new copy or overwriting the original file.
+• Modern Material Design: Clean Jetpack Compose UI with full Dark Theme and multi-language support.
+• 100% Offline & Private: No internet permission requested, zero telemetry, zero ads, and zero data collection.

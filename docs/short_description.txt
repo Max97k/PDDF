@@ -1,0 +1,1 @@
+Easily batch decrypt password-protected PDF files locally on your device.
