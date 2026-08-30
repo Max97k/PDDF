@@ -53,6 +53,9 @@ android {
       } else {
         signingConfig = signingConfigs.getByName("debug")
       }
+      ndk {
+        debugSymbolLevel = "FULL"
+      }
     }
     debug {
       enableUnitTestCoverage = true
