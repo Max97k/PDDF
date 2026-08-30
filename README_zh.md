@@ -5,6 +5,7 @@
 **一款現代化、輕量、極度注重隱私的開源 Android 應用程式，在您的裝置本機 100% 離線批量解除 PDF 密碼保護。**
 
 [![平台支援](https://img.shields.io/badge/平台-Android%207.0%2B%20(API%2024%2B)-3DDC84?style=flat-square&logo=android&logoColor=white)](https://android.com)
+[![Google Play 測試](https://img.shields.io/badge/Google%20Play-加入測試計畫-brightgreen?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/apps/testing/com.max97k.pddf)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20%7C%20Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![隱私保證](https://img.shields.io/badge/隱私-100%25%20離線%20%7C%20無網路權限-success?style=flat-square&logo=shield&logoColor=white)](#-隱私與安全架構設計)
@@ -14,6 +15,15 @@
 [English](README.md) • [繁體中文](README_zh.md)
 
 </div>
+
+---
+
+## 📲 加入 Google Play 測試計畫
+
+PDDF 目前正在 Google Play 進行公開/封閉測試，歡迎點擊下方連結加入測試並體驗最新版本：
+
+* 📱 **Android 裝置直接加入**：[https://play.google.com/store/apps/details?id=com.max97k.pddf](https://play.google.com/store/apps/details?id=com.max97k.pddf)
+* 🌐 **網頁版加入測試**：[https://play.google.com/apps/testing/com.max97k.pddf](https://play.google.com/apps/testing/com.max97k.pddf)
 
 ---
 

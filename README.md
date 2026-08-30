@@ -5,6 +5,7 @@
 **A modern, lightweight, privacy-first Android app to batch decrypt password-protected PDF files 100% locally on your device.**
 
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B%20(API%2024%2B)-3DDC84?style=flat-square&logo=android&logoColor=white)](https://android.com)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Join%20Testing-brightgreen?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/apps/testing/com.max97k.pddf)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20%7C%20Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25%20Offline%20%7C%20No%20Internet%20Permission-success?style=flat-square&logo=shield&logoColor=white)](#-privacy--security-by-design)
@@ -14,6 +15,15 @@
 [English](README.md) • [繁體中文](README_zh.md)
 
 </div>
+
+---
+
+## 📲 Join Google Play Testing
+
+PDDF is currently available for testing on Google Play. You can join the test using either of the following links:
+
+* 📱 **Join on Android**: [https://play.google.com/store/apps/details?id=com.max97k.pddf](https://play.google.com/store/apps/details?id=com.max97k.pddf)
+* 🌐 **Join on the Web**: [https://play.google.com/apps/testing/com.max97k.pddf](https://play.google.com/apps/testing/com.max97k.pddf)
 
 ---
 
