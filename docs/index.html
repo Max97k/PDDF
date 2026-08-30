@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - PDF Decryptor (PDDF)</title>
+    <style>
+        :root {
+            --primary: #1976d2;
+            --primary-dark: #115293;
+            --text: #212121;
+            --text-secondary: #555555;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --badge-bg: #e3f2fd;
+            --badge-text: #0d47a1;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #90caf9;
+                --primary-dark: #64b5f6;
+                --text: #e0e0e0;
+                --text-secondary: #aaaaaa;
+                --bg: #121212;
+                --card-bg: #1e1e1e;
+                --border: #333333;
+                --badge-bg: #1a2733;
+                --badge-text: #90caf9;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .lang-switch {
+            display: flex;
+            gap: 8px;
+        }
+
+        .lang-btn {
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active, .lang-btn:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .highlight-box {
+            background-color: var(--badge-bg);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: var(--text);
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        ul {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .lang-content {
+            display: none;
+        }
+
+        .lang-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-top">
+            <h1>PDF Decryptor (PDDF)</h1>
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="setLanguage('en')">English</button>
+                <button class="lang-btn" onclick="setLanguage('zh')">繁體中文</button>
+            </div>
+        </div>
+        <p class="meta" id="last-updated">Last updated: August 30, 2026 | Application ID: <code>com.max97k.pddf</code></p>
+    </header>
+
+    <!-- English Version -->
+    <div id="content-en" class="lang-content active">
+        <div class="highlight-box">
+            <strong>Privacy Summary:</strong> PDF Decryptor (PDDF) is an open-source, offline-first tool designed with complete privacy in mind. We do not collect, store, transmit, or share any of your personal data, files, or passwords.
+        </div>
+
+        <h2>1. Zero Data Collection & Transmission</h2>
+        <p><strong>We do not collect, transmit, or store your data on any remote servers.</strong></p>
+        <ul>
+            <li><strong>No Internet Permission:</strong> The application does not even request the Android <code>INTERNET</code> permission. It has zero capability to transmit data over the network.</li>
+            <li><strong>100% Local Processing:</strong> All PDF decryption, password verification, and document processing happen entirely on your local device hardware using Apache PDFBox Android.</li>
+            <li><strong>No Analytics or Tracking:</strong> We do not include any analytics tools, telemetry frameworks, crash reporting trackers, or advertising SDKs (e.g., Firebase Analytics, Google Analytics, Facebook SDK).</li>
+        </ul>
+
+        <h2>2. Storage & File Access</h2>
+        <p>PDF Decryptor uses Android's modern Storage Access Framework (SAF) and system file pickers to access PDF documents:</p>
+        <ul>
+            <li>File access is strictly limited to PDF files that you explicitly select.</li>
+            <li>Decrypted PDF files are saved only to the directory you choose on your device storage.</li>
+            <li>Original files are never modified without your instruction.</li>
+        </ul>
+
+        <h2>3. Saved Passwords & Security</h2>
+        <p>If you choose to use the saved password profile feature:</p>
+        <ul>
+            <li>Passwords and labels are stored securely in a local, sandboxed SQLite database on your device.</li>
+            <li>Saved password profiles can optionally be protected by Android Biometric Authentication (Fingerprint / Face Unlock).</li>
+            <li>Sensitive credential files and databases are explicitly excluded from Android cloud backups (Google Drive) and device-to-device migration transfers.</li>
+        </ul>
+
+        <h2>4. Third-Party Services & Advertising</h2>
+        <ul>
+            <li><strong>No Advertisements:</strong> PDF Decryptor is 100% free of ads.</li>
+            <li><strong>No Third-Party SDK Data Sharing:</strong> We do not integrate with third-party data brokers or marketing services.</li>
+        </ul>
+
+        <h2>5. Children's Privacy</h2>
+        <p>PDF Decryptor does not collect or request any personal information from any user, including children under the age of 13.</p>
+
+        <h2>6. Open Source Transparency</h2>
+        <p>PDF Decryptor is open source. You can audit the full source code, permissions, and build configuration at any time on GitHub:</p>
+        <p><a href="https://github.com/Max97k/PDDF" target="_blank" rel="noopener noreferrer">https://github.com/Max97k/PDDF</a></p>
+
+        <h2>7. Changes to This Privacy Policy</h2>
+        <p>We may update our Privacy Policy as the app evolves. Any modifications will be posted to this page with an updated revision date.</p>
+
+        <h2>8. Contact Us</h2>
+        <p>If you have questions, concerns, or inquiries regarding this Privacy Policy, please open an issue on GitHub:</p>
+        <p><a href="https://github.com/Max97k/PDDF/issues" target="_blank" rel="noopener noreferrer">https://github.com/Max97k/PDDF/issues</a></p>
+    </div>
+
+    <!-- Traditional Chinese Version -->
+    <div id="content-zh" class="lang-content">
+        <div class="highlight-box">
+            <strong>隱私權簡介：</strong> PDF Decryptor (PDDF) 是一款開源且離線優先的 PDF 解密工具。我們不會收集、上傳、傳輸或分享您的任何個人資料、PDF 檔案或密碼。
+        </div>
+
+        <h2>1. 零資料收集與傳輸</h2>
+        <p><strong>我們絕不會在任何外部伺服器上收集、傳輸或儲存您的任何資料。</strong></p>
+        <ul>
+            <li><strong>無需網路權限：</strong> 本應用程式甚至未宣告 Android <code>INTERNET</code> 網路權限，完全無法進行任何網路連線與資料傳輸。</li>
+            <li><strong>100% 裝置端本地處理：</strong> 所有 PDF 解密、密碼驗證與文件生成操作均在您的本機裝置上透過 Apache PDFBox Android 完成，檔案絕不離開您的裝置。</li>
+            <li><strong>無數據分析與追蹤：</strong> 本應用程式未包含任何第三方分析工具、遙測追蹤、崩潰回報器或廣告 SDK（例如 Firebase Analytics、Google Analytics 等）。</li>
+        </ul>
+
+        <h2>2. 儲存空間與檔案存取</h2>
+        <p>PDF Decryptor 透過 Android 儲存存取框架（Storage Access Framework, SAF）與系統檔案選擇器讀取與儲存檔案：</p>
+        <ul>
+            <li>僅存取您主動選擇的 PDF 檔案。</li>
+            <li>解密後的 PDF 檔案只會儲存至您指定的手機目錄中。</li>
+            <li>絕不會未經授權修改您的原始檔案。</li>
+        </ul>
+
+        <h2>3. 密碼管理與安全性</h2>
+        <p>若您選擇使用「常用密碼」儲存功能：</p>
+        <ul>
+            <li>密碼與標籤資料僅儲存於您手機本機的沙盒資料庫中。</li>
+            <li>支援 Android 生物辨識驗證（指紋 / 臉部解鎖）保護您的已存密碼。</li>
+            <li>密碼資料庫已明確設定排除於 Android 雲端備份（Google Drive）與裝置間轉移，避免密碼外洩。</li>
+        </ul>
+
+        <h2>4. 第三方服務與廣告</h2>
+        <ul>
+            <li><strong>無廣告：</strong> PDF Decryptor 完全無廣告干擾。</li>
+            <li><strong>無第三方資料共享：</strong> 我們絕不向任何行銷或資料分析業者提供使用者資料。</li>
+        </ul>
+
+        <h2>5. 兒童隱私保護</h2>
+        <p>PDF Decryptor 不會主動或被動收集任何使用者的個人資訊（包含 13 歲以下的兒童）。</p>
+
+        <h2>6. 開源與透明度</h2>
+        <p>PDF Decryptor 為開源專案，您可以隨時在 GitHub 查閱所有原始碼、權限設定與建置腳本：</p>
+        <p><a href="https://github.com/Max97k/PDDF" target="_blank" rel="noopener noreferrer">https://github.com/Max97k/PDDF</a></p>
+
+        <h2>7. 隱私權政策修訂</h2>
+        <p>我們可能會隨著應用程式更新適時修訂本隱私權政策。最新版本將隨時發布於本頁面，並標註最後更新日期。</p>
+
+        <h2>8. 聯絡我們</h2>
+        <p>若您對本隱私權政策有任何疑問或建議，歡迎透過 GitHub Issues 與我們聯繫：</p>
+        <p><a href="https://github.com/Max97k/PDDF/issues" target="_blank" rel="noopener noreferrer">https://github.com/Max97k/PDDF/issues</a></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 PDF Decryptor (PDDF). Open Source Project under Apache License 2.0.</p>
+    </footer>
+</div>
+
+<script>
+    function setLanguage(lang) {
+        document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+        
+        if (lang === 'zh') {
+            document.getElementById('content-zh').classList.add('active');
+            document.querySelectorAll('.lang-btn')[1].classList.add('active');
+            document.getElementById('last-updated').innerText = '最後更新日期：2026 年 8 月 30 日 | 應用程式 ID：com.max97k.pddf';
+            document.documentElement.lang = 'zh-TW';
+        } else {
+            document.getElementById('content-en').classList.add('active');
+            document.querySelectorAll('.lang-btn')[0].classList.add('active');
+            document.getElementById('last-updated').innerText = 'Last updated: August 30, 2026 | Application ID: com.max97k.pddf';
+            document.documentElement.lang = 'en';
+        }
+    }
+
+    // Auto-detect browser language
+    const userLang = navigator.language || navigator.userLanguage;
+    if (userLang.startsWith('zh')) {
+        setLanguage('zh');
+    }
+</script>
+
+</body>
+</html>
