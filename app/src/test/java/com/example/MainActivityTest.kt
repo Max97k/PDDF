@@ -3,6 +3,7 @@ package com.example
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.activity.viewModels
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -89,5 +90,24 @@ class MainActivityTest {
         val result = getFileName(context, uri)
 
         assertEquals("just_a_name.pdf", result)
+    }
+
+    @Test
+    fun handleIntent_showSavedPasswords_opensPasswordDialog() {
+        val intent = android.content.Intent("com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS")
+        val controller = org.robolectric.Robolectric.buildActivity(MainActivity::class.java, intent).setup()
+        val activity = controller.get()
+        val viewModel: MainViewModel by activity.viewModels()
+        org.junit.Assert.assertTrue(viewModel.showPasswordListDialog.value)
+    }
+
+    @Test
+    fun handleIntent_selectPdf_triggersDocumentPicker() {
+        val controller = org.robolectric.Robolectric.buildActivity(MainActivity::class.java).setup()
+        val activity = controller.get()
+        val viewModel: MainViewModel by activity.viewModels()
+        val intent = android.content.Intent("com.max97k.pddf.ACTION_SELECT_PDF")
+        controller.newIntent(intent)
+        org.junit.Assert.assertTrue(viewModel.requestOpenDocumentPicker.value)
     }
 }

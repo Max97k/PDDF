@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF Decryptor</string>
     <string name="btn_select_pdfs">Select Encrypted PDFs</string>
@@ -66,4 +67,41 @@
     <string name="changelog_content">- AMOLED pure black &amp; dynamic theme\n- Batch decryption progress &amp; cancellation\n- PDF security &amp; metadata inspector\n- Tablet / foldable drag-and-drop support\n- Hardware-backed Keystore DB encryption\n- Biometric unlock for password vault</string>
     <string name="title_empty_state">No PDF Selected</string>
     <string name="desc_empty_state">Select one or more encrypted PDFs to begin. You can also share files directly from your file manager or other apps.</string>
+
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="title_document_details">Document Details</string>
+    <string name="content_desc_collapse">Collapse</string>
+    <string name="content_desc_expand">Expand</string>
+    <string name="label_doc_title">Title: %1$s</string>
+    <string name="label_doc_author">Author: %1$s</string>
+    <string name="label_doc_pages">Pages: %1$s</string>
+    <string name="label_doc_file_size">File Size: %1$s</string>
+    <string name="label_doc_encryption">Encryption: %1$s</string>
+    <string name="label_doc_permissions">Permissions: %1$s</string>
+    <string name="label_printing_allowed">Printing allowed</string>
+    <string name="label_printing_denied">Printing denied</string>
+    <string name="label_copying_allowed">Copying allowed</string>
+    <string name="label_copying_denied">Copying denied</string>
+    <string name="label_unknown">Unknown</string>
+    <string name="content_desc_theme_settings">Theme Settings</string>
+    <string name="theme_system_default">System Default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED Black</string>
+    <string name="title_processing_batch">Processing Batch</string>
+    <string name="label_batch_progress">%1$d of %2$d completed</string>
+    <string name="label_search">Search</string>
+    <string name="content_desc_clear_search">Clear search</string>
+    <string name="msg_no_matching_passwords">No matching passwords</string>
+    <string name="content_desc_delete_named">Delete %1$s</string>
+
+    <plurals name="selected_files_count">
+        <item quantity="one">%1$d file selected</item>
+        <item quantity="other">%1$d files selected</item>
+    </plurals>
+    <plurals name="processing_files_count">
+        <item quantity="one">Decrypting %1$d file...</item>
+        <item quantity="other">Decrypting %1$d files...</item>
+    </plurals>
 </resources>

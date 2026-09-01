@@ -204,4 +204,13 @@ class MainViewModelTest {
         assertTrue(ConflictMode.entries.contains(ConflictMode.OVERWRITE))
         assertTrue(ConflictMode.entries.contains(ConflictMode.SAVE_AS_COPY))
     }
+
+    @Test
+    fun testTriggerOpenDocumentPicker() {
+        assertFalse(viewModel.requestOpenDocumentPicker.value)
+        viewModel.triggerOpenDocumentPicker()
+        assertTrue(viewModel.requestOpenDocumentPicker.value)
+        viewModel.onDocumentPickerLaunched()
+        assertFalse(viewModel.requestOpenDocumentPicker.value)
+    }
 }

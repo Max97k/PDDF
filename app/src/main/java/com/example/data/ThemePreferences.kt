@@ -1,4 +1,4 @@
-﻿package com.example.data
+package com.example.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -15,12 +15,15 @@ enum class ThemeMode {
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_prefs")
 
-class ThemePreferences(private val context: Context) {
+class ThemePreferences(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences> = context.dataStore
+) {
     companion object {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     }
 
-    val themeMode: Flow<ThemeMode> = context.dataStore.data
+    val themeMode: Flow<ThemeMode> = dataStore.data
         .map { preferences ->
             val name = preferences[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name
             try {
@@ -31,7 +34,7 @@ class ThemePreferences(private val context: Context) {
         }
 
     suspend fun saveThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[THEME_MODE_KEY] = mode.name
         }
     }

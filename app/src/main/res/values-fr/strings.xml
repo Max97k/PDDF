@@ -67,4 +67,41 @@
     <string name="changelog_content">- Thème noir pur AMOLED et thème dynamique\n- Progression du déchiffrement par lots et annulation\n- Inspecteur de métadonnées et sécurité PDF\n- Prise en charge du glisser-déposer\n- Chiffrement matériel de la base avec Keystore\n- Déverrouillage biométrique du coffre de mots de passe</string>
     <string name="title_empty_state">Aucun PDF sélectionné</string>
     <string name="desc_empty_state">Sélectionnez un ou plusieurs fichiers PDF chiffrés pour commencer. Vous pouvez également partager des fichiers depuis votre gestionnaire de fichiers.</string>
+
+    <string name="show_password">Afficher le mot de passe</string>
+    <string name="hide_password">Masquer le mot de passe</string>
+    <string name="title_document_details">Détails du document</string>
+    <string name="content_desc_collapse">Réduire</string>
+    <string name="content_desc_expand">Développer</string>
+    <string name="label_doc_title">Titre : %1$s</string>
+    <string name="label_doc_author">Auteur : %1$s</string>
+    <string name="label_doc_pages">Pages : %1$s</string>
+    <string name="label_doc_file_size">Taille du fichier : %1$s</string>
+    <string name="label_doc_encryption">Chiffrement : %1$s</string>
+    <string name="label_doc_permissions">Autorisations : %1$s</string>
+    <string name="label_printing_allowed">Impression autorisée</string>
+    <string name="label_printing_denied">Impression refusée</string>
+    <string name="label_copying_allowed">Copie autorisée</string>
+    <string name="label_copying_denied">Copie refusée</string>
+    <string name="label_unknown">Inconnu</string>
+    <string name="content_desc_theme_settings">Paramètres du thème</string>
+    <string name="theme_system_default">Par défaut du système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_amoled">Noir AMOLED</string>
+    <string name="title_processing_batch">Traitement par lots</string>
+    <string name="label_batch_progress">%1$d sur %2$d terminés</string>
+    <string name="label_search">Rechercher</string>
+    <string name="content_desc_clear_search">Effacer la recherche</string>
+    <string name="msg_no_matching_passwords">Aucun mot de passe correspondant</string>
+    <string name="content_desc_delete_named">Supprimer %1$s</string>
+
+    <plurals name="selected_files_count">
+        <item quantity="one">%1$d fichier sélectionné</item>
+        <item quantity="other">%1$d fichiers sélectionnés</item>
+    </plurals>
+    <plurals name="processing_files_count">
+        <item quantity="one">Déchiffrement de %1$d fichier...</item>
+        <item quantity="other">Déchiffrement de %1$d fichiers...</item>
+    </plurals>
 </resources>

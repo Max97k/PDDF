@@ -1,5 +1,8 @@
 package com.example.util
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -9,7 +12,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class CryptoManager {
+class CryptoManager(private val context: Context? = null) {
     private val ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
     private val BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM
     private val PADDING = KeyProperties.ENCRYPTION_PADDING_NONE
@@ -20,6 +23,14 @@ class CryptoManager {
     companion object {
         // For testing ONLY across all instances
         var testKeyOverride: SecretKey? = null
+
+        fun isStrongBoxSupported(context: Context): Boolean {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
+            } else {
+                false
+            }
+        }
     }
 
     private fun getSecretKey(): SecretKey {
@@ -44,17 +55,53 @@ class CryptoManager {
 
     private fun generateKey(): SecretKey {
         val keyGenerator = KeyGenerator.getInstance(ALGORITHM, "AndroidKeyStore")
-        val keyGenParameterSpec = KeyGenParameterSpec.Builder(
+        val hasStrongBox = context?.let { isStrongBoxSupported(it) } ?: false
+
+        if (hasStrongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                val strongBoxSpec = KeyGenParameterSpec.Builder(
+                    KEY_ALIAS,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+                )
+                    .setKeySize(256)
+                    .setBlockModes(BLOCK_MODE)
+                    .setEncryptionPaddings(PADDING)
+                    .setRandomizedEncryptionRequired(true)
+                    .setIsStrongBoxBacked(true)
+                    .build()
+
+                keyGenerator.init(strongBoxSpec)
+                return keyGenerator.generateKey()
+            } catch (e: Exception) {
+                // Graceful fallback to standard TEE if StrongBox initialization fails
+            }
+        }
+
+        // Standard TEE KeyStore spec
+        val teeSpec = KeyGenParameterSpec.Builder(
             KEY_ALIAS,
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
         )
+            .setKeySize(256)
             .setBlockModes(BLOCK_MODE)
             .setEncryptionPaddings(PADDING)
             .setRandomizedEncryptionRequired(true)
             .build()
-        
-        keyGenerator.init(keyGenParameterSpec)
+
+        keyGenerator.init(teeSpec)
         return keyGenerator.generateKey()
+    }
+
+    fun initCipherForBiometric(mode: Int, iv: ByteArray? = null): Cipher {
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        val secretKey = getSecretKey()
+        if (mode == Cipher.DECRYPT_MODE && iv != null) {
+            val spec = GCMParameterSpec(128, iv)
+            cipher.init(mode, secretKey, spec)
+        } else {
+            cipher.init(mode, secretKey)
+        }
+        return cipher
     }
 
     fun encrypt(plainText: String): String {
@@ -78,17 +125,15 @@ class CryptoManager {
         return try {
             val actualEncrypted = encryptedText.removePrefix(PREFIX)
             val combined = Base64.decode(actualEncrypted, Base64.NO_WRAP)
-            
+
             if (combined.size < 12) {
                 return encryptedText
             }
 
-            val cipher = Cipher.getInstance(TRANSFORMATION)
             val iv = combined.copyOfRange(0, 12)
             val encryptedBytes = combined.copyOfRange(12, combined.size)
-            
-            val spec = GCMParameterSpec(128, iv)
-            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
+
+            val cipher = initCipherForBiometric(Cipher.DECRYPT_MODE, iv)
             val decryptedBytes = cipher.doFinal(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {

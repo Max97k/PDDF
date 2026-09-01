@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF 解密工具</string>
     <string name="btn_select_pdfs">選擇加密的 PDF 檔案</string>
@@ -66,4 +67,39 @@
     <string name="changelog_content">- 支援 AMOLED 純黑與 Material 3 主題\n- 批量解密進度指示與即時取消\n- PDF 元數據與安全性權限檢查器\n- 平板/摺疊螢幕拖放 PDF 支援\n- 晶片級 Keystore 硬體資料庫加密\n- 生物辨識安全解鎖密碼庫</string>
     <string name="title_empty_state">未選擇 PDF 檔案</string>
     <string name="desc_empty_state">請選擇一個或多個加密的 PDF 檔案。您也可以從檔案管理員或其他應用程式直接分享檔案至本工具。</string>
+
+    <string name="show_password">顯示密碼</string>
+    <string name="hide_password">隱藏密碼</string>
+    <string name="title_document_details">文件詳細資訊</string>
+    <string name="content_desc_collapse">收合</string>
+    <string name="content_desc_expand">展開</string>
+    <string name="label_doc_title">標題：%1$s</string>
+    <string name="label_doc_author">作者：%1$s</string>
+    <string name="label_doc_pages">頁數：%1$s</string>
+    <string name="label_doc_file_size">檔案大小：%1$s</string>
+    <string name="label_doc_encryption">加密方式：%1$s</string>
+    <string name="label_doc_permissions">權限：%1$s</string>
+    <string name="label_printing_allowed">允許列印</string>
+    <string name="label_printing_denied">禁止列印</string>
+    <string name="label_copying_allowed">允許複製</string>
+    <string name="label_copying_denied">禁止複製</string>
+    <string name="label_unknown">未知</string>
+    <string name="content_desc_theme_settings">主題設定</string>
+    <string name="theme_system_default">跟隨系統</string>
+    <string name="theme_light">淺色模式</string>
+    <string name="theme_dark">深色模式</string>
+    <string name="theme_amoled">AMOLED 純黑</string>
+    <string name="title_processing_batch">批次處理中</string>
+    <string name="label_batch_progress">已完成 %1$d / %2$d</string>
+    <string name="label_search">搜尋</string>
+    <string name="content_desc_clear_search">清除搜尋</string>
+    <string name="msg_no_matching_passwords">無相符的密碼</string>
+    <string name="content_desc_delete_named">刪除 %1$s</string>
+
+    <plurals name="selected_files_count">
+        <item quantity="other">已選擇 %1$d 個檔案</item>
+    </plurals>
+    <plurals name="processing_files_count">
+        <item quantity="other">正在解密 %1$d 個檔案...</item>
+    </plurals>
 </resources>

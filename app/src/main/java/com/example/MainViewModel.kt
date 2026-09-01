@@ -17,16 +17,22 @@ import com.example.domain.usecase.BatchProcessUseCase
 import com.example.domain.usecase.DecryptPdfUseCase
 import com.example.domain.usecase.PasswordVaultUseCase
 import com.example.util.FileUtils
+import com.example.util.MemoryUtils
 import com.example.util.Result
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class DecryptStatus {
@@ -68,12 +74,6 @@ class MainViewModel @JvmOverloads constructor(
             initialValue = ThemeMode.SYSTEM
         )
 
-    fun setTheme(mode: ThemeMode) {
-        viewModelScope.launch {
-            themePreferences.saveThemeMode(mode)
-        }
-    }
-
     val savedPasswords: StateFlow<List<PasswordEntity>> = passwordVaultUseCase.allPasswords
         .map { result ->
             when (result) {
@@ -86,6 +86,28 @@ class MainViewModel @JvmOverloads constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    // ---------------------------------------------------------------------------------------------
+    // UDF State & Effect Streams
+    // ---------------------------------------------------------------------------------------------
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState: StateFlow<MainUiState> = kotlinx.coroutines.flow.combine(
+        _uiState,
+        themeMode,
+        savedPasswords
+    ) { baseState, theme, passwords ->
+        baseState.copy(
+            themeMode = theme,
+            savedPasswords = passwords
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MainUiState()
+    )
+
+    private val _uiEffect = Channel<UiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<UiEffect> = _uiEffect.receiveAsFlow()
 
     val selectedUris = MutableStateFlow<List<Uri>>(emptyList())
     val selectedFileNames = MutableStateFlow<List<String>>(emptyList())
@@ -101,6 +123,7 @@ class MainViewModel @JvmOverloads constructor(
     val passwordVisible = MutableStateFlow(false)
     val showSavePasswordDialog = MutableStateFlow(false)
     val showPasswordListDialog = MutableStateFlow(false)
+    val requestOpenDocumentPicker = MutableStateFlow(false)
 
     val isAutoUnlocking = MutableStateFlow(false)
     val showAutoUnlockPasswordPrompt = MutableStateFlow(false)
@@ -109,75 +132,162 @@ class MainViewModel @JvmOverloads constructor(
     val autoUnlockErrorMessage = MutableStateFlow<String?>(null)
     val previewPdfUri = MutableStateFlow<Uri?>(null)
 
-    // Unified UDF UI state
+    // Legacy UDF UI state for boundary / backward compatibility
     val pdfUiState = MutableStateFlow<PdfUiState>(PdfUiState.Idle)
 
-    data class BatchState(
-        val isProcessing: Boolean = false,
-        val progress: Int = 0,
-        val total: Int = 0
-    )
     val batchState = MutableStateFlow(BatchState())
     private var batchJob: Job? = null
 
-    fun cancelBatch() {
-        batchJob?.cancel()
-    }
-
     private var backgroundTime: Long = 0
-    private val TIMEOUT_MILLIS = 60000L // 60 seconds
+    private val TIMEOUT_MILLIS = 60000L // 60 seconds auto-clear
 
     private val prefs = application.getSharedPreferences("pdf_decryptor_prefs", Context.MODE_PRIVATE)
-
     private var pdfBoxInitJob: Job? = null
 
     init {
         pdfBoxInitJob = viewModelScope.launch(ioDispatcher) {
             PDFBoxResourceLoader.init(application)
         }
+
+        // Restore conflict preferences
         val savedRemember = prefs.getBoolean("remember_conflict_choice", false)
         rememberConflictChoice.value = savedRemember
-        if (savedRemember) {
-            val savedModeStr = prefs.getString("conflict_mode", ConflictMode.SAVE_AS_COPY.name)
-            conflictMode.value = try {
-                ConflictMode.valueOf(savedModeStr!!)
-            } catch (_: Exception) {
-                ConflictMode.SAVE_AS_COPY
-            }
+        val savedModeStr = prefs.getString("conflict_mode", ConflictMode.SAVE_AS_COPY.name)
+        val savedMode = try {
+            ConflictMode.valueOf(savedModeStr!!)
+        } catch (_: Exception) {
+            ConflictMode.SAVE_AS_COPY
         }
-    }
+        conflictMode.value = if (savedRemember) savedMode else ConflictMode.SAVE_AS_COPY
 
-    fun onAppBackgrounded() {
-        backgroundTime = System.currentTimeMillis()
-    }
-
-    fun onAppForegrounded() {
-        if (backgroundTime > 0 && System.currentTimeMillis() - backgroundTime > TIMEOUT_MILLIS) {
-            clearSensitiveData()
+        _uiState.update {
+            it.copy(
+                rememberConflictChoice = savedRemember,
+                conflictMode = if (savedRemember) savedMode else ConflictMode.SAVE_AS_COPY
+            )
         }
-        backgroundTime = 0
-    }
-
-    private fun clearSensitiveData() {
-        password.value = ""
-        showSavePasswordDialog.value = false
-        showPasswordListDialog.value = false
     }
 
     private suspend fun ensurePdfBoxInitialized() {
         pdfBoxInitJob?.join()
     }
 
+    fun emitEffect(effect: UiEffect) {
+        viewModelScope.launch {
+            _uiEffect.send(effect)
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Unidirectional Action Dispatcher (UDF Intent Handler)
+    // ---------------------------------------------------------------------------------------------
+    fun onAction(action: MainUiAction) {
+        when (action) {
+            is MainUiAction.SelectFiles -> setSelectedUris(action.context, action.uris)
+            is MainUiAction.ClearSelectedFiles -> setSelectedUris(action.context, emptyList())
+            is MainUiAction.RequestFilePicker -> triggerOpenDocumentPicker()
+            is MainUiAction.UpdatePassword -> {
+                password.value = action.password
+                _uiState.update { it.copy(password = action.password) }
+            }
+            is MainUiAction.SetPassword -> {
+                password.value = action.password
+                _uiState.update { it.copy(password = action.password) }
+            }
+            is MainUiAction.TogglePasswordVisibility -> {
+                val newVisible = !passwordVisible.value
+                passwordVisible.value = newVisible
+                _uiState.update { it.copy(passwordVisible = newVisible) }
+            }
+            is MainUiAction.TogglePasswordVisible -> {
+                val newVisible = !passwordVisible.value
+                passwordVisible.value = newVisible
+                _uiState.update { it.copy(passwordVisible = newVisible) }
+            }
+            is MainUiAction.DecryptInPlace -> decryptPdfsInPlace(action.context, uiState.value.selectedUris, uiState.value.password)
+            is MainUiAction.DecryptToDirectory -> decryptPdfsToDirectory(action.context, uiState.value.selectedUris, action.outputDirectoryUri, uiState.value.password, uiState.value.conflictMode)
+            is MainUiAction.DecryptToUri -> decryptPdfToUri(action.context, uiState.value.selectedUris.firstOrNull() ?: return, action.destUri, uiState.value.password)
+            is MainUiAction.RequestSaveAsPicker -> handleSaveAsRequest()
+            is MainUiAction.CancelBatch -> cancelBatch()
+            is MainUiAction.HandleExternalIntent -> handleExternalPdfIntent(action.context, action.uri, action.onViewerReady)
+            is MainUiAction.UnlockWithManualPassword -> unlockWithManualPassword(action.context, uiState.value.autoUnlockTargetUri ?: return, action.enteredPassword, action.rememberPassword, action.onViewerReady)
+            is MainUiAction.DismissAutoUnlockPrompt -> dismissAutoUnlockPrompt()
+            is MainUiAction.SavePassword -> savePassword(action.name, action.passwordValue)
+            is MainUiAction.DeletePassword -> deletePasswordWithUndo(action.entity)
+            is MainUiAction.RestorePassword -> restorePassword(action.entity)
+            is MainUiAction.SelectSavedPassword -> {
+                password.value = action.passwordValue
+                showPasswordListDialog.value = false
+                _uiState.update { it.copy(password = action.passwordValue, showPasswordListDialog = false) }
+            }
+            is MainUiAction.RequestOpenPasswordList -> emitEffect(UiEffect.TriggerBiometricAuth)
+            is MainUiAction.RequestOpenSavePassword -> {
+                showSavePasswordDialog.value = true
+                _uiState.update { it.copy(showSavePasswordDialog = true) }
+            }
+            is MainUiAction.SetSavePasswordDialogVisible -> {
+                showSavePasswordDialog.value = action.visible
+                _uiState.update { it.copy(showSavePasswordDialog = action.visible) }
+            }
+            is MainUiAction.SetPasswordListDialogVisible -> {
+                showPasswordListDialog.value = action.visible
+                _uiState.update { it.copy(showPasswordListDialog = action.visible) }
+            }
+            is MainUiAction.SetWhatsNewDialogVisible -> {
+                _uiState.update { it.copy(showWhatsNewDialog = action.visible) }
+            }
+            is MainUiAction.SetPreviewPdfUri -> {
+                previewPdfUri.value = action.uri
+                _uiState.update { it.copy(previewPdfUri = action.uri) }
+            }
+            is MainUiAction.SetTheme -> setTheme(action.mode)
+            is MainUiAction.UpdateConflictSettings -> updateConflictSettings(action.mode, action.remember)
+            is MainUiAction.CopyUriStream -> copyUriStream(action.context, action.sourceUri, action.destUri)
+            is MainUiAction.OpenPdfExternal -> emitEffect(UiEffect.OpenPdfExternally(action.uri))
+            is MainUiAction.SharePdf -> emitEffect(UiEffect.SharePdf(action.uri))
+            is MainUiAction.OpenDownloads -> emitEffect(UiEffect.OpenFileDownloads)
+            is MainUiAction.OpenUrl -> emitEffect(UiEffect.OpenUrl(action.url))
+            is MainUiAction.AppBackgrounded -> onAppBackgrounded()
+            is MainUiAction.AppForegrounded -> onAppForegrounded()
+        }
+    }
+
+    private fun handleSaveAsRequest() {
+        val state = uiState.value
+        if (state.isBatch) {
+            emitEffect(UiEffect.LaunchDirectoryPicker)
+        } else {
+            val fileName = state.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+            emitEffect(UiEffect.LaunchCreateDocument(fileName))
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Semantic Helper Methods
+    // ---------------------------------------------------------------------------------------------
+    fun setTheme(mode: ThemeMode) {
+        viewModelScope.launch {
+            themePreferences.saveThemeMode(mode)
+            _uiState.update { it.copy(themeMode = mode) }
+        }
+    }
+
+    fun triggerOpenDocumentPicker() {
+        requestOpenDocumentPicker.value = true
+        emitEffect(UiEffect.LaunchFilePicker)
+    }
+
+    fun onDocumentPickerLaunched() {
+        requestOpenDocumentPicker.value = false
+    }
+
     fun updateConflictSettings(mode: ConflictMode, remember: Boolean) {
         conflictMode.value = mode
         rememberConflictChoice.value = remember
+        _uiState.update { it.copy(conflictMode = mode, rememberConflictChoice = remember) }
         prefs.edit().apply {
             putBoolean("remember_conflict_choice", remember)
-            if (remember) {
-                putString("conflict_mode", mode.name)
-            } else {
-                remove("conflict_mode")
-            }
+            if (remember) putString("conflict_mode", mode.name) else remove("conflict_mode")
             apply()
         }
     }
@@ -224,6 +334,15 @@ class MainViewModel @JvmOverloads constructor(
             selectedMetadata.value = null
             statusMessage.value = null
 
+            _uiState.update {
+                it.copy(
+                    selectedUris = pdfUris,
+                    selectedFileNames = pdfNames,
+                    selectedMetadata = null,
+                    statusMessage = null
+                )
+            }
+
             if (pdfUris.isNotEmpty()) {
                 checkSelectedPdfs(context, pdfPairs)
             }
@@ -241,7 +360,6 @@ class MainViewModel @JvmOverloads constructor(
                 if (extractedMetadata == null) {
                     extractedMetadata = decryptPdfUseCase.extractMetadata(context, uri)
                 }
-
                 try {
                     decryptPdfUseCase.openSafeInputStream(context, uri)?.use { inputStream ->
                         val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
@@ -249,9 +367,7 @@ class MainViewModel @JvmOverloads constructor(
                             com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
                         )
                         doc.use {
-                            if (!it.isEncrypted) {
-                                unencryptedNames.add(fileName)
-                            }
+                            if (!it.isEncrypted) unencryptedNames.add(fileName)
                         }
                     }
                 } catch (e: Exception) {
@@ -272,8 +388,14 @@ class MainViewModel @JvmOverloads constructor(
                 warnings.add(context.getString(R.string.msg_warning_unsupported, unsupportedNames.joinToString(", ")))
             }
 
-            if (warnings.isNotEmpty()) {
-                statusMessage.value = warnings.joinToString("\n")
+            val finalMsg = if (warnings.isNotEmpty()) warnings.joinToString("\n") else null
+            statusMessage.value = finalMsg
+
+            _uiState.update {
+                it.copy(
+                    selectedMetadata = extractedMetadata,
+                    statusMessage = finalMsg
+                )
             }
         }
     }
@@ -284,11 +406,20 @@ class MainViewModel @JvmOverloads constructor(
         onViewerReady: (Uri) -> Unit = {}
     ) {
         viewModelScope.launch {
+            val fileName = FileUtils.getFileName(context, uri)
             isAutoUnlocking.value = true
             autoUnlockTargetUri.value = uri
-            val fileName = FileUtils.getFileName(context, uri)
             autoUnlockFileName.value = fileName
             autoUnlockErrorMessage.value = null
+
+            _uiState.update {
+                it.copy(
+                    isAutoUnlocking = true,
+                    autoUnlockTargetUri = uri,
+                    autoUnlockFileName = fileName,
+                    autoUnlockErrorMessage = null
+                )
+            }
 
             ensurePdfBoxInitialized()
 
@@ -297,28 +428,35 @@ class MainViewModel @JvmOverloads constructor(
                     isAutoUnlocking.value = false
                     lastDecryptedUri.value = uri
                     previewPdfUri.value = uri
+                    _uiState.update { it.copy(isAutoUnlocking = false, lastDecryptedUri = uri, previewPdfUri = uri) }
                     onViewerReady(uri)
                 }
                 is AutoUnlockUseCase.AutoUnlockResult.UnlockedWithSavedPassword -> {
+                    val msg = context.getString(R.string.summary_decrypted_saved, 1)
                     isAutoUnlocking.value = false
                     lastDecryptedUri.value = result.outputUri
                     previewPdfUri.value = result.outputUri
-                    statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                    statusMessage.value = msg
+                    _uiState.update {
+                        it.copy(
+                            isAutoUnlocking = false,
+                            lastDecryptedUri = result.outputUri,
+                            previewPdfUri = result.outputUri,
+                            statusMessage = msg
+                        )
+                    }
                     onViewerReady(result.outputUri)
                 }
-                is AutoUnlockUseCase.AutoUnlockResult.RequireManualPassword -> {
-                    isAutoUnlocking.value = false
-                    showAutoUnlockPasswordPrompt.value = true
-                }
+                is AutoUnlockUseCase.AutoUnlockResult.RequireManualPassword,
                 is AutoUnlockUseCase.AutoUnlockResult.Error -> {
                     isAutoUnlocking.value = false
                     showAutoUnlockPasswordPrompt.value = true
+                    _uiState.update { it.copy(isAutoUnlocking = false, showAutoUnlockPasswordPrompt = true) }
                 }
             }
         }
     }
 
-    // Legacy alias for compatibility
     fun startAutoUnlockFlow(context: Context, uri: Uri, onViewerReady: (Uri) -> Unit = {}) {
         handleExternalPdfIntent(context, uri, onViewerReady)
     }
@@ -333,6 +471,7 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             isProcessing.value = true
             autoUnlockErrorMessage.value = null
+            _uiState.update { it.copy(isProcessing = true, autoUnlockErrorMessage = null) }
 
             ensurePdfBoxInitialized()
 
@@ -345,28 +484,51 @@ class MainViewModel @JvmOverloads constructor(
             )
 
             isProcessing.value = false
+            _uiState.update { it.copy(isProcessing = false) }
+
             when (status) {
                 DecryptStatus.SUCCESS -> {
                     if (resultUri != null) {
+                        val msg = context.getString(R.string.summary_decrypted_saved, 1)
                         lastDecryptedUri.value = resultUri
                         previewPdfUri.value = resultUri
                         showAutoUnlockPasswordPrompt.value = false
                         autoUnlockErrorMessage.value = null
-                        statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
+                        statusMessage.value = msg
+                        _uiState.update {
+                            it.copy(
+                                lastDecryptedUri = resultUri,
+                                previewPdfUri = resultUri,
+                                showAutoUnlockPasswordPrompt = false,
+                                autoUnlockErrorMessage = null,
+                                statusMessage = msg
+                            )
+                        }
                         onViewerReady(resultUri)
                     }
                 }
                 DecryptStatus.WRONG_PASSWORD -> {
-                    autoUnlockErrorMessage.value = context.getString(R.string.msg_wrong_password_try_again)
+                    val errMsg = context.getString(R.string.msg_wrong_password_try_again)
+                    autoUnlockErrorMessage.value = errMsg
+                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg) }
                 }
                 DecryptStatus.NOT_ENCRYPTED -> {
                     lastDecryptedUri.value = uri
                     previewPdfUri.value = uri
                     showAutoUnlockPasswordPrompt.value = false
+                    _uiState.update {
+                        it.copy(
+                            lastDecryptedUri = uri,
+                            previewPdfUri = uri,
+                            showAutoUnlockPasswordPrompt = false
+                        )
+                    }
                     onViewerReady(uri)
                 }
                 else -> {
-                    autoUnlockErrorMessage.value = context.getString(R.string.summary_error, 1)
+                    val errMsg = context.getString(R.string.summary_error, 1)
+                    autoUnlockErrorMessage.value = errMsg
+                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg) }
                 }
             }
         }
@@ -375,27 +537,22 @@ class MainViewModel @JvmOverloads constructor(
     fun dismissAutoUnlockPrompt() {
         showAutoUnlockPasswordPrompt.value = false
         autoUnlockErrorMessage.value = null
-    }
-
-    fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
-        viewModelScope.launch(ioDispatcher) {
-            try {
-                decryptPdfUseCase.openSafeInputStream(context, sourceUri)?.use { input ->
-                    decryptPdfUseCase.openSafeOutputStream(context, destUri)?.use { output ->
-                        input.copyTo(output)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+        _uiState.update { it.copy(showAutoUnlockPasswordPrompt = false, autoUnlockErrorMessage = null) }
     }
 
     fun decryptPdfsInPlace(context: Context, inputUris: List<Uri>, passwordValue: String) {
         batchJob = viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
-            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+            val initBatch = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+            batchState.value = initBatch
+            _uiState.update {
+                it.copy(
+                    isProcessing = true,
+                    statusMessage = "Processing...",
+                    batchState = initBatch
+                )
+            }
 
             ensurePdfBoxInitialized()
 
@@ -404,7 +561,9 @@ class MainViewModel @JvmOverloads constructor(
                 inputUris = inputUris,
                 passwordValue = passwordValue,
                 onProgress = { current, _ ->
-                    batchState.value = batchState.value.copy(progress = current)
+                    val updatedBatch = batchState.value.copy(progress = current)
+                    batchState.value = updatedBatch
+                    _uiState.update { it.copy(batchState = updatedBatch) }
                 }
             )
 
@@ -416,12 +575,22 @@ class MainViewModel @JvmOverloads constructor(
             if (result.errorCount > 0) summaryList.add(context.getString(R.string.summary_error, result.errorCount))
             if (result.cancelledCount > 0) summaryList.add("Cancelled: ${result.cancelledCount} files")
 
-            statusMessage.value = summaryList.joinToString("\n")
+            val finalMsg = summaryList.joinToString("\n")
+            statusMessage.value = finalMsg
             if (result.lastDecryptedUri != null) {
                 lastDecryptedUri.value = result.lastDecryptedUri
             }
             isProcessing.value = false
             batchState.value = BatchState()
+
+            _uiState.update {
+                it.copy(
+                    statusMessage = finalMsg,
+                    lastDecryptedUri = result.lastDecryptedUri ?: it.lastDecryptedUri,
+                    isProcessing = false,
+                    batchState = BatchState()
+                )
+            }
         }
     }
 
@@ -433,19 +602,31 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
+            _uiState.update { it.copy(isProcessing = true, statusMessage = "Processing...") }
+
             ensurePdfBoxInitialized()
             val status = decryptPdfUseCase.decrypt(context, inputUri, destUri, passwordValue)
-            when (status) {
-                DecryptStatus.SUCCESS -> {
-                    statusMessage.value = context.getString(R.string.summary_decrypted_saved, 1)
-                    lastDecryptedUri.value = destUri
-                }
-                DecryptStatus.NOT_ENCRYPTED -> statusMessage.value = context.getString(R.string.summary_not_encrypted, 1)
-                DecryptStatus.WRONG_PASSWORD -> statusMessage.value = context.getString(R.string.summary_wrong_password, 1)
-                DecryptStatus.UNSUPPORTED_ENCRYPTION -> statusMessage.value = context.getString(R.string.summary_unsupported, 1)
-                DecryptStatus.ERROR -> statusMessage.value = context.getString(R.string.summary_error, 1)
+            val msg = when (status) {
+                DecryptStatus.SUCCESS -> context.getString(R.string.summary_decrypted_saved, 1)
+                DecryptStatus.NOT_ENCRYPTED -> context.getString(R.string.summary_not_encrypted, 1)
+                DecryptStatus.WRONG_PASSWORD -> context.getString(R.string.summary_wrong_password, 1)
+                DecryptStatus.UNSUPPORTED_ENCRYPTION -> context.getString(R.string.summary_unsupported, 1)
+                DecryptStatus.ERROR -> context.getString(R.string.summary_error, 1)
+            }
+
+            statusMessage.value = msg
+            if (status == DecryptStatus.SUCCESS) {
+                lastDecryptedUri.value = destUri
             }
             isProcessing.value = false
+
+            _uiState.update {
+                it.copy(
+                    isProcessing = false,
+                    statusMessage = msg,
+                    lastDecryptedUri = if (status == DecryptStatus.SUCCESS) destUri else it.lastDecryptedUri
+                )
+            }
         }
     }
 
@@ -465,7 +646,15 @@ class MainViewModel @JvmOverloads constructor(
         batchJob = viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
-            batchState.value = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+            val initBatch = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+            batchState.value = initBatch
+            _uiState.update {
+                it.copy(
+                    isProcessing = true,
+                    statusMessage = "Processing...",
+                    batchState = initBatch
+                )
+            }
 
             ensurePdfBoxInitialized()
 
@@ -476,14 +665,24 @@ class MainViewModel @JvmOverloads constructor(
                 passwordValue = passwordValue,
                 conflictMode = conflictMode,
                 onProgress = { current, _ ->
-                    batchState.value = batchState.value.copy(progress = current)
+                    val updatedBatch = batchState.value.copy(progress = current)
+                    batchState.value = updatedBatch
+                    _uiState.update { it.copy(batchState = updatedBatch) }
                 }
             )
 
             if (result.errorOutputDir) {
-                statusMessage.value = context.getString(R.string.msg_error_output_dir)
+                val errOutputDir = context.getString(R.string.msg_error_output_dir)
+                statusMessage.value = errOutputDir
                 isProcessing.value = false
                 batchState.value = BatchState()
+                _uiState.update {
+                    it.copy(
+                        statusMessage = errOutputDir,
+                        isProcessing = false,
+                        batchState = BatchState()
+                    )
+                }
                 return@launch
             }
 
@@ -495,12 +694,22 @@ class MainViewModel @JvmOverloads constructor(
             if (result.errorCount > 0) summaryList.add(context.getString(R.string.summary_error, result.errorCount))
             if (result.cancelledCount > 0) summaryList.add("Cancelled: ${result.cancelledCount} files")
 
-            statusMessage.value = summaryList.joinToString("\n")
+            val finalMsg = summaryList.joinToString("\n")
+            statusMessage.value = finalMsg
             if (result.lastDecryptedUri != null) {
                 lastDecryptedUri.value = result.lastDecryptedUri
             }
             isProcessing.value = false
             batchState.value = BatchState()
+
+            _uiState.update {
+                it.copy(
+                    statusMessage = finalMsg,
+                    lastDecryptedUri = result.lastDecryptedUri ?: it.lastDecryptedUri,
+                    isProcessing = false,
+                    batchState = BatchState()
+                )
+            }
         }
     }
 
@@ -516,9 +725,29 @@ class MainViewModel @JvmOverloads constructor(
         decryptPdfsToDirectory(context, inputUris, outputDirectoryUri, passwordValue, mode)
     }
 
+    fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                decryptPdfUseCase.openSafeInputStream(context, sourceUri)?.use { input ->
+                    decryptPdfUseCase.openSafeOutputStream(context, destUri)?.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun cancelBatch() {
+        batchJob?.cancel()
+    }
+
     fun savePassword(name: String, passwordValue: String) {
         viewModelScope.launch(ioDispatcher) {
             passwordVaultUseCase.insertPassword(name, passwordValue)
+            showSavePasswordDialog.value = false
+            _uiState.update { it.copy(showSavePasswordDialog = false) }
         }
     }
 
@@ -534,8 +763,72 @@ class MainViewModel @JvmOverloads constructor(
         }
     }
 
+    fun deletePasswordWithUndo(entity: PasswordEntity) {
+        deletePassword(entity.id)
+        emitEffect(
+            UiEffect.ShowSnackbar(
+                message = "Password deleted",
+                actionLabel = "Undo",
+                onAction = { restorePassword(entity) }
+            )
+        )
+    }
+
+    fun onAppBackgrounded() {
+        backgroundTime = System.currentTimeMillis()
+    }
+
+    fun onAppForegrounded() {
+        if (backgroundTime > 0 && System.currentTimeMillis() - backgroundTime > TIMEOUT_MILLIS) {
+            clearSensitiveData()
+        }
+        backgroundTime = 0
+    }
+
+    private fun clearSensitiveData() {
+        val currentChars = password.value.toCharArray()
+        MemoryUtils.wipe(currentChars)
+        password.value = ""
+        showSavePasswordDialog.value = false
+        showPasswordListDialog.value = false
+        _uiState.update {
+            it.copy(
+                password = "",
+                showSavePasswordDialog = false,
+                showPasswordListDialog = false
+            )
+        }
+    }
+
     internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
         ensurePdfBoxInitialized()
         return decryptPdfUseCase.decrypt(context, inputUri, outputUri, passwordValue)
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Test Harness Helper (Allows Direct State Injection in Unit / Screenshot Tests)
+    // ---------------------------------------------------------------------------------------------
+    fun updateStateForTesting(transform: (MainUiState) -> MainUiState) {
+        _uiState.update(transform)
+        val s = _uiState.value
+        selectedUris.value = s.selectedUris
+        selectedFileNames.value = s.selectedFileNames
+        selectedMetadata.value = s.selectedMetadata
+        password.value = s.password
+        passwordVisible.value = s.passwordVisible
+        isProcessing.value = s.isProcessing
+        statusMessage.value = s.statusMessage
+        lastDecryptedUri.value = s.lastDecryptedUri
+        previewPdfUri.value = s.previewPdfUri
+        batchState.value = s.batchState
+        isAutoUnlocking.value = s.isAutoUnlocking
+        showAutoUnlockPasswordPrompt.value = s.showAutoUnlockPasswordPrompt
+        autoUnlockTargetUri.value = s.autoUnlockTargetUri
+        autoUnlockFileName.value = s.autoUnlockFileName
+        autoUnlockErrorMessage.value = s.autoUnlockErrorMessage
+        showSavePasswordDialog.value = s.showSavePasswordDialog
+        showPasswordListDialog.value = s.showPasswordListDialog
+        conflictMode.value = s.conflictMode
+        rememberConflictChoice.value = s.rememberConflictChoice
     }
 }

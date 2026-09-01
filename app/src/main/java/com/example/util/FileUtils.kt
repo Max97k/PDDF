@@ -40,7 +40,11 @@ object FileUtils {
     }
 
     /**
-     * Overwrites file contents with zeros/random bytes before deletion to prevent recovery of sensitive PDF data.
+     * Strictly implements DoD 5220.22-M 3-pass file shredding standard:
+     * - Pass 1: Overwrite with 0x00 (zeros)
+     * - Pass 2: Overwrite with 0xFF (ones)
+     * - Pass 3: Overwrite with cryptographic pseudo-random bytes
+     * Flushes hardware storage buffer with sync() after each pass before deletion.
      */
     fun secureDelete(file: File?): Boolean {
         if (file == null || !file.exists()) return true
@@ -48,14 +52,42 @@ object FileUtils {
             if (file.isFile && file.length() > 0) {
                 val length = file.length()
                 RandomAccessFile(file, "rws").use { raf ->
-                    val buffer = ByteArray(4096.coerceAtMost(length.toInt()).coerceAtLeast(1))
-                    SecureRandom().nextBytes(buffer)
+                    val bufferSize = 4096.coerceAtMost(length.toInt()).coerceAtLeast(1)
+                    val buffer = ByteArray(bufferSize)
+                    val random = SecureRandom()
+
+                    // Pass 1: 0x00 (zero bytes)
+                    raf.seek(0)
+                    buffer.fill(0x00.toByte())
                     var written = 0L
                     while (written < length) {
                         val toWrite = (length - written).coerceAtMost(buffer.size.toLong()).toInt()
                         raf.write(buffer, 0, toWrite)
                         written += toWrite
                     }
+                    try { raf.fd.sync() } catch (_: Exception) {}
+
+                    // Pass 2: 0xFF (all-ones bytes)
+                    raf.seek(0)
+                    buffer.fill(0xFF.toByte())
+                    written = 0L
+                    while (written < length) {
+                        val toWrite = (length - written).coerceAtMost(buffer.size.toLong()).toInt()
+                        raf.write(buffer, 0, toWrite)
+                        written += toWrite
+                    }
+                    try { raf.fd.sync() } catch (_: Exception) {}
+
+                    // Pass 3: Cryptographic pseudo-random bytes
+                    raf.seek(0)
+                    written = 0L
+                    while (written < length) {
+                        val toWrite = (length - written).coerceAtMost(buffer.size.toLong()).toInt()
+                        random.nextBytes(buffer)
+                        raf.write(buffer, 0, toWrite)
+                        written += toWrite
+                    }
+                    try { raf.fd.sync() } catch (_: Exception) {}
                 }
             }
             file.delete()

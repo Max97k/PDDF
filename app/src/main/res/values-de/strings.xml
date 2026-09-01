@@ -27,6 +27,7 @@
     <string name="msg_password_deleted">Passwort gelöscht</string>
     <string name="btn_undo">RÜCKGÄNGIG</string>
     <string name="content_desc_delete">Löschen</string>
+
     <string name="msg_notice_all_unencrypted">⚠️ Hinweis: Die ausgewählte(n) PDF-Datei(en) ist/sind nicht passwortgeschützt und muss/müssen nicht entschlüsselt werden.</string>
     <string name="msg_notice_some_unencrypted">⚠️ Hinweis: %1$s ist nicht passwortgeschützt.</string>
     <string name="msg_warning_unsupported">⚠️ Warnung: %1$s verwendet eine erweiterte Verschlüsselung (Zertifikat/DRM), die mit einem Standardpasswort nicht entschlüsselt werden kann.</string>
@@ -52,6 +53,7 @@
     <string name="btn_save_as">Als neue Datei speichern</string>
     <string name="version_info">Version %1$s</string>
     <string name="github_link">GitHub-Quelle</string>
+
     <string name="shortcut_select_pdf_short">PDFs auswählen</string>
     <string name="shortcut_select_pdf_long">Verschlüsselte PDF-Dateien auswählen</string>
     <string name="shortcut_saved_passwords_short">Gespeicherte Passwörter</string>
@@ -65,4 +67,41 @@
     <string name="changelog_content">- AMOLED reines Schwarz &amp; dynamisches Design\n- Stapel-Entschlüsselungsfortschritt &amp; Abbrechen\n- PDF-Sicherheits- &amp; Metadaten-Inspektor\n- Tablet / Foldable Drag-and-Drop-Unterstützung\n- Hardware-gestützte Keystore-Verschlüsselung\n- Biometrische Entsperrung des Passworttresors</string>
     <string name="title_empty_state">Keine PDF ausgewählt</string>
     <string name="desc_empty_state">Wählen Sie eine oder mehrere verschlüsselte PDFs aus, um zu beginnen. Sie können Dateien auch direkt aus dem Dateimanager teilen.</string>
+
+    <string name="show_password">Passwort anzeigen</string>
+    <string name="hide_password">Passwort verbergen</string>
+    <string name="title_document_details">Dokumentdetails</string>
+    <string name="content_desc_collapse">Einklappen</string>
+    <string name="content_desc_expand">Ausklappen</string>
+    <string name="label_doc_title">Titel: %1$s</string>
+    <string name="label_doc_author">Autor: %1$s</string>
+    <string name="label_doc_pages">Seiten: %1$s</string>
+    <string name="label_doc_file_size">Dateigröße: %1$s</string>
+    <string name="label_doc_encryption">Verschlüsselung: %1$s</string>
+    <string name="label_doc_permissions">Berechtigungen: %1$s</string>
+    <string name="label_printing_allowed">Drucken erlaubt</string>
+    <string name="label_printing_denied">Drucken verweigert</string>
+    <string name="label_copying_allowed">Kopieren erlaubt</string>
+    <string name="label_copying_denied">Kopieren verweigert</string>
+    <string name="label_unknown">Unbekannt</string>
+    <string name="content_desc_theme_settings">Designeinstellungen</string>
+    <string name="theme_system_default">Systemstandard</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_amoled">AMOLED Schwarz</string>
+    <string name="title_processing_batch">Stapelverarbeitung</string>
+    <string name="label_batch_progress">%1$d von %2$d abgeschlossen</string>
+    <string name="label_search">Suchen</string>
+    <string name="content_desc_clear_search">Suche löschen</string>
+    <string name="msg_no_matching_passwords">Keine passenden Passwörter</string>
+    <string name="content_desc_delete_named">%1$s löschen</string>
+
+    <plurals name="selected_files_count">
+        <item quantity="one">%1$d Datei ausgewählt</item>
+        <item quantity="other">%1$d Dateien ausgewählt</item>
+    </plurals>
+    <plurals name="processing_files_count">
+        <item quantity="one">Entschlüssle %1$d Datei...</item>
+        <item quantity="other">Entschlüssle %1$d Dateien...</item>
+    </plurals>
 </resources>

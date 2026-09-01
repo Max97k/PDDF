@@ -27,7 +27,7 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
-  androidResources { localeFilters += listOf("zh-rTW", "en") }
+  androidResources { localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en") }
 
   signingConfigs {
     create("release") {
@@ -58,7 +58,7 @@ android {
       }
     }
     debug {
-      enableUnitTestCoverage = true
+      enableUnitTestCoverage = false
     }
   }
   packaging {
@@ -66,7 +66,7 @@ android {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
     jniLibs {
-      useLegacyPackaging = true
+      useLegacyPackaging = false
     }
   }
   compileOptions {
@@ -104,7 +104,17 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     html.required.set(true)
   }
 
-  val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+  val kotlinClasses = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+    exclude(
+      "**/R.class",
+      "**/R$*.class",
+      "**/BuildConfig.*",
+      "**/Manifest*.*",
+      "**/*Test*.*",
+      "android/**/*"
+    )
+  }
+  val javaClasses = fileTree("${project.layout.buildDirectory.get()}/intermediates/javac/debug/compileDebugJavaWithJavac/classes") {
     exclude(
       "**/R.class",
       "**/R$*.class",
@@ -117,7 +127,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
   val mainSrc = "${project.projectDir}/src/main/java"
 
   sourceDirectories.setFrom(files(mainSrc))
-  classDirectories.setFrom(files(debugTree))
+  classDirectories.setFrom(files(kotlinClasses, javaClasses))
   executionData.setFrom(fileTree(project.layout.buildDirectory.get()).matching {
     include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
   })
@@ -160,11 +170,14 @@ dependencies {
   implementation("androidx.biometric:biometric:1.1.0")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.datastore:datastore-preferences:1.1.1")
+  implementation(libs.androidx.work.runtime.ktx)
+  testImplementation(libs.androidx.work.testing)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.turbine)
   testImplementation(libs.robolectric)
   testImplementation(libs.roborazzi)
   testImplementation(libs.roborazzi.compose)

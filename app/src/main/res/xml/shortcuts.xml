@@ -7,10 +7,10 @@
         android:shortcutShortLabel="@string/shortcut_select_pdf_short"
         android:shortcutLongLabel="@string/shortcut_select_pdf_long">
         <intent
-            android:action="android.intent.action.VIEW"
-            android:targetPackage="com.example"
+            android:action="com.max97k.pddf.ACTION_SELECT_PDF"
+            android:targetPackage="com.max97k.pddf"
             android:targetClass="com.example.MainActivity" />
-        <categories android:name="android.shortcut.conversation" />
+        <categories android:name="android.intent.category.DEFAULT" />
     </shortcut>
     <shortcut
         android:shortcutId="shortcut_saved_passwords"
@@ -19,9 +19,9 @@
         android:shortcutShortLabel="@string/shortcut_saved_passwords_short"
         android:shortcutLongLabel="@string/shortcut_saved_passwords_long">
         <intent
-            android:action="com.example.ACTION_SHOW_SAVED_PASSWORDS"
-            android:targetPackage="com.example"
+            android:action="com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS"
+            android:targetPackage="com.max97k.pddf"
             android:targetClass="com.example.MainActivity" />
-        <categories android:name="android.shortcut.conversation" />
+        <categories android:name="android.intent.category.DEFAULT" />
     </shortcut>
 </shortcuts>

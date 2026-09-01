@@ -7,7 +7,7 @@ import com.example.data.AppDatabase
 import com.example.data.PasswordEntity
 import com.example.data.PasswordRepository
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,7 +43,7 @@ class PasswordRepositoryTest {
     }
 
     @Test
-    fun insertAndGetAllPasswords() = runBlocking {
+    fun insertAndGetAllPasswords() = runTest {
         val initialResult = repository.allPasswords.first()
         assertTrue(initialResult is com.example.util.Result.Success && initialResult.data.isEmpty())
 
@@ -63,7 +63,7 @@ class PasswordRepositoryTest {
     }
 
     @Test
-    fun deletePasswordById() = runBlocking {
+    fun deletePasswordById() = runTest {
         val pass = PasswordEntity(id = 10, name = "Work", passwordValue = "work123")
         repository.insert(pass)
 

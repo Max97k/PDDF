@@ -67,4 +67,41 @@
     <string name="changelog_content">- Modo negro puro AMOLED y tema dinámico\n- Progreso de descifrado por lotes y cancelación\n- Inspector de metadatos y seguridad PDF\n- Compatibilidad con arrastrar y soltar\n- Cifrado de base de datos con Keystore por hardware\n- Desbloqueo biométrico para el baúl de contraseñas</string>
     <string name="title_empty_state">No hay PDF seleccionado</string>
     <string name="desc_empty_state">Selecciona uno o más archivos PDF cifrados para comenzar. También puedes compartir archivos directamente desde tu administrador de archivos.</string>
+
+    <string name="show_password">Mostrar contraseña</string>
+    <string name="hide_password">Ocultar contraseña</string>
+    <string name="title_document_details">Detalles del documento</string>
+    <string name="content_desc_collapse">Contraer</string>
+    <string name="content_desc_expand">Expandir</string>
+    <string name="label_doc_title">Título: %1$s</string>
+    <string name="label_doc_author">Autor: %1$s</string>
+    <string name="label_doc_pages">Páginas: %1$s</string>
+    <string name="label_doc_file_size">Tamaño de archivo: %1$s</string>
+    <string name="label_doc_encryption">Cifrado: %1$s</string>
+    <string name="label_doc_permissions">Permisos: %1$s</string>
+    <string name="label_printing_allowed">Impresión permitida</string>
+    <string name="label_printing_denied">Impresión denegada</string>
+    <string name="label_copying_allowed">Copia permitida</string>
+    <string name="label_copying_denied">Copia denegada</string>
+    <string name="label_unknown">Desconocido</string>
+    <string name="content_desc_theme_settings">Ajustes de tema</string>
+    <string name="theme_system_default">Predeterminado del sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_amoled">Negro AMOLED</string>
+    <string name="title_processing_batch">Procesando lote</string>
+    <string name="label_batch_progress">%1$d de %2$d completados</string>
+    <string name="label_search">Buscar</string>
+    <string name="content_desc_clear_search">Borrar búsqueda</string>
+    <string name="msg_no_matching_passwords">No hay contraseñas coincidentes</string>
+    <string name="content_desc_delete_named">Eliminar %1$s</string>
+
+    <plurals name="selected_files_count">
+        <item quantity="one">%1$d archivo seleccionado</item>
+        <item quantity="other">%1$d archivos seleccionados</item>
+    </plurals>
+    <plurals name="processing_files_count">
+        <item quantity="one">Descifrando %1$d archivo...</item>
+        <item quantity="other">Descifrando %1$d archivos...</item>
+    </plurals>
 </resources>

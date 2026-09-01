@@ -42,7 +42,13 @@
                 <data android:mimeType="application/pdf" />
             </intent-filter>
             <intent-filter>
+                <action android:name="com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS" />
                 <action android:name="com.example.ACTION_SHOW_SAVED_PASSWORDS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.max97k.pddf.ACTION_SELECT_PDF" />
+                <action android:name="com.example.ACTION_SELECT_PDF" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             
