@@ -1,1 +1,1 @@
-v0.3.0 版本更新：全面架構現代化升級（Clean UseCase 領域分層）、整合 App Startup 冷啟動大幅提速、平板與折疊屏雙欄自適應支援、記憶體回收池與暫存檔案安全粉碎防護。
+v0.4.0 版本更新：全面架構現代化升級（Clean Architecture 模組化、不可變 MainUiState 與 UDF）、硬體安全加固（StrongBox KeyStore、BiometricPrompt 生物辨識與 DoD 檔案粉碎）、Android 15 預測返回與 16KB 頁面對齊、平板雙欄適配、多國語系與 WorkManager 背景解密。

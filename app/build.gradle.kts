@@ -22,8 +22,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 24
     targetSdk = 35
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 7
-    versionName = (project.findProperty("versionName") as? String) ?: "0.3.0"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 8
+    versionName = (project.findProperty("versionName") as? String) ?: "0.4.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

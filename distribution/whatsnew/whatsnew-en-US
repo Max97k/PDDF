@@ -1,1 +1,1 @@
-v0.3.0 Release: Architecture modernization with clean UseCases, App Startup acceleration, foldable/tablet adaptive layout support, and secure file shredding.
+v0.4.0 Release: Architecture modernization (Clean Architecture, UDF MainUiState), hardware security (StrongBox KeyStore, BiometricPrompt, DoD shredding), Android 15 predictive back, 16KB page alignment, adaptive tablet layout, and WorkManager background decryption.
