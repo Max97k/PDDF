@@ -16,12 +16,12 @@ jacoco {
 
 android {
   namespace = "com.example"
-  compileSdk = 35
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.max97k.pddf"
     minSdk = 24
-    targetSdk = 35
+    targetSdk = 36
     versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 8
     versionName = (project.findProperty("versionName") as? String) ?: "0.4.0"
 
