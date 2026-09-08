@@ -15,11 +15,11 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-class DecryptPdfUseCase(
+open class DecryptPdfUseCase(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
-    suspend fun decrypt(
+    open suspend fun decrypt(
         context: Context,
         inputUri: Uri,
         outputUri: Uri,
@@ -36,12 +36,27 @@ class DecryptPdfUseCase(
                 docWithoutPass?.use {
                     if (!it.isEncrypted) {
                         // Copy the original bytes to outputUri so the caller gets a valid file.
-                        openSafeInputStream(context, inputUri)?.use { srcStream ->
-                            openSafeOutputStream(context, outputUri)?.buffered()?.use { dstStream ->
-                                srcStream.copyTo(dstStream)
+                        val copySucceeded = try {
+                            val srcStream = openSafeInputStream(context, inputUri)
+                            val dstStream = openSafeOutputStream(context, outputUri)
+                            if (srcStream != null && dstStream != null) {
+                                srcStream.use { s ->
+                                    dstStream.buffered().use { d ->
+                                        s.copyTo(d)
+                                    }
+                                }
+                                true
+                            } else {
+                                false
                             }
+                        } catch (_: Exception) {
+                            false
                         }
-                        return@withContext DecryptStatus.NOT_ENCRYPTED
+                        return@withContext if (copySucceeded) {
+                            DecryptStatus.NOT_ENCRYPTED
+                        } else {
+                            DecryptStatus.ERROR
+                        }
                     }
                 }
             }
@@ -52,22 +67,21 @@ class DecryptPdfUseCase(
         // 2. Attempt decryption with password
         try {
             openSafeInputStream(context, inputUri)?.use { inputStream ->
-                val document = PDDocument.load(
+                PDDocument.load(
                     inputStream.buffered(),
                     passwordValue,
                     com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
-                )
-                try {
+                ).use { document ->
                     if (!document.isEncrypted) {
                         return@withContext DecryptStatus.NOT_ENCRYPTED
                     }
                     document.setAllSecurityToBeRemoved(true)
-                    openSafeOutputStream(context, outputUri)?.buffered()?.use { outputStream ->
+                    val outStream = openSafeOutputStream(context, outputUri)
+                        ?: return@withContext DecryptStatus.ERROR
+                    outStream.buffered().use { outputStream ->
                         document.save(outputStream)
                         return@withContext DecryptStatus.SUCCESS
                     }
-                } finally {
-                    document.close()
                 }
             }
         } catch (_: InvalidPasswordException) {
@@ -77,7 +91,14 @@ class DecryptPdfUseCase(
             return@withContext when {
                 msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required") ->
                     DecryptStatus.WRONG_PASSWORD
-                msg.contains("security handler") || msg.contains("cryptfilter") || msg.contains("certificate") || msg.contains("public key") || msg.contains("unsupported") ->
+                msg.contains("security handler") ||
+                msg.contains("cryptfilter") ||
+                msg.contains("certificate") ||
+                msg.contains("public key") ||
+                msg.contains("unsupported") ||
+                msg.contains("filter") ||
+                msg.contains("drm") ||
+                msg.contains("algorithm") ->
                     DecryptStatus.UNSUPPORTED_ENCRYPTION
                 else ->
                     DecryptStatus.ERROR
@@ -131,7 +152,7 @@ class DecryptPdfUseCase(
         }
     }
 
-    fun openSafeInputStream(context: Context, uri: Uri): InputStream? {
+    open fun openSafeInputStream(context: Context, uri: Uri): InputStream? {
         return try {
             context.contentResolver.openInputStream(uri)
         } catch (_: Exception) {
@@ -145,7 +166,7 @@ class DecryptPdfUseCase(
         }
     }
 
-    fun openSafeOutputStream(context: Context, uri: Uri): OutputStream? {
+    open fun openSafeOutputStream(context: Context, uri: Uri): OutputStream? {
         return try {
             if (uri.scheme == "file" && uri.path != null) {
                 FileOutputStream(File(uri.path!!))

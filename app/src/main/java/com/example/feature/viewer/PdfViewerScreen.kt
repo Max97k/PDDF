@@ -25,7 +25,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -39,6 +38,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
+import androidx.fragment.app.commitNow
 import androidx.pdf.viewer.fragment.PdfViewerFragment
 import com.example.R
 
@@ -114,7 +114,7 @@ fun PdfViewerScreen(
                 // Guard against duplicate commits: AndroidView.update fires on every recomposition,
                 // but fragment transactions are asynchronous — findFragmentByTag returns null until
                 // the commit is processed, so without this flag a second commit could sneak in.
-                val committed = remember(containerId) { mutableStateOf(false) }
+                val committed = remember(containerId) { booleanArrayOf(false) }
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
@@ -125,8 +125,8 @@ fun PdfViewerScreen(
                     update = { _ ->
                         if (!fragmentManager.isStateSaved && !fragmentManager.isDestroyed) {
                             val existing = fragmentManager.findFragmentByTag(fragmentTag) as? PdfViewerFragment
-                            if (existing == null && !committed.value) {
-                                committed.value = true
+                            if (existing == null && !committed[0]) {
+                                committed[0] = true
                                 val fragment = PdfViewerFragment().apply {
                                     documentUri = uri
                                 }
@@ -143,11 +143,17 @@ fun PdfViewerScreen(
 
                 DisposableEffect(containerId, fragmentManager) {
                     onDispose {
-                        if (!fragmentManager.isStateSaved && !fragmentManager.isDestroyed) {
+                        if (!fragmentManager.isDestroyed) {
                             val fragment = fragmentManager.findFragmentByTag(fragmentTag)
                             if (fragment != null) {
-                                fragmentManager.commit(allowStateLoss = true) {
-                                    remove(fragment)
+                                try {
+                                    fragmentManager.commitNow(allowStateLoss = true) {
+                                        remove(fragment)
+                                    }
+                                } catch (_: Exception) {
+                                    fragmentManager.commit(allowStateLoss = true) {
+                                        remove(fragment)
+                                    }
                                 }
                             }
                         }

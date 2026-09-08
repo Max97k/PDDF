@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class AutoUnlockUseCase(
+open class AutoUnlockUseCase(
     private val decryptPdfUseCase: DecryptPdfUseCase,
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -37,27 +37,47 @@ class AutoUnlockUseCase(
         Uri.fromFile(file)
     }
 
-    suspend fun tryAutoUnlock(
+    open suspend fun tryAutoUnlock(
         context: Context,
         uri: Uri
     ): AutoUnlockResult = withContext(ioDispatcher) {
-        // 1. Check if unencrypted
-        var isEncrypted = true
+        // 1. Check if unencrypted or corrupted / unsupported
+        val inputStream = try {
+            decryptPdfUseCase.openSafeInputStream(context, uri)
+        } catch (_: Exception) {
+            null
+        } ?: return@withContext AutoUnlockResult.Error("Unable to open file stream")
+
+        var isEncrypted = false
         try {
-            decryptPdfUseCase.openSafeInputStream(context, uri)?.use { input ->
-                try {
-                    val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
-                        input.buffered(),
-                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
-                    )
-                    doc.use {
-                        isEncrypted = it.isEncrypted
-                    }
-                } catch (_: Exception) {
-                    isEncrypted = true
+            inputStream.use { input ->
+                val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                    input.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                )
+                doc.use {
+                    isEncrypted = it.isEncrypted
                 }
             }
-        } catch (_: Exception) {}
+        } catch (_: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) {
+            // Password is required to open this PDF; valid encrypted document
+            isEncrypted = true
+        } catch (e: Exception) {
+            val msg = e.message?.lowercase() ?: ""
+            return@withContext if (msg.contains("security handler") ||
+                msg.contains("cryptfilter") ||
+                msg.contains("certificate") ||
+                msg.contains("public key") ||
+                msg.contains("unsupported") ||
+                msg.contains("filter") ||
+                msg.contains("drm") ||
+                msg.contains("algorithm")
+            ) {
+                AutoUnlockResult.Error("Unsupported encryption/DRM")
+            } else {
+                AutoUnlockResult.Error("Corrupted PDF header or file")
+            }
+        }
 
         if (!isEncrypted) {
             return@withContext AutoUnlockResult.NotEncrypted
@@ -80,6 +100,9 @@ class AutoUnlockUseCase(
                         outputUri = fileProviderUri(context, tempFile), // content:// required by PdfViewerFragment
                         matchedPasswordName = saved.name
                     )
+                } else if (status == DecryptStatus.UNSUPPORTED_ENCRYPTION) {
+                    com.example.util.FileUtils.secureDelete(tempFile)
+                    return@withContext AutoUnlockResult.Error("Unsupported encryption")
                 } else {
                     com.example.util.FileUtils.secureDelete(tempFile)
                 }
@@ -91,7 +114,7 @@ class AutoUnlockUseCase(
         AutoUnlockResult.RequireManualPassword
     }
 
-    suspend fun unlockWithManualPassword(
+    open suspend fun unlockWithManualPassword(
         context: Context,
         uri: Uri,
         enteredPassword: String,

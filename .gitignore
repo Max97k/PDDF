@@ -21,3 +21,5 @@ debug.keystore
 app/build/
 app/release/
 *.pdf
+.agents/
+TEST_READY.md

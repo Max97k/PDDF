@@ -75,4 +75,20 @@ class PasswordRepositoryTest {
         result = repository.allPasswords.first()
         assertTrue(result is com.example.util.Result.Success && (result as com.example.util.Result.Success).data.isEmpty())
     }
+
+    @Test
+    fun testGetAllDecryptedPasswords_andCustomDispatcher() = runTest {
+        val customRepo = PasswordRepository(
+            passwordDao = database.passwordDao(),
+            cryptoManager = com.example.util.CryptoManager(),
+            ioDispatcher = kotlinx.coroutines.Dispatchers.IO
+        )
+        val pass = PasswordEntity(id = 20, name = "Confidential", passwordValue = "pass999", timestamp = 5000L)
+        customRepo.insert(pass)
+
+        val decryptedList = customRepo.getAllDecryptedPasswords()
+        assertEquals(1, decryptedList.size)
+        assertEquals("Confidential", decryptedList[0].name)
+        assertEquals("pass999", decryptedList[0].passwordValue)
+    }
 }

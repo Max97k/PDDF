@@ -55,11 +55,19 @@ class MainViewModelUdfTurbineTest {
             .allowMainThreadQueries()
             .build()
         repository = PasswordRepository(database.passwordDao(), CryptoManager())
+        val themePrefs = com.example.data.ThemePreferences(application, ioDispatcher = testDispatcher)
+        runTest(testDispatcher) {
+            themePrefs.saveThemeMode(com.example.data.ThemeMode.SYSTEM)
+            advanceUntilIdle()
+        }
         viewModel = MainViewModel(application, repository, ioDispatcher = testDispatcher)
     }
 
     @After
-    fun tearDown() {
+    fun tearDown() = runTest(testDispatcher) {
+        val themePrefs = com.example.data.ThemePreferences(application, ioDispatcher = testDispatcher)
+        themePrefs.saveThemeMode(com.example.data.ThemeMode.SYSTEM)
+        advanceUntilIdle()
         database.close()
         Dispatchers.resetMain()
     }
@@ -253,6 +261,62 @@ class MainViewModelUdfTurbineTest {
             viewModel.onAppForegrounded()
             val cleared = awaitItem()
             assertEquals("", cleared)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun testUiEffect_emitsSnackbarOnCorruptedPdfAutoUnlockTurbine() = runTest {
+        val corruptFile = java.io.File.createTempFile("corrupt_turbine", ".pdf", application.cacheDir)
+        corruptFile.writeBytes("CORRUPT_BYTES_FOR_TURBINE".toByteArray())
+        corruptFile.deleteOnExit()
+
+        viewModel.uiEffect.test {
+            viewModel.handleExternalPdfIntent(application, Uri.fromFile(corruptFile))
+            advanceUntilIdle()
+
+            val effect = awaitItem()
+            assertTrue("Expected UiEffect.ShowSnackbar, got $effect", effect is UiEffect.ShowSnackbar)
+            val snackbar = effect as UiEffect.ShowSnackbar
+            assertTrue(
+                "Expected error message, got ${snackbar.message}",
+                snackbar.message.contains("Corrupted") || snackbar.message.contains("Failed") || snackbar.message.contains("Error")
+            )
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun testUiEffect_emitsSnackbarOnUnsupportedEncryptionAutoUnlockTurbine() = runTest {
+        val mockAutoUnlockUseCase = object : com.example.domain.usecase.AutoUnlockUseCase(
+            com.example.domain.usecase.DecryptPdfUseCase(testDispatcher),
+            com.example.domain.usecase.PasswordVaultUseCase(repository),
+            testDispatcher
+        ) {
+            override suspend fun tryAutoUnlock(context: android.content.Context, uri: Uri): AutoUnlockResult {
+                return AutoUnlockResult.Error("Unsupported encryption/DRM")
+            }
+        }
+        val customViewModel = MainViewModel(
+            application = application,
+            repository = repository,
+            ioDispatcher = testDispatcher,
+            autoUnlockUseCase = mockAutoUnlockUseCase
+        )
+
+        customViewModel.uiEffect.test {
+            customViewModel.handleExternalPdfIntent(application, Uri.parse("content://dummy/unsupported.pdf"))
+            advanceUntilIdle()
+
+            val effect = awaitItem()
+            assertTrue("Expected UiEffect.ShowSnackbar, got $effect", effect is UiEffect.ShowSnackbar)
+            val snackbar = effect as UiEffect.ShowSnackbar
+            assertTrue(
+                "Expected unsupported error message, got ${snackbar.message}",
+                snackbar.message.contains("Unsupported encryption")
+            )
 
             cancelAndIgnoreRemainingEvents()
         }

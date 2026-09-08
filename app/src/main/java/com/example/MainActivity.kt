@@ -3,8 +3,8 @@ package com.example
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -27,6 +27,30 @@ import com.example.util.FileUtils
 class MainActivity : FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+
+    private val pickPdfLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            val uris = mutableListOf<Uri>()
+            data?.clipData?.let { clipData ->
+                for (i in 0 until clipData.itemCount) {
+                    uris.add(clipData.getItemAt(i).uri)
+                }
+            } ?: data?.data?.let { uris.add(it) }
+            if (uris.isNotEmpty()) {
+                val flags = data?.flags ?: 0
+                val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                if (takeFlags != 0) {
+                    uris.forEach { uri ->
+                        FileUtils.takePersistableUriPermissionSafely(this, uri, takeFlags)
+                    }
+                }
+                viewModel.setSelectedUris(this, uris)
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,7 +108,7 @@ class MainActivity : FragmentActivity() {
                 putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
             }
-            startActivityForResult(pickerIntent, REQUEST_CODE_PICK_PDF)
+            pickPdfLauncher.launch(pickerIntent)
             return
         }
 
@@ -93,20 +117,10 @@ class MainActivity : FragmentActivity() {
         if (Intent.ACTION_VIEW == action) {
             intent.data?.let { uris.add(it) }
         } else if (Intent.ACTION_SEND == action) {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableExtra(Intent.EXTRA_STREAM)
-            }
+            val uri = intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
             uri?.let { uris.add(it) }
         } else if (Intent.ACTION_SEND_MULTIPLE == action) {
-            val streamUris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
-            }
+            val streamUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
             streamUris?.let { uris.addAll(it) }
         }
 
@@ -116,25 +130,6 @@ class MainActivity : FragmentActivity() {
                 viewModel.startAutoUnlockFlow(this, uris.first()) {}
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_PICK_PDF && resultCode == RESULT_OK) {
-            val uris = mutableListOf<Uri>()
-            data?.clipData?.let { clipData ->
-                for (i in 0 until clipData.itemCount) {
-                    uris.add(clipData.getItemAt(i).uri)
-                }
-            } ?: data?.data?.let { uris.add(it) }
-            if (uris.isNotEmpty()) {
-                viewModel.setSelectedUris(this, uris)
-            }
-        }
-    }
-
-    companion object {
-        private const val REQUEST_CODE_PICK_PDF = 1001
     }
 }
 

@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class DecryptStatus {
     SUCCESS,
@@ -56,7 +57,7 @@ class MainViewModel @JvmOverloads constructor(
             AppDatabase::class.java, "pdf-decryptor-db"
         )
         .addMigrations(AppDatabase.MIGRATION_1_2)
-        .fallbackToDestructiveMigration()
+        .fallbackToDestructiveMigration(dropAllTables = true)
         .build().passwordDao()
     ),
     private val themePreferences: ThemePreferences = ThemePreferences(application),
@@ -150,21 +151,24 @@ class MainViewModel @JvmOverloads constructor(
         }
 
         // Restore conflict preferences
-        val savedRemember = prefs.getBoolean("remember_conflict_choice", false)
-        rememberConflictChoice.value = savedRemember
-        val savedModeStr = prefs.getString("conflict_mode", ConflictMode.SAVE_AS_COPY.name)
-        val savedMode = try {
-            ConflictMode.valueOf(savedModeStr!!)
-        } catch (_: Exception) {
-            ConflictMode.SAVE_AS_COPY
-        }
-        conflictMode.value = if (savedRemember) savedMode else ConflictMode.SAVE_AS_COPY
+        viewModelScope.launch(ioDispatcher) {
+            val savedRemember = prefs.getBoolean("remember_conflict_choice", false)
+            val savedModeStr = prefs.getString("conflict_mode", ConflictMode.SAVE_AS_COPY.name)
+            val savedMode = try {
+                ConflictMode.valueOf(savedModeStr ?: ConflictMode.SAVE_AS_COPY.name)
+            } catch (_: Exception) {
+                ConflictMode.SAVE_AS_COPY
+            }
+            val activeMode = if (savedRemember) savedMode else ConflictMode.SAVE_AS_COPY
+            conflictMode.value = activeMode
+            rememberConflictChoice.value = savedRemember
 
-        _uiState.update {
-            it.copy(
-                rememberConflictChoice = savedRemember,
-                conflictMode = if (savedRemember) savedMode else ConflictMode.SAVE_AS_COPY
-            )
+            _uiState.update {
+                it.copy(
+                    rememberConflictChoice = savedRemember,
+                    conflictMode = activeMode
+                )
+            }
         }
     }
 
@@ -285,10 +289,12 @@ class MainViewModel @JvmOverloads constructor(
         conflictMode.value = mode
         rememberConflictChoice.value = remember
         _uiState.update { it.copy(conflictMode = mode, rememberConflictChoice = remember) }
-        prefs.edit().apply {
-            putBoolean("remember_conflict_choice", remember)
-            if (remember) putString("conflict_mode", mode.name) else remove("conflict_mode")
-            apply()
+        viewModelScope.launch(ioDispatcher) {
+            prefs.edit().apply {
+                putBoolean("remember_conflict_choice", remember)
+                if (remember) putString("conflict_mode", mode.name) else remove("conflict_mode")
+                apply()
+            }
         }
     }
 
@@ -296,23 +302,10 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch(ioDispatcher) {
             val currentUris = selectedUris.value
             val removedUris = currentUris.filter { !uris.contains(it) }
-            val persistedPermissions = try {
-                context.contentResolver.persistedUriPermissions.map { it.uri }
-            } catch (_: Exception) {
-                emptyList()
-            }
             for (removedUri in removedUris) {
-                if (persistedPermissions.contains(removedUri)) {
-                    try {
-                        context.contentResolver.releasePersistableUriPermission(
-                            removedUri,
-                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
+                FileUtils.releasePersistableUriPermissionSafely(context, removedUri)
             }
+            FileUtils.pruneStalePersistedUriPermissions(context, uris)
 
             val pdfPairs = uris.mapNotNull { uri ->
                 val name = FileUtils.getFileName(context, uri)
@@ -354,6 +347,7 @@ class MainViewModel @JvmOverloads constructor(
             ensurePdfBoxInitialized()
             val unencryptedNames = mutableListOf<String>()
             val unsupportedNames = mutableListOf<String>()
+            val corruptedNames = mutableListOf<String>()
             var extractedMetadata: PdfMetadata? = null
 
             for ((uri, fileName) in pdfPairs) {
@@ -361,19 +355,36 @@ class MainViewModel @JvmOverloads constructor(
                     extractedMetadata = decryptPdfUseCase.extractMetadata(context, uri)
                 }
                 try {
-                    decryptPdfUseCase.openSafeInputStream(context, uri)?.use { inputStream ->
-                        val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
-                            inputStream.buffered(),
-                            com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
-                        )
-                        doc.use {
-                            if (!it.isEncrypted) unencryptedNames.add(fileName)
+                    val stream = decryptPdfUseCase.openSafeInputStream(context, uri)
+                    if (stream != null) {
+                        stream.use { inputStream ->
+                            val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                                inputStream.buffered(),
+                                com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                            )
+                            doc.use {
+                                if (!it.isEncrypted) unencryptedNames.add(fileName)
+                            }
                         }
+                    } else {
+                        corruptedNames.add(fileName)
                     }
+                } catch (_: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) {
+                    // Valid password-encrypted PDF, normal expectation
                 } catch (e: Exception) {
                     val msg = e.message?.lowercase() ?: ""
-                    if (msg.contains("security handler") || msg.contains("cryptfilter") || msg.contains("certificate") || msg.contains("public key") || msg.contains("unsupported")) {
+                    if (msg.contains("security handler") ||
+                        msg.contains("cryptfilter") ||
+                        msg.contains("certificate") ||
+                        msg.contains("public key") ||
+                        msg.contains("unsupported") ||
+                        msg.contains("filter") ||
+                        msg.contains("drm") ||
+                        msg.contains("algorithm")
+                    ) {
                         unsupportedNames.add(fileName)
+                    } else {
+                        corruptedNames.add(fileName)
                     }
                 }
             }
@@ -387,6 +398,9 @@ class MainViewModel @JvmOverloads constructor(
             if (unsupportedNames.isNotEmpty()) {
                 warnings.add(context.getString(R.string.msg_warning_unsupported, unsupportedNames.joinToString(", ")))
             }
+            if (corruptedNames.isNotEmpty()) {
+                warnings.add("⚠️ Warning: ${corruptedNames.joinToString(", ")} is corrupted or unreadable.")
+            }
 
             val finalMsg = if (warnings.isNotEmpty()) warnings.joinToString("\n") else null
             statusMessage.value = finalMsg
@@ -397,6 +411,10 @@ class MainViewModel @JvmOverloads constructor(
                     statusMessage = finalMsg
                 )
             }
+
+            if (corruptedNames.isNotEmpty()) {
+                emitEffect(UiEffect.ShowSnackbar("⚠️ Warning: ${corruptedNames.joinToString(", ")} is corrupted or unreadable."))
+            }
         }
     }
 
@@ -406,7 +424,7 @@ class MainViewModel @JvmOverloads constructor(
         onViewerReady: (Uri) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val fileName = FileUtils.getFileName(context, uri)
+            val fileName = withContext(ioDispatcher) { FileUtils.getFileName(context, uri) }
             isAutoUnlocking.value = true
             autoUnlockTargetUri.value = uri
             autoUnlockFileName.value = fileName
@@ -447,11 +465,24 @@ class MainViewModel @JvmOverloads constructor(
                     }
                     onViewerReady(result.outputUri)
                 }
-                is AutoUnlockUseCase.AutoUnlockResult.RequireManualPassword,
-                is AutoUnlockUseCase.AutoUnlockResult.Error -> {
+                is AutoUnlockUseCase.AutoUnlockResult.RequireManualPassword -> {
                     isAutoUnlocking.value = false
                     showAutoUnlockPasswordPrompt.value = true
                     _uiState.update { it.copy(isAutoUnlocking = false, showAutoUnlockPasswordPrompt = true) }
+                }
+                is AutoUnlockUseCase.AutoUnlockResult.Error -> {
+                    isAutoUnlocking.value = false
+                    showAutoUnlockPasswordPrompt.value = false
+                    val errorMsg = result.message.ifBlank { context.getString(R.string.summary_error, 1) }
+                    statusMessage.value = errorMsg
+                    _uiState.update {
+                        it.copy(
+                            isAutoUnlocking = false,
+                            showAutoUnlockPasswordPrompt = false,
+                            statusMessage = errorMsg
+                        )
+                    }
+                    emitEffect(UiEffect.ShowSnackbar(errorMsg))
                 }
             }
         }
@@ -524,6 +555,18 @@ class MainViewModel @JvmOverloads constructor(
                         )
                     }
                     onViewerReady(uri)
+                }
+                DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                    showAutoUnlockPasswordPrompt.value = false
+                    val warningMsg = context.getString(R.string.summary_unsupported, 1)
+                    statusMessage.value = warningMsg
+                    _uiState.update {
+                        it.copy(
+                            showAutoUnlockPasswordPrompt = false,
+                            statusMessage = warningMsg
+                        )
+                    }
+                    emitEffect(UiEffect.ShowSnackbar(warningMsg))
                 }
                 else -> {
                     val errMsg = context.getString(R.string.summary_error, 1)
@@ -736,7 +779,7 @@ class MainViewModel @JvmOverloads constructor(
                     }
                 } ?: -1L
 
-                if (bytesCopied != null && bytesCopied > 0) {
+                if (bytesCopied > 0) {
                     val msg = context.getString(R.string.summary_decrypted_saved, 1)
                     statusMessage.value = msg
                     lastDecryptedUri.value = destUri

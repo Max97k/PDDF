@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.R
 
@@ -32,7 +35,9 @@ fun BatchProgressDialog(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.label_batch_progress, progress, total),
-                    modifier = Modifier.padding(bottom = 16.dp),
+                    modifier = Modifier
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .padding(bottom = 16.dp),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 val animatedProgress by animateFloatAsState(

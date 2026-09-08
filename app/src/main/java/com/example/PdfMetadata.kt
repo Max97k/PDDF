@@ -1,5 +1,8 @@
 package com.example
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class PdfMetadata(
     val title: String,
     val author: String,

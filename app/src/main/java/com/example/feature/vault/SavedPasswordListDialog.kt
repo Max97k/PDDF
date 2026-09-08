@@ -3,11 +3,15 @@ package com.example.feature.vault
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -90,7 +94,9 @@ fun SavedPasswordListDialog(
                     if (filteredPasswords.isEmpty()) {
                         Text(
                             text = stringResource(R.string.msg_no_matching_passwords),
-                            modifier = Modifier.padding(top = 8.dp),
+                            modifier = Modifier
+                                .semantics { liveRegion = LiveRegionMode.Polite }
+                                .padding(top = 8.dp),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     } else {
@@ -99,6 +105,7 @@ fun SavedPasswordListDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .defaultMinSize(minHeight = 48.dp)
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onSelectPassword(savedPass.passwordValue)

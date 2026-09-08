@@ -51,4 +51,19 @@ class ThemePreferencesTest {
         val lightMode = themePreferences.themeMode.first()
         assertEquals(ThemeMode.LIGHT, lightMode)
     }
+
+    @Test
+    fun testCustomDispatcherInjection() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher()
+        val testScope = TestScope(testDispatcher)
+        val testDataStore = PreferenceDataStoreFactory.create(
+            scope = testScope,
+            produceFile = { tmpFolder.newFile("test_theme_prefs_custom.preferences_pb") }
+        )
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        val customPreferences = ThemePreferences(application, testDataStore, ioDispatcher = testDispatcher)
+        customPreferences.saveThemeMode(ThemeMode.DARK)
+        val mode = customPreferences.themeMode.first()
+        assertEquals(ThemeMode.DARK, mode)
+    }
 }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,6 +72,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -91,7 +97,10 @@ import com.example.ui.components.PasswordInputSection
 import com.example.ui.components.SelectedFilesCard
 import com.example.ui.components.ThemeDropdownMenu
 import com.example.ui.components.WhatsNewDialog
+import com.example.util.FileUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -181,11 +190,18 @@ fun PDFDecryptorScreen(
     }
 
     LaunchedEffect(versionName) {
-        val sharedPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val lastSeenVersion = sharedPrefs.getString("last_seen_version", null)
-        if (lastSeenVersion != versionName) {
+        val shouldShow = withContext(Dispatchers.IO) {
+            val sharedPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            val lastSeenVersion = sharedPrefs.getString("last_seen_version", null)
+            if (lastSeenVersion != versionName) {
+                sharedPrefs.edit().putString("last_seen_version", versionName).apply()
+                true
+            } else {
+                false
+            }
+        }
+        if (shouldShow) {
             showWhatsNewDialog = true
-            sharedPrefs.edit().putString("last_seen_version", versionName).apply()
         }
     }
 
@@ -218,12 +234,7 @@ fun PDFDecryptorScreen(
                     val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     if (takeFlags != 0) {
                         uris.forEach { uri ->
-                            try {
-                                @Suppress("WrongConstant")
-                                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                            FileUtils.takePersistableUriPermissionSafely(context, uri, takeFlags)
                         }
                     }
                     onAction(MainUiAction.SelectFiles(context, uris))
@@ -520,6 +531,7 @@ fun PDFDecryptorScreen(
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Text(
                                     text = uiState.statusMessage,
+                                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                                     color = if (uiState.statusMessage.startsWith("Error") || uiState.statusMessage.startsWith("Failed") || uiState.statusMessage.contains("❌"))
                                         MaterialTheme.colorScheme.error
                                     else
@@ -788,6 +800,7 @@ fun PDFDecryptorScreen(
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
                                 text = uiState.statusMessage,
+                                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                                 color = if (uiState.statusMessage.startsWith("Error") || uiState.statusMessage.startsWith("Failed") || uiState.statusMessage.contains("❌"))
                                     MaterialTheme.colorScheme.error
                                 else
@@ -904,7 +917,10 @@ fun PDFDecryptorScreen(
                 text = stringResource(R.string.version_info, versionName ?: ""),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clickable { showWhatsNewDialog = true }
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                    .semantics { role = Role.Button }
+                    .clickable { showWhatsNewDialog = true }
             )
             TextButton(
                 onClick = {

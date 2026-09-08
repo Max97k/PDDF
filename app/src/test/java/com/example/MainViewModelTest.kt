@@ -12,8 +12,11 @@ import com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission
 import com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -72,28 +75,31 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testUpdateConflictSettings() {
+    fun testUpdateConflictSettings() = runTest(testDispatcher) {
         viewModel.updateConflictSettings(ConflictMode.OVERWRITE, true)
+        advanceUntilIdle()
 
         assertEquals(ConflictMode.OVERWRITE, viewModel.conflictMode.value)
         assertTrue(viewModel.rememberConflictChoice.value)
 
         // Verify persistence in another ViewModel instance
         val newViewModel = MainViewModel(application, repository, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
         assertEquals(ConflictMode.OVERWRITE, newViewModel.conflictMode.value)
         assertTrue(newViewModel.rememberConflictChoice.value)
 
         // Toggle back off
         viewModel.updateConflictSettings(ConflictMode.SAVE_AS_COPY, false)
+        advanceUntilIdle()
         assertFalse(viewModel.rememberConflictChoice.value)
     }
 
     @Test
-    fun testSaveAndDeletePassword() = runTest {
+    fun testSaveAndDeletePassword() = runTest(testDispatcher) {
         viewModel.savePassword("Tax Return", "pass123")
         advanceUntilIdle()
 
-        var passwordsResult = repository.allPasswords.first()
+        var passwordsResult = repository.allPasswords.first { it is com.example.util.Result.Success && it.data.isNotEmpty() }
         assertTrue(passwordsResult is com.example.util.Result.Success)
         var passwords = (passwordsResult as com.example.util.Result.Success).data
         assertTrue(passwords.any { it.name == "Tax Return" && it.passwordValue == "pass123" })
@@ -102,7 +108,7 @@ class MainViewModelTest {
         viewModel.deletePassword(savedEntity.id)
         advanceUntilIdle()
 
-        passwordsResult = repository.allPasswords.first()
+        passwordsResult = repository.allPasswords.first { it is com.example.util.Result.Success && it.data.none { p -> p.id == savedEntity.id } }
         passwords = (passwordsResult as com.example.util.Result.Success).data
         assertFalse(passwords.any { it.id == savedEntity.id })
     }
@@ -212,5 +218,112 @@ class MainViewModelTest {
         assertTrue(viewModel.requestOpenDocumentPicker.value)
         viewModel.onDocumentPickerLaunched()
         assertFalse(viewModel.requestOpenDocumentPicker.value)
+    }
+
+    @Test
+    fun testHandleExternalPdfIntent_corruptedPdf_showsSnackbarAndDoesNotShowPrompt() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        val corruptFile = File.createTempFile("corrupt_intent", ".pdf", application.cacheDir)
+        corruptFile.writeBytes("CORRUPTED_PDF_HEADER_CONTENT".toByteArray())
+        corruptFile.deleteOnExit()
+
+        viewModel.handleExternalPdfIntent(application, Uri.fromFile(corruptFile))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.showAutoUnlockPasswordPrompt.value)
+        assertFalse(viewModel.isAutoUnlocking.value)
+        assertFalse(viewModel.uiState.value.showAutoUnlockPasswordPrompt)
+        assertFalse(viewModel.uiState.value.isAutoUnlocking)
+        val statusMsg = viewModel.statusMessage.value ?: viewModel.uiState.value.statusMessage
+        org.junit.Assert.assertNotNull(statusMsg)
+        assertTrue(statusMsg!!.contains("Corrupted") || statusMsg.contains("Failed") || statusMsg.contains("Error"))
+    }
+
+    @Test
+    fun testHandleExternalPdfIntent_unsupportedEncryption_showsSnackbarAndDoesNotShowPrompt() = runTest(testDispatcher) {
+        val mockAutoUnlockUseCase = object : com.example.domain.usecase.AutoUnlockUseCase(
+            com.example.domain.usecase.DecryptPdfUseCase(testDispatcher),
+            com.example.domain.usecase.PasswordVaultUseCase(repository),
+            testDispatcher
+        ) {
+            override suspend fun tryAutoUnlock(context: android.content.Context, uri: Uri): AutoUnlockResult {
+                return AutoUnlockResult.Error("Unsupported encryption/DRM")
+            }
+        }
+        val customViewModel = MainViewModel(
+            application = application,
+            repository = repository,
+            ioDispatcher = testDispatcher,
+            autoUnlockUseCase = mockAutoUnlockUseCase
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { customViewModel.uiState.collect() }
+
+        customViewModel.handleExternalPdfIntent(application, Uri.parse("content://dummy/unsupported.pdf"))
+        advanceUntilIdle()
+
+        assertFalse(customViewModel.showAutoUnlockPasswordPrompt.value)
+        assertFalse(customViewModel.isAutoUnlocking.value)
+        assertFalse(customViewModel.uiState.value.showAutoUnlockPasswordPrompt)
+        assertFalse(customViewModel.uiState.value.isAutoUnlocking)
+        val statusMsg = customViewModel.statusMessage.value ?: customViewModel.uiState.value.statusMessage
+        org.junit.Assert.assertNotNull(statusMsg)
+        assertTrue(statusMsg!!.contains("Unsupported encryption"))
+    }
+
+    @Test
+    fun testUnlockWithManualPassword_unsupportedEncryption_dismissesPromptAndShowsSnackbar() = runTest(testDispatcher) {
+        val mockAutoUnlockUseCase = object : com.example.domain.usecase.AutoUnlockUseCase(
+            com.example.domain.usecase.DecryptPdfUseCase(testDispatcher),
+            com.example.domain.usecase.PasswordVaultUseCase(repository),
+            testDispatcher
+        ) {
+            override suspend fun unlockWithManualPassword(
+                context: android.content.Context,
+                uri: Uri,
+                enteredPassword: String,
+                rememberPassword: Boolean,
+                fileName: String
+            ): Pair<DecryptStatus, Uri?> {
+                return Pair(DecryptStatus.UNSUPPORTED_ENCRYPTION, null)
+            }
+        }
+        val customViewModel = MainViewModel(
+            application = application,
+            repository = repository,
+            ioDispatcher = testDispatcher,
+            autoUnlockUseCase = mockAutoUnlockUseCase
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { customViewModel.uiState.collect() }
+
+        // Set initial state showing prompt
+        customViewModel.updateStateForTesting { it.copy(showAutoUnlockPasswordPrompt = true) }
+        assertTrue(customViewModel.showAutoUnlockPasswordPrompt.value)
+
+        customViewModel.unlockWithManualPassword(application, Uri.parse("content://dummy/test.pdf"), "password", false)
+        advanceUntilIdle()
+
+        assertFalse(customViewModel.showAutoUnlockPasswordPrompt.value)
+        assertFalse(customViewModel.uiState.value.showAutoUnlockPasswordPrompt)
+        val statusMsg = customViewModel.statusMessage.value ?: customViewModel.uiState.value.statusMessage
+        org.junit.Assert.assertNotNull(statusMsg)
+        assertTrue(statusMsg!!.contains(application.getString(R.string.summary_unsupported, 1)))
+    }
+
+    @Test
+    fun testCheckSelectedPdfs_corruptedFile_recordsWarningInStatusMessage() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        val corruptFile = File.createTempFile("corrupt_check", ".pdf", application.cacheDir)
+        corruptFile.writeBytes("INVALID_PDF_BYTES".toByteArray())
+        corruptFile.deleteOnExit()
+
+        viewModel.setSelectedUris(application, listOf(Uri.fromFile(corruptFile)))
+        advanceUntilIdle()
+
+        val statusMsg = viewModel.statusMessage.value ?: viewModel.uiState.value.statusMessage
+        org.junit.Assert.assertNotNull(statusMsg)
+        assertTrue(statusMsg!!.contains(corruptFile.name))
+        assertTrue(statusMsg.contains("corrupted") || statusMsg.contains("unreadable"))
     }
 }

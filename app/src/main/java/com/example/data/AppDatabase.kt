@@ -14,30 +14,29 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Ensure all legacy plaintext passwords are encrypted
-                val cursor = db.query("SELECT id, passwordValue FROM passwords")
-                val cryptoManager = CryptoManager()
-                
                 val updates = mutableListOf<Pair<Int, String>>()
-                while (cursor.moveToNext()) {
-                    val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
-                    val passwordValue = cursor.getString(cursor.getColumnIndexOrThrow("passwordValue"))
-                    
-                    // If it's not encrypted (doesn't have the prefix), we encrypt it
-                    if (!passwordValue.startsWith("ENC_")) {
-                        try {
-                            val encryptedValue = cryptoManager.encrypt(passwordValue)
-                            updates.add(Pair(id, encryptedValue))
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                db.query("SELECT id, passwordValue FROM passwords").use { cursor ->
+                    val cryptoManager = CryptoManager()
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+                        val passwordValue = cursor.getString(cursor.getColumnIndexOrThrow("passwordValue"))
+                        
+                        // If it's not encrypted (doesn't have the prefix), we encrypt it
+                        if (!passwordValue.startsWith("ENC_")) {
+                            try {
+                                val encryptedValue = cryptoManager.encrypt(passwordValue)
+                                updates.add(Pair(id, encryptedValue))
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
                     }
                 }
-                cursor.close()
 
                 for ((id, encryptedValue) in updates) {
                     db.execSQL(
                         "UPDATE passwords SET passwordValue = ? WHERE id = ?",
-                        arrayOf(encryptedValue, id)
+                        arrayOf<Any>(encryptedValue, id)
                     )
                 }
             }

@@ -1,6 +1,7 @@
 package com.example.util
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -122,5 +123,91 @@ object FileUtils {
         } catch (_: Exception) {
             null
         }
+    }
+
+    const val MAX_PERSISTABLE_URI_PERMISSIONS = 128
+
+    fun takePersistableUriPermissionSafely(
+        context: Context,
+        uri: Uri,
+        modeFlags: Int,
+        maxLimit: Int = MAX_PERSISTABLE_URI_PERMISSIONS
+    ): Boolean {
+        return try {
+            val resolver = context.contentResolver
+            val persisted = resolver.persistedUriPermissions
+            if (persisted.any { it.uri == uri }) return true
+
+            if (persisted.size >= maxLimit) {
+                // Prune oldest permissions to prevent system quota exhaustion
+                val toRelease = persisted.take(persisted.size - maxLimit + 5)
+                for (p in toRelease) {
+                    try {
+                        resolver.releasePersistableUriPermission(
+                            p.uri,
+                            (if (p.isReadPermission) Intent.FLAG_GRANT_READ_URI_PERMISSION else 0) or
+                            (if (p.isWritePermission) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+                        )
+                    } catch (_: Exception) {}
+                }
+            }
+            @Suppress("WrongConstant")
+            resolver.takePersistableUriPermission(uri, modeFlags)
+            true
+        } catch (_: SecurityException) {
+            false
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun releasePersistableUriPermissionSafely(
+        context: Context,
+        uri: Uri,
+        modeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+    ): Boolean {
+        return try {
+            val resolver = context.contentResolver
+            if (resolver.persistedUriPermissions.any { it.uri == uri }) {
+                resolver.releasePersistableUriPermission(uri, modeFlags)
+                true
+            } else false
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun pruneStalePersistedUriPermissions(
+        context: Context,
+        activeUris: Collection<Uri> = emptyList(),
+        maxRetained: Int = 64
+    ) {
+        try {
+            val resolver = context.contentResolver
+            val persisted = resolver.persistedUriPermissions
+            val stale = persisted.filter { !activeUris.contains(it.uri) }
+            for (p in stale) {
+                try {
+                    resolver.releasePersistableUriPermission(
+                        p.uri,
+                        (if (p.isReadPermission) Intent.FLAG_GRANT_READ_URI_PERMISSION else 0) or
+                        (if (p.isWritePermission) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+                    )
+                } catch (_: Exception) {}
+            }
+            val remaining = resolver.persistedUriPermissions
+            if (remaining.size > maxRetained) {
+                val overflow = remaining.take(remaining.size - maxRetained)
+                for (p in overflow) {
+                    try {
+                        resolver.releasePersistableUriPermission(
+                            p.uri,
+                            (if (p.isReadPermission) Intent.FLAG_GRANT_READ_URI_PERMISSION else 0) or
+                            (if (p.isWritePermission) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+                        )
+                    } catch (_: Exception) {}
+                }
+            }
+        } catch (_: Exception) {}
     }
 }
