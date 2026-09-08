@@ -2,6 +2,7 @@ package com.example.domain.usecase
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.content.FileProvider
 import com.example.DecryptStatus
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,21 @@ class AutoUnlockUseCase(
         data class UnlockedWithSavedPassword(val outputUri: Uri, val matchedPasswordName: String) : AutoUnlockResult
         data object RequireManualPassword : AutoUnlockResult
         data class Error(val message: String) : AutoUnlockResult
+    }
+
+    /**
+     * Returns a content:// URI for [file] via FileProvider so it can be consumed by
+     * PdfViewerFragment and shared across process boundaries.
+     * file:// URIs are rejected by PdfViewerFragment and trigger FileUriExposedException on
+     * Android 7+.
+     *
+     * Falls back to Uri.fromFile() when FileProvider is unavailable (e.g. Robolectric unit tests),
+     * so the fallback keeps tests green while production always gets a proper content:// URI.
+     */
+    private fun fileProviderUri(context: Context, file: File): Uri = try {
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    } catch (_: Exception) {
+        Uri.fromFile(file)
     }
 
     suspend fun tryAutoUnlock(
@@ -56,12 +72,12 @@ class AutoUnlockUseCase(
                 val status = decryptPdfUseCase.decrypt(
                     context = context,
                     inputUri = uri,
-                    outputUri = Uri.fromFile(tempFile),
+                    outputUri = Uri.fromFile(tempFile), // write via File path is fine for local I/O
                     passwordValue = saved.passwordValue
                 )
                 if (status == DecryptStatus.SUCCESS) {
                     return@withContext AutoUnlockResult.UnlockedWithSavedPassword(
-                        outputUri = Uri.fromFile(tempFile),
+                        outputUri = fileProviderUri(context, tempFile), // content:// required by PdfViewerFragment
                         matchedPasswordName = saved.name
                     )
                 } else {
@@ -88,7 +104,7 @@ class AutoUnlockUseCase(
             val status = decryptPdfUseCase.decrypt(
                 context = context,
                 inputUri = uri,
-                outputUri = Uri.fromFile(tempFile),
+                outputUri = Uri.fromFile(tempFile), // write via File path is fine for local I/O
                 passwordValue = enteredPassword
             )
             if (status == DecryptStatus.SUCCESS) {
@@ -98,7 +114,7 @@ class AutoUnlockUseCase(
                         passwordValue = enteredPassword
                     )
                 }
-                return@withContext Pair(status, Uri.fromFile(tempFile))
+                return@withContext Pair(status, fileProviderUri(context, tempFile)) // content:// required by PdfViewerFragment
             } else {
                 com.example.util.FileUtils.secureDelete(tempFile)
                 return@withContext Pair(status, null)

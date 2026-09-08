@@ -727,14 +727,41 @@ class MainViewModel @JvmOverloads constructor(
 
     fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {
         viewModelScope.launch(ioDispatcher) {
+            isProcessing.value = true
+            _uiState.update { it.copy(isProcessing = true) }
             try {
-                decryptPdfUseCase.openSafeInputStream(context, sourceUri)?.use { input ->
+                val bytesCopied = decryptPdfUseCase.openSafeInputStream(context, sourceUri)?.use { input ->
                     decryptPdfUseCase.openSafeOutputStream(context, destUri)?.use { output ->
                         input.copyTo(output)
                     }
+                } ?: -1L
+
+                if (bytesCopied != null && bytesCopied > 0) {
+                    val msg = context.getString(R.string.summary_decrypted_saved, 1)
+                    statusMessage.value = msg
+                    lastDecryptedUri.value = destUri
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            statusMessage = msg,
+                            lastDecryptedUri = destUri
+                        )
+                    }
+                    emitEffect(UiEffect.ShowToast(msg))
+                } else {
+                    val errMsg = context.getString(R.string.summary_error, 1)
+                    statusMessage.value = errMsg
+                    _uiState.update { it.copy(isProcessing = false, statusMessage = errMsg) }
+                    emitEffect(UiEffect.ShowToast(errMsg))
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                val errMsg = context.getString(R.string.summary_error, 1)
+                statusMessage.value = errMsg
+                _uiState.update { it.copy(isProcessing = false, statusMessage = errMsg) }
+                emitEffect(UiEffect.ShowToast(errMsg))
+            } finally {
+                isProcessing.value = false
             }
         }
     }
@@ -765,13 +792,6 @@ class MainViewModel @JvmOverloads constructor(
 
     fun deletePasswordWithUndo(entity: PasswordEntity) {
         deletePassword(entity.id)
-        emitEffect(
-            UiEffect.ShowSnackbar(
-                message = "Password deleted",
-                actionLabel = "Undo",
-                onAction = { restorePassword(entity) }
-            )
-        )
     }
 
     fun onAppBackgrounded() {

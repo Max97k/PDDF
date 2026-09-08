@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@Deprecated("PdfPageItem is deprecated as PdfViewerFragment now handles PDF page rendering.")
 @Composable
 fun PdfPageItem(
     renderer: PdfRenderer,

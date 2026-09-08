@@ -35,6 +35,12 @@ class DecryptPdfUseCase(
                 }
                 docWithoutPass?.use {
                     if (!it.isEncrypted) {
+                        // Copy the original bytes to outputUri so the caller gets a valid file.
+                        openSafeInputStream(context, inputUri)?.use { srcStream ->
+                            openSafeOutputStream(context, outputUri)?.buffered()?.use { dstStream ->
+                                srcStream.copyTo(dstStream)
+                            }
+                        }
                         return@withContext DecryptStatus.NOT_ENCRYPTED
                     }
                 }

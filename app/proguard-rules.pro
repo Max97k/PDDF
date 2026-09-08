@@ -69,3 +69,8 @@
 -keep class com.example.util.CryptoManager { *; }
 -keep class com.example.PdfMetadata { *; }
 -keep class com.example.data.ThemeMode { *; }
+
+# AndroidX PDF Viewer
+-keep class androidx.pdf.** { *; }
+-dontwarn androidx.pdf.**
+

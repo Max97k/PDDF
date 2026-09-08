@@ -17,10 +17,11 @@ jacoco {
 android {
   namespace = "com.example"
   compileSdk = 36
+  compileSdkExtension = 19
 
   defaultConfig {
     applicationId = "com.max97k.pddf"
-    minSdk = 24
+    minSdk = 34
     targetSdk = 36
     versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 8
     versionName = (project.findProperty("versionName") as? String) ?: "0.4.0"
@@ -168,7 +169,8 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.pdfbox.android)
   implementation("androidx.biometric:biometric:1.1.0")
-  implementation("androidx.fragment:fragment-ktx:1.6.2")
+  implementation(libs.androidx.fragment.ktx)
+  implementation(libs.androidx.pdf.viewer.fragment)
   implementation("androidx.datastore:datastore-preferences:1.1.1")
   implementation(libs.androidx.work.runtime.ktx)
   testImplementation(libs.androidx.work.testing)

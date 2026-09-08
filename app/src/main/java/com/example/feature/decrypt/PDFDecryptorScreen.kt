@@ -256,6 +256,23 @@ fun PDFDecryptorScreen(
         }
     )
 
+    // Dedicated launcher for saving the already-decrypted preview PDF.
+    // MUST NOT reuse createDocumentLauncher — that one triggers a full re-decryption
+    // with uiState.password (which is "" when opened from external sources like Gmail),
+    // resulting in a 0-byte output file.
+    val savePreviewDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                val sourceUri = uiState.previewPdfUri
+                if (destUri != null && sourceUri != null) {
+                    onAction(MainUiAction.CopyUriStream(context, sourceUri, destUri))
+                }
+            }
+        }
+    )
+
     var isDragging by remember { mutableStateOf(false) }
 
     val dragAndDropTarget = remember {
@@ -394,8 +411,8 @@ fun PDFDecryptorScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 DocumentDetailsCard(
                                     metadata = uiState.selectedMetadata,
-                                    onPreview = if (uiState.hasSelectedFiles) {
-                                        { onAction(MainUiAction.SetPreviewPdfUri(uiState.selectedUris.first())) }
+                                    onPreview = if (uiState.activePreviewUri != null) {
+                                        { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
                                     } else null
                                 )
                             }
@@ -674,8 +691,8 @@ fun PDFDecryptorScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             DocumentDetailsCard(
                                 metadata = uiState.selectedMetadata,
-                                onPreview = if (uiState.hasSelectedFiles) {
-                                    { onAction(MainUiAction.SetPreviewPdfUri(uiState.selectedUris.first())) }
+                                onPreview = if (uiState.activePreviewUri != null) {
+                                    { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
                                 } else null
                             )
                         }
@@ -981,7 +998,7 @@ fun PDFDecryptorScreen(
                     type = "application/pdf"
                     putExtra(Intent.EXTRA_TITLE, fileName)
                 }
-                createDocumentLauncher.launch(intent)
+                savePreviewDocumentLauncher.launch(intent)
             }
         )
     }

@@ -275,4 +275,66 @@ class ComposeUiTests {
         composeTestRule.onNodeWithContentDescription("Close").performClick()
         assert(closed)
     }
+
+    @Test
+    fun pdfViewerScreen_actionsWorkCorrectly() {
+        var shared = false
+        var saved = false
+        var closed = false
+
+        composeTestRule.setContent {
+            PdfViewerScreen(
+                uri = android.net.Uri.parse("file:///sample.pdf"),
+                title = "Sample Document",
+                onClose = { closed = true },
+                onShare = { shared = true },
+                onSaveAs = { saved = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Sample Document").assertExists()
+        composeTestRule.onNodeWithContentDescription("Share File").performClick()
+        assert(shared)
+        composeTestRule.onNodeWithContentDescription("Save As New").performClick()
+        assert(saved)
+        composeTestRule.onNodeWithContentDescription("Close").performClick()
+        assert(closed)
+    }
+
+    @Test
+    fun pdfViewerDialog_displaysAndDismissesCorrectly() {
+        var dismissed = false
+        var shared = false
+
+        composeTestRule.setContent {
+            com.example.feature.viewer.PdfViewerDialog(
+                uri = android.net.Uri.parse("file:///dialog_sample.pdf"),
+                title = "Dialog PDF",
+                onDismiss = { dismissed = true },
+                onShare = { shared = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Dialog PDF").assertExists()
+        composeTestRule.onNodeWithContentDescription("Share File").performClick()
+        assert(shared)
+        composeTestRule.onNodeWithContentDescription("Close").performClick()
+        assert(dismissed)
+    }
+
+    @Test
+    fun uiPdfViewer_delegatesCorrectly() {
+        var dismissed = false
+        composeTestRule.setContent {
+            com.example.ui.PdfViewerDialog(
+                uri = android.net.Uri.parse("file:///ui_delegation.pdf"),
+                title = "UI Delegated PDF",
+                onDismiss = { dismissed = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("UI Delegated PDF").assertExists()
+        composeTestRule.onNodeWithContentDescription("Close").performClick()
+        assert(dismissed)
+    }
 }
