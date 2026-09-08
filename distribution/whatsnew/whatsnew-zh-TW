@@ -1,1 +1,1 @@
-v0.4.0 版本更新：全面架構現代化升級（Clean Architecture 模組化、不可變 MainUiState 與 UDF）、硬體安全加固（StrongBox KeyStore、BiometricPrompt 生物辨識與 DoD 檔案粉碎）、Android 15 預測返回與 16KB 頁面對齊、平板雙欄適配、多國語系與 WorkManager 背景解密。
+v0.5.0 版本更新：修復外部開啟（Gmail/雲端硬碟）自動解鎖後，閱讀器另存為產出 0-byte 空檔案問題；全新整合官方 AndroidX PDF 閱讀器，支援雙指平滑縮放與文字選取搜尋；加固 PDF 損壞標頭與不支援 DRM 之例外防禦；全面 AutoClose 串流資源釋放與主線程零 I/O 隔離；優化 TalkBack 無障礙規範與 48dp 觸控標準。
