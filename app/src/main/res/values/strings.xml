@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF Decryptor</string>
     <string name="btn_select_pdfs">Select Encrypted PDFs</string>
@@ -53,6 +53,7 @@
     <string name="btn_exit_search_pdf">Close Search</string>
     <string name="btn_overwrite">Overwrite Original</string>
     <string name="btn_save_as">Save As New</string>
+    <string name="btn_decrypt_and_preview">Decrypt &amp; View</string>
     <string name="version_info">Version %1$s</string>
     <string name="github_link">GitHub Source</string>
 

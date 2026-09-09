@@ -191,7 +191,12 @@ class MainViewModel @JvmOverloads constructor(
     // ---------------------------------------------------------------------------------------------
     fun onAction(action: MainUiAction) {
         when (action) {
-            is MainUiAction.SelectFiles -> setSelectedUris(action.context, action.uris)
+            is MainUiAction.SelectFiles -> {
+                setSelectedUris(action.context, action.uris)
+                if (action.uris.size == 1) {
+                    startAutoUnlockFlow(action.context, action.uris.first())
+                }
+            }
             is MainUiAction.ClearSelectedFiles -> setSelectedUris(action.context, emptyList())
             is MainUiAction.RequestFilePicker -> triggerOpenDocumentPicker()
             is MainUiAction.UpdatePassword -> {
@@ -215,8 +220,10 @@ class MainViewModel @JvmOverloads constructor(
             is MainUiAction.DecryptInPlace -> decryptPdfsInPlace(action.context, uiState.value.selectedUris, uiState.value.password)
             is MainUiAction.DecryptToDirectory -> decryptPdfsToDirectory(action.context, uiState.value.selectedUris, action.outputDirectoryUri, uiState.value.password, uiState.value.conflictMode)
             is MainUiAction.DecryptToUri -> decryptPdfToUri(action.context, uiState.value.selectedUris.firstOrNull() ?: return, action.destUri, uiState.value.password)
+            is MainUiAction.DecryptAndPreview -> decryptAndPreview(action.context, action.uri, action.passwordValue)
             is MainUiAction.RequestSaveAsPicker -> handleSaveAsRequest()
             is MainUiAction.CancelBatch -> cancelBatch()
+            is MainUiAction.StartAutoUnlock -> startAutoUnlockFlow(action.context, action.uri)
             is MainUiAction.HandleExternalIntent -> handleExternalPdfIntent(action.context, action.uri, action.onViewerReady)
             is MainUiAction.UnlockWithManualPassword -> unlockWithManualPassword(action.context, uiState.value.autoUnlockTargetUri ?: return, action.enteredPassword, action.rememberPassword, action.onViewerReady)
             is MainUiAction.DismissAutoUnlockPrompt -> dismissAutoUnlockPrompt()
@@ -386,7 +393,9 @@ class MainViewModel @JvmOverloads constructor(
                     // Valid password-encrypted PDF, normal expectation
                 } catch (e: Exception) {
                     val msg = e.message?.lowercase() ?: ""
-                    if (msg.contains("security handler") ||
+                    if (msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required")) {
+                        // Valid password-encrypted PDF, normal expectation
+                    } else if (msg.contains("security handler") ||
                         msg.contains("cryptfilter") ||
                         msg.contains("certificate") ||
                         msg.contains("public key") ||
@@ -505,6 +514,21 @@ class MainViewModel @JvmOverloads constructor(
         handleExternalPdfIntent(context, uri, onViewerReady)
     }
 
+    fun decryptAndPreview(context: Context, uri: Uri, passwordValue: String) {
+        viewModelScope.launch {
+            if (autoUnlockFileName.value.isBlank()) {
+                autoUnlockFileName.value = withContext(ioDispatcher) { FileUtils.getFileName(context, uri) }
+            }
+            autoUnlockTargetUri.value = uri
+            unlockWithManualPassword(
+                context = context,
+                uri = uri,
+                enteredPassword = passwordValue,
+                rememberPassword = false
+            )
+        }
+    }
+
     fun unlockWithManualPassword(
         context: Context,
         uri: Uri,
@@ -519,12 +543,16 @@ class MainViewModel @JvmOverloads constructor(
 
             ensurePdfBoxInitialized()
 
+            val effectiveFileName = autoUnlockFileName.value.ifBlank {
+                withContext(ioDispatcher) { FileUtils.getFileName(context, uri) }
+            }
+
             val (status, resultUri) = autoUnlockUseCase.unlockWithManualPassword(
                 context = context,
                 uri = uri,
                 enteredPassword = enteredPassword,
                 rememberPassword = rememberPassword,
-                fileName = autoUnlockFileName.value
+                fileName = effectiveFileName
             )
 
             isProcessing.value = false
@@ -554,7 +582,8 @@ class MainViewModel @JvmOverloads constructor(
                 DecryptStatus.WRONG_PASSWORD -> {
                     val errMsg = context.getString(R.string.msg_wrong_password_try_again)
                     autoUnlockErrorMessage.value = errMsg
-                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg) }
+                    statusMessage.value = errMsg
+                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg, statusMessage = errMsg) }
                 }
                 DecryptStatus.NOT_ENCRYPTED -> {
                     lastDecryptedUri.value = uri
@@ -584,7 +613,8 @@ class MainViewModel @JvmOverloads constructor(
                 else -> {
                     val errMsg = context.getString(R.string.summary_error, 1)
                     autoUnlockErrorMessage.value = errMsg
-                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg) }
+                    statusMessage.value = errMsg
+                    _uiState.update { it.copy(autoUnlockErrorMessage = errMsg, statusMessage = errMsg) }
                 }
             }
         }

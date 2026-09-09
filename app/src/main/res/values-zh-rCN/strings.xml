@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF 解密工具</string>
     <string name="btn_select_pdfs">选择加密的 PDF 文件</string>
@@ -53,6 +53,7 @@
     <string name="btn_exit_search_pdf">关闭搜索</string>
     <string name="btn_overwrite">覆盖原文件</string>
     <string name="btn_save_as">另存为新文件</string>
+    <string name="btn_decrypt_and_preview">解密并预览</string>
     <string name="version_info">版本 %1$s</string>
     <string name="github_link">GitHub 源码</string>
 

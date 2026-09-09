@@ -10,6 +10,7 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission
 import com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -54,8 +56,10 @@ class MainViewModelTest {
 
         database = Room.inMemoryDatabaseBuilder(application, AppDatabase::class.java)
             .allowMainThreadQueries()
+            .setQueryExecutor(testDispatcher.asExecutor())
+            .setTransactionExecutor(testDispatcher.asExecutor())
             .build()
-        repository = PasswordRepository(database.passwordDao(), com.example.util.CryptoManager())
+        repository = PasswordRepository(database.passwordDao(), com.example.util.CryptoManager(), ioDispatcher = testDispatcher)
         viewModel = MainViewModel(application, repository, ioDispatcher = testDispatcher)
     }
 
@@ -325,5 +329,50 @@ class MainViewModelTest {
         org.junit.Assert.assertNotNull(statusMsg)
         assertTrue(statusMsg!!.contains(corruptFile.name))
         assertTrue(statusMsg.contains("corrupted") || statusMsg.contains("unreadable"))
+    }
+
+    @Test
+    fun testSelectFiles_singleEncryptedPdf_triggersAutoUnlockPrompt() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        val doc = PDDocument()
+        doc.addPage(PDPage())
+        val ap = com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission()
+        val spp = com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy("secret", "secret", ap)
+        spp.encryptionKeyLength = 128
+        doc.protect(spp)
+        val inputFile = File.createTempFile("test_locked", ".pdf", application.cacheDir)
+        doc.save(inputFile)
+        doc.close()
+
+        viewModel.onAction(MainUiAction.SelectFiles(application, listOf(Uri.fromFile(inputFile))))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.showAutoUnlockPasswordPrompt.value)
+        assertTrue(viewModel.uiState.value.showAutoUnlockPasswordPrompt)
+        assertEquals(inputFile.name, viewModel.uiState.value.autoUnlockFileName)
+    }
+
+    @Test
+    fun testDecryptAndPreview_action_decryptsAndSetsPreviewUri() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        val doc = PDDocument()
+        doc.addPage(PDPage())
+        val ap = com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission()
+        val spp = com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy("secret", "secret", ap)
+        spp.encryptionKeyLength = 128
+        doc.protect(spp)
+        val inputFile = File.createTempFile("test_locked2", ".pdf", application.cacheDir)
+        doc.save(inputFile)
+        doc.close()
+
+        val uri = Uri.fromFile(inputFile)
+        viewModel.onAction(MainUiAction.DecryptAndPreview(application, uri, "secret"))
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.previewPdfUri.value)
+        assertNotNull(viewModel.uiState.value.previewPdfUri)
+        assertNotNull(viewModel.lastDecryptedUri.value)
     }
 }

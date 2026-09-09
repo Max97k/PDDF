@@ -268,29 +268,38 @@ Start-Sleep -Milliseconds 300
 & $adb -s $DeviceId shell input keyevent 4
 Start-Sleep -Seconds 1
 
-# Step 9: Click "Overwrite Original"
-Write-Host "`n[Step 9] Clicking 'Overwrite Original' button..."
-$overwriteBtn = Wait-ForUiNode -Text "Overwrite Original" -Enabled "true" -TimeoutSec 10
-if (-not $overwriteBtn) {
-    throw "'Overwrite Original' button was not enabled or not found!"
+# Step 9: Click "Unlock & View" (AutoUnlock Dialog) or "Overwrite Original"
+Write-Host "`n[Step 9] Proceeding with decryption..."
+$unlockBtn = Wait-ForUiNode -Text "Unlock" -TimeoutSec 5
+if ($unlockBtn) {
+    Write-Host "  -> Detected AutoUnlock Dialog, tapping '$($unlockBtn.Text)'..."
+    # Step 11: Clear Logcat before opening PDF viewer for continuous monitoring
+    Write-Host "`n[Step 11] Clearing Logcat for crash monitoring..."
+    & $adb -s $DeviceId logcat -c
+    Tap-Node $unlockBtn
+} else {
+    $overwriteBtn = Wait-ForUiNode -Text "Overwrite Original" -Enabled "true" -TimeoutSec 10
+    if (-not $overwriteBtn) {
+        throw "'Overwrite Original' or 'Unlock' button was not found!"
+    }
+    Tap-Node $overwriteBtn
+
+    # Step 10: Wait for decryption to complete and "Preview PDF" button to appear
+    Write-Host "`n[Step 10] Waiting for decryption to complete and 'Preview PDF' button to appear..."
+    $previewBtn = Wait-ForUiNode -Text "Preview PDF" -TimeoutSec 25
+    if (-not $previewBtn) {
+        throw "Decryption failed or 'Preview PDF' button did not appear!"
+    }
+    Write-Host "  -> Decryption successful! 'Preview PDF' button is displayed."
+
+    # Step 11: Clear Logcat before opening PDF viewer for continuous monitoring
+    Write-Host "`n[Step 11] Clearing Logcat for crash monitoring..."
+    & $adb -s $DeviceId logcat -c
+
+    # Step 12: Click "Preview PDF"
+    Write-Host "`n[Step 12] Clicking 'Preview PDF'..."
+    Tap-Node $previewBtn
 }
-Tap-Node $overwriteBtn
-
-# Step 10: Wait for decryption to complete and "Preview PDF" button to appear
-Write-Host "`n[Step 10] Waiting for decryption to complete and 'Preview PDF' button to appear..."
-$previewBtn = Wait-ForUiNode -Text "Preview PDF" -TimeoutSec 25
-if (-not $previewBtn) {
-    throw "Decryption failed or 'Preview PDF' button did not appear!"
-}
-Write-Host "  -> Decryption successful! 'Preview PDF' button is displayed."
-
-# Step 11: Clear Logcat before opening PDF viewer for continuous monitoring
-Write-Host "`n[Step 11] Clearing Logcat for crash monitoring..."
-& $adb -s $DeviceId logcat -c
-
-# Step 12: Click "Preview PDF"
-Write-Host "`n[Step 12] Clicking 'Preview PDF'..."
-Tap-Node $previewBtn
 
 # Wait for viewer to render
 Write-Host "  -> Waiting for PDF viewer to render..."

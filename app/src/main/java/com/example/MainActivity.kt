@@ -55,7 +55,7 @@ class MainActivity : FragmentActivity() {
                         FileUtils.takePersistableUriPermissionSafely(this, uri, takeFlags)
                     }
                 }
-                viewModel.setSelectedUris(this, uris)
+                viewModel.onAction(MainUiAction.SelectFiles(this, uris))
             }
         }
     }
@@ -181,10 +181,7 @@ class MainActivity : FragmentActivity() {
         }
 
         if (uris.isNotEmpty()) {
-            viewModel.setSelectedUris(this, uris)
-            if (uris.size == 1 && (Intent.ACTION_VIEW == action || Intent.ACTION_SEND == action)) {
-                viewModel.startAutoUnlockFlow(this, uris.first()) {}
-            }
+            viewModel.onAction(MainUiAction.SelectFiles(this, uris))
         }
     }
 }

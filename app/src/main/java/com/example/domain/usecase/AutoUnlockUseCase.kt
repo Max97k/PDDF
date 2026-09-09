@@ -64,7 +64,9 @@ open class AutoUnlockUseCase(
             isEncrypted = true
         } catch (e: Exception) {
             val msg = e.message?.lowercase() ?: ""
-            return@withContext if (msg.contains("security handler") ||
+            if (msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required")) {
+                isEncrypted = true
+            } else if (msg.contains("security handler") ||
                 msg.contains("cryptfilter") ||
                 msg.contains("certificate") ||
                 msg.contains("public key") ||
@@ -73,9 +75,9 @@ open class AutoUnlockUseCase(
                 msg.contains("drm") ||
                 msg.contains("algorithm")
             ) {
-                AutoUnlockResult.Error("Unsupported encryption/DRM")
+                return@withContext AutoUnlockResult.Error("Unsupported encryption/DRM")
             } else {
-                AutoUnlockResult.Error("Corrupted PDF header or file")
+                return@withContext AutoUnlockResult.Error("Corrupted PDF header or file")
             }
         }
 

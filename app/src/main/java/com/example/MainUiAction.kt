@@ -24,10 +24,12 @@ sealed interface MainUiAction {
     data class DecryptInPlace(val context: Context) : MainUiAction
     data class DecryptToDirectory(val context: Context, val outputDirectoryUri: Uri) : MainUiAction
     data class DecryptToUri(val context: Context, val destUri: Uri) : MainUiAction
+    data class DecryptAndPreview(val context: Context, val uri: Uri, val passwordValue: String) : MainUiAction
     data object RequestSaveAsPicker : MainUiAction
     data object CancelBatch : MainUiAction
 
     // External Intent & Auto-Unlock
+    data class StartAutoUnlock(val context: Context, val uri: Uri) : MainUiAction
     data class HandleExternalIntent(
         val context: Context,
         val uri: Uri,
