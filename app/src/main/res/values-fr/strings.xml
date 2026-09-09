@@ -49,6 +49,8 @@
     <string name="btn_unlock_pdf">Déverrouiller et Afficher</string>
     <string name="msg_wrong_password_try_again">Mot de passe incorrect. Veuillez réessayer.</string>
     <string name="btn_share_file">Partager le fichier</string>
+    <string name="btn_search_pdf">Rechercher dans le document</string>
+    <string name="btn_exit_search_pdf">Fermer la recherche</string>
     <string name="btn_overwrite">Écraser l\'original</string>
     <string name="btn_save_as">Enregistrer sous un nouveau nom</string>
     <string name="version_info">Version %1$s</string>

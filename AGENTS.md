@@ -21,6 +21,10 @@ This document establishes the official development standards, architectural cont
   - In Compose, collect states using `collectAsStateWithLifecycle()`.
   - UI events flow upwards via lambda callbacks.
 - **Dependency Flow**: UI Layer (`@Composable`) -> ViewModel -> Repository (Single Source of Truth) -> Data Source (Room / SAF / Network).
+- **Fragment & Window Isolation Contract**:
+  - NEVER host an `AndroidView(factory = { FragmentContainerView(...) })` inside an `androidx.compose.ui.window.Dialog`. Compose `Dialog` creates an independent secondary `Window` and `DecorView`, causing host `FragmentActivity.supportFragmentManager.commit` to crash with `IllegalArgumentException: No view found for id 0x...`.
+  - Always use an in-window overlay pattern (`Box(modifier = Modifier.fillMaxSize().zIndex(100f))` with `BackHandler`).
+  - Application Theme MUST inherit from Material3 (`Theme.Material3.DayNight.NoActionBar`). AndroidX `PdfViewerFragment`'s internal layout (`pdf_viewer_fragment.xml`) mandates Material 3 theme attributes; running under `DeviceDefault` crashes with `InflateException`.
 
 ---
 
@@ -41,8 +45,9 @@ This document establishes the official development standards, architectural cont
 - **Zero I/O on Main Thread**:
   - `ContentResolver` queries, SAF operations, and Apache PDFBox parsing MUST run on `Dispatchers.IO`.
   - Never execute file/content queries directly inside `@Composable` rendering branches. Wrap in `LaunchedEffect` or ViewModel Coroutines.
-- **Auto-Closeable Streams**:
+- **Auto-Closeable Streams & SAF Overwrite Truncation**:
   - Always use Kotlin `.use { ... }` blocks when handling `InputStream`, `OutputStream`, `ParcelFileDescriptor`, or `PDDocument` instances to avoid memory leaks.
+  - When overwriting files via SAF `ContentResolver.openOutputStream(uri)`, ALWAYS specify mode `"wt"` (write + truncate). Using default `"w"` appends/preserves old trailing bytes, corrupting PDF file headers/trailers.
 
 ---
 
@@ -53,14 +58,42 @@ This document establishes the official development standards, architectural cont
 
 ---
 
-## 6. Verification & Definition of Done
-Before completing any task, the Agent must execute and verify:
-1. **JVM Unit Tests**:
+## 6. Verification & Definition of Done (MANDATORY TESTING STANDARD)
+Before declaring any task complete, every AI Agent must execute and strictly verify:
+
+1. **JVM Unit & Regression Tests**:
    ```powershell
-   .\gradlew.bat :app:testDebugUnitTest
+   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :app:testDebugUnitTest
    ```
-2. **Code Coverage / Build Check** (when adding features):
+   Must pass 100% (all test suites clean, 0 failures, 0 skipped).
+
+2. **Code Coverage & Build Check**:
    ```powershell
-   .\gradlew.bat :app:jacocoTestReport
+   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :app:jacocoTestReport
    ```
-3. **Context Optimization**: When reading source files, use line slicing (`StartLine` / `EndLine`) to prevent context window bloat.
+
+3. **MANDATORY On-Device / Emulator E2E Automated Verification**:
+   > [!CRITICAL]
+   > **NEVER claim "E2E verified" based solely on JVM unit tests (`testDebugUnitTest`).**  
+   > JVM/Robolectric executes in headless host memory with a mocked WindowManager and mocked layout inflator. It CANNOT detect:
+   > - Compose Dialog window isolation mismatch (`No view found for id 0x1`)
+   > - XML theme attribute resolution failures (`InflateException`)
+   > - Asynchronous FragmentManager transaction lifecycle races
+   > - SAF stream truncation bugs on actual DocumentsProviders.
+
+   For ANY changes affecting UI flows, SAF file operations, Fragment embedding, or PDF rendering, the Agent MUST execute the unattended E2E automation script on a running emulator or connected device:
+   ```powershell
+   powershell.exe -ExecutionPolicy Bypass -File .\scripts\verify_pdf_viewer.ps1 -DeviceId emulator-5554
+   ```
+   **Pass Criteria for E2E Script (Exit Code 0)**:
+   - [PASS] Push real AES-256 encrypted PDF asset (`app/src/test/assets/encrypted.pdf`) to `/sdcard/Download/`
+   - [PASS] Clean state reset (`pm clear com.max97k.pddf`) and app launch
+   - [PASS] Auto-dismiss intro dialogs and select target encrypted file in `documentsui`
+   - [PASS] Auto-type password `"password"` and click "Overwrite Original"
+   - [PASS] Assert decryption success and render AndroidX `PdfViewerFragment`
+   - [PASS] Assert Share button shifts focus to system `ChooserActivity` and cleanly returns
+   - [PASS] Assert Save As button shifts focus to `documentsui` and cleanly returns
+   - [PASS] Assert Close button destroys PDF viewer and restores main screen
+   - [PASS] Assert Logcat continuous monitoring has **0 Fatal Exceptions / 0 Runtime Crashes**.
+
+4. **Context Optimization**: When reading source files, use line slicing (`StartLine` / `EndLine`) to prevent context window bloat.

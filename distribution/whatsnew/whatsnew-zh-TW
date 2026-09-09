@@ -1,1 +1,1 @@
-v0.5.0 版本更新：修復外部開啟（Gmail/雲端硬碟）自動解鎖後，閱讀器另存為產出 0-byte 空檔案問題；全新整合官方 AndroidX PDF 閱讀器，支援雙指平滑縮放與文字選取搜尋；加固 PDF 損壞標頭與不支援 DRM 之例外防禦；全面 AutoClose 串流資源釋放與主線程零 I/O 隔離；優化 TalkBack 無障礙規範與 48dp 觸控標準。
+v0.6.0 版本更新：修復內建 PDF 閱讀器搜尋功能與雙向狀態同步（支援 Find in file 快速文字搜尋）；優化 Compose 與 AndroidX PdfViewerFragment 生命週期同步；深色模式與無障礙體驗提升。

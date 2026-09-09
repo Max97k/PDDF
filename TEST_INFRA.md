@@ -22,10 +22,11 @@
 | 12| Turbine & Clean Architecture Boundary | ORIGINAL_REQUEST § R4 | 5 | 5 | ✓ | ✓ |
 
 ## Test Architecture
-- Test Runner: Gradle command `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :app:testDebugUnitTest`
+- Tier 1–4 JVM Runner: `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :app:testDebugUnitTest` (32 suites, 166 tests passing).
+- Tier 5 On-Device/Emulator E2E Automation: `powershell.exe -ExecutionPolicy Bypass -File .\scripts\verify_pdf_viewer.ps1 -DeviceId emulator-5554`
 - Visual Regression: Roborazzi (`.\gradlew.bat :app:recordRoborazziDebug` / `verifyRoborazziDebug`)
 - Coverage: JaCoCo (`.\gradlew.bat :app:jacocoTestReport`)
-- Test Directory Layout: `app/src/test/java/com/example/`
+- Test Directory Layout: `app/src/test/java/com/example/` & `scripts/`
 
 ## Real-World Application Scenarios (Tier 4)
 | # | Scenario | Features Exercised | Complexity |
@@ -35,3 +36,23 @@
 | 3 | Multi-window drag-and-drop on foldable/tablet dual-pane with IME keyboard typing | DragDrop, WindowInsets, AdaptiveLayout, UDF | High |
 | 4 | Multi-language switching (zh-TW, zh-CN, ja, es) with plural counts and screen reader | Localization, Plurals, TalkBack, WCAG | Medium |
 | 5 | Reactive StateFlow emission stream verification under rapid concurrent user actions | MainViewModel, MainUiState, Turbine, Clean Architecture | High |
+
+## Tier 5: On-Device / Emulator Automated E2E Verification
+> [!IMPORTANT]
+> JVM tests cannot catch Window isolation bugs (`No view found for id 0x1`) or XML theme attribute inflation bugs (`InflateException`). Any task affecting UI, SAF, or PDF Viewer MUST run Tier 5 automated verification:
+
+- **Script**: `scripts/verify_pdf_viewer.ps1`
+- **Execution Target**: Android Emulator API 35+ (`emulator-5554`) or connected physical device.
+- **Workflow**:
+  1. Push real AES-256 test asset (`app/src/test/assets/encrypted.pdf`) to `/sdcard/Download/`
+  2. Clear app state (`pm clear com.max97k.pddf`) and launch `MainActivity`
+  3. Dismiss "What's New" intro dialog
+  4. Select `encrypted.pdf` via `documentsui`
+  5. Type password `"password"` and tap "Overwrite Original" (with `"wt"` stream truncation)
+  6. Assert decryption card and tap "Preview PDF"
+  7. Verify AndroidX `PdfViewerFragment` renders document
+  8. Test Share button -> assert focus switches to `ChooserActivityLauncher` -> Back
+  9. Test Save As button -> assert focus switches to `documentsui` -> Back
+  10. Test Close button -> assert viewer destroyed and main screen restored
+  11. Continuous Logcat crash watcher -> assert 0 Fatal Exceptions / 0 Runtime Crashes.
+

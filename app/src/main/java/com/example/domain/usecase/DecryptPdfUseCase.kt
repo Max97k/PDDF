@@ -171,7 +171,11 @@ open class DecryptPdfUseCase(
             if (uri.scheme == "file" && uri.path != null) {
                 FileOutputStream(File(uri.path!!))
             } else {
-                context.contentResolver.openOutputStream(uri)
+                try {
+                    context.contentResolver.openOutputStream(uri, "wt")
+                } catch (_: Exception) {
+                    context.contentResolver.openOutputStream(uri)
+                }
             }
         } catch (_: Exception) {
             null

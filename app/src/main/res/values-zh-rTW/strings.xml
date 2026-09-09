@@ -49,6 +49,8 @@
     <string name="btn_unlock_pdf">解鎖並檢視</string>
     <string name="msg_wrong_password_try_again">密碼錯誤，請重新輸入。</string>
     <string name="btn_share_file">分享檔案</string>
+    <string name="btn_search_pdf">在文件中搜尋</string>
+    <string name="btn_exit_search_pdf">關閉搜尋</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>
     <string name="version_info">版本 %1$s</string>
@@ -64,7 +66,7 @@
     <string name="biometric_prompt_subtitle">確認身分以存取已儲存的密碼。</string>
 
     <string name="dialog_title_whats_new">最新功能</string>
-    <string name="changelog_content">- 修復外部開啟預覽另存為 0-byte 檔案問題\n- 全新整合官方 AndroidX PDF 閱讀器\n- 強化損壞文件與不支援 DRM 之例外防禦\n- 嚴格 AutoClose 資源釋放與主線程零 I/O 隔離\n- 落實 TalkBack 無障礙規範與 48dp 觸控尺寸\n- 升級 SAF 持久權限自動管理</string>
+    <string name="changelog_content">- 修復內建 PDF 閱讀器搜尋功能與文字比對\n- 優化 Compose 與 PdfViewerFragment 生命週期同步\n- 強化搜尋列雙向狀態同步與鍵盤互動\n- 深色模式與無障礙體驗提升\n- 嚴格 AutoClose 資源釋放與主線程零 I/O 隔離\n- 升級 SAF 持久權限自動管理</string>
     <string name="title_empty_state">未選擇 PDF 檔案</string>
     <string name="desc_empty_state">請選擇一個或多個加密的 PDF 檔案。您也可以從檔案管理員或其他應用程式直接分享檔案至本工具。</string>
 

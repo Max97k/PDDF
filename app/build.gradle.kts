@@ -23,8 +23,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 34
     targetSdk = 36
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 9
-    versionName = (project.findProperty("versionName") as? String) ?: "0.5.0"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 10
+    versionName = (project.findProperty("versionName") as? String) ?: "0.6.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -97,6 +97,13 @@ android {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  extensions.findByType(JacocoTaskExtension::class.java)?.apply {
+    isIncludeNoLocationClasses = false
+    excludes = listOf("jdk.internal.*", "sun.*", "java.*", "javax.*", "org.conscrypt.*")
+  }
+}
+
 tasks.register<JacocoReport>("jacocoTestReport") {
   dependsOn("testDebugUnitTest")
 
@@ -132,6 +139,12 @@ tasks.register<JacocoReport>("jacocoTestReport") {
   executionData.setFrom(fileTree(project.layout.buildDirectory.get()).matching {
     include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
   })
+}
+
+tasks.withType<Test>().configureEach {
+  (extensions.findByName("jacoco") as? org.gradle.testing.jacoco.plugins.JacocoTaskExtension)?.apply {
+    isEnabled = false
+  }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files

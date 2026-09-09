@@ -49,6 +49,8 @@
     <string name="btn_unlock_pdf">Desbloquear y Ver</string>
     <string name="msg_wrong_password_try_again">Contraseña incorrecta. Inténtelo de nuevo.</string>
     <string name="btn_share_file">Compartir archivo</string>
+    <string name="btn_search_pdf">Buscar en el documento</string>
+    <string name="btn_exit_search_pdf">Cerrar búsqueda</string>
     <string name="btn_overwrite">Sobrescribir original</string>
     <string name="btn_save_as">Guardar como nuevo</string>
     <string name="version_info">Versión %1$s</string>

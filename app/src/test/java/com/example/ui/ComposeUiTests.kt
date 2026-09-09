@@ -293,6 +293,8 @@ class ComposeUiTests {
         }
 
         composeTestRule.onNodeWithText("Sample Document").assertExists()
+        // Search button must always be present in the TopAppBar.
+        composeTestRule.onNodeWithContentDescription("Search in Document").assertExists()
         composeTestRule.onNodeWithContentDescription("Share File").performClick()
         assert(shared)
         composeTestRule.onNodeWithContentDescription("Save As New").performClick()
@@ -300,6 +302,33 @@ class ComposeUiTests {
         composeTestRule.onNodeWithContentDescription("Close").performClick()
         assert(closed)
     }
+
+    @Test
+    fun pdfViewerScreen_searchButtonTogglesContentDescription() {
+        composeTestRule.setContent {
+            PdfViewerScreen(
+                uri = android.net.Uri.parse("file:///search_test.pdf"),
+                title = "Search Test",
+                onClose = {}
+            )
+        }
+
+        // Initial state: search is inactive — button label says "Search in Document".
+        composeTestRule.onNodeWithContentDescription("Search in Document").assertExists()
+
+        // Tap the search button to activate search.
+        composeTestRule.onNodeWithContentDescription("Search in Document").performClick()
+
+        // After activating, the content description must change to "Close Search".
+        composeTestRule.onNodeWithContentDescription("Close Search").assertExists()
+
+        // Tap again to deactivate.
+        composeTestRule.onNodeWithContentDescription("Close Search").performClick()
+
+        // Back to the original label.
+        composeTestRule.onNodeWithContentDescription("Search in Document").assertExists()
+    }
+
 
     @Test
     fun pdfViewerDialog_displaysAndDismissesCorrectly() {

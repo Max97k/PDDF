@@ -348,11 +348,11 @@ fun PDFDecryptorScreen(
                 target = dragAndDropTarget
             )
             .background(if (isDragging) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.background)
-            .padding(24.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(24.dp)
                 .padding(bottom = 48.dp)
         ) {
             // Header Row (App Title + Theme Switcher)

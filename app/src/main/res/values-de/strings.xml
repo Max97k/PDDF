@@ -49,6 +49,8 @@
     <string name="btn_unlock_pdf">Entsperren &amp; Anzeigen</string>
     <string name="msg_wrong_password_try_again">Falsches Passwort. Bitte erneut versuchen.</string>
     <string name="btn_share_file">Datei teilen</string>
+    <string name="btn_search_pdf">Im Dokument suchen</string>
+    <string name="btn_exit_search_pdf">Suche schließen</string>
     <string name="btn_overwrite">Original überschreiben</string>
     <string name="btn_save_as">Als neue Datei speichern</string>
     <string name="version_info">Version %1$s</string>
