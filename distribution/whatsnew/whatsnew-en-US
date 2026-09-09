@@ -1,1 +1,1 @@
-﻿v0.6.5 Release: Added screenshot protection (FLAG_SECURE) with branded privacy shield overlay; streamlined Material 3 settings and theme switcher (System, Light, Dark with Monet dynamic color); restructured post-decryption actions with symmetrical 3-tier layout; improved About dialog.
+v0.7.0 Release: Immediate auto-unlock and direct opening in built-in PDF viewer upon selecting encrypted PDF; added primary 'Decrypt & View' action button; instant viewing for unencrypted documents; vault password auto-match acceleration; strengthened error handling and synced 7 locales.
