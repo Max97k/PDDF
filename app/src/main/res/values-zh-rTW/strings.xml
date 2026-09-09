@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF 解密工具</string>
     <string name="btn_select_pdfs">選擇加密的 PDF 檔案</string>
@@ -39,7 +39,7 @@
     <string name="summary_unsupported">⚠️ 高級加密（DRM/憑證）：%1$d 個</string>
     <string name="summary_error">❌ 讀取或解密失敗：%1$d 個</string>
     <string name="btn_open_file_manager">開啟檔案管理員</string>
-    <string name="btn_open_pdf">開啟外部 PDF App</string>
+    <string name="btn_open_pdf">外部開啟</string>
     <string name="btn_preview_pdf">內建預覽 PDF</string>
     <string name="label_page_indicator">第 %1$d / %2$d 頁</string>
     <string name="error_pdf_preview">無法預覽此 PDF 文件。</string>
@@ -104,4 +104,17 @@
     <plurals name="processing_files_count">
         <item quantity="other">正在解密 %1$d 個檔案...</item>
     </plurals>
+
+    <!-- 設定 -->
+    <string name="title_settings">設定</string>
+    <string name="settings_section_appearance">外觀</string>
+    <string name="settings_section_privacy">隱私與安全</string>
+    <string name="settings_screenshot_protection">截圖保護</string>
+    <string name="settings_screenshot_protection_desc">防止截圖，並在多工視窗中隱藏 App 內容預覽</string>
+    <string name="content_desc_settings">設定</string>
+    <string name="content_desc_whats_new">最新功能</string>
+    <string name="msg_screenshot_protection_on">截圖保護已啟用</string>
+    <string name="msg_screenshot_protection_off">截圖保護已停用</string>
+    <string name="content_desc_about">關於</string>
+    <string name="privacy_shield_active">隱私安全保護中</string>
 </resources>

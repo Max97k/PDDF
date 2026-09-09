@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF Decryptor</string>
     <string name="btn_select_pdfs">Verschlüsselte PDFs auswählen</string>
@@ -39,7 +39,7 @@
     <string name="summary_unsupported">⚠️ Erweiterte Verschlüsselung (DRM/Zertifikat): %1$d</string>
     <string name="summary_error">❌ Fehlgeschlagen/Lesefehler: %1$d</string>
     <string name="btn_open_file_manager">Dateimanager öffnen</string>
-    <string name="btn_open_pdf">PDF-App öffnen</string>
+    <string name="btn_open_pdf">Öffnen mit</string>
     <string name="btn_preview_pdf">PDF Vorschau</string>
     <string name="label_page_indicator">Seite %1$d / %2$d</string>
     <string name="error_pdf_preview">PDF-Vorschau nicht möglich</string>
@@ -106,4 +106,17 @@
         <item quantity="one">Entschlüssle %1$d Datei...</item>
         <item quantity="other">Entschlüssle %1$d Dateien...</item>
     </plurals>
+
+    <!-- Settings -->
+    <string name="title_settings">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_screenshot_protection">Screenshot Protection</string>
+    <string name="settings_screenshot_protection_desc">Block screenshots and hide app preview in Recent Tasks</string>
+    <string name="content_desc_settings">Settings</string>
+    <string name="content_desc_whats_new">What\'s New</string>
+    <string name="msg_screenshot_protection_on">Screenshot protection enabled</string>
+    <string name="msg_screenshot_protection_off">Screenshot protection disabled</string>
+    <string name="content_desc_about">Über</string>
+    <string name="privacy_shield_active">Sicherheitsschutz aktiv</string>
 </resources>

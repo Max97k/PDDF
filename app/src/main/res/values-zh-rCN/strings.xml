@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PDF 解密工具</string>
     <string name="btn_select_pdfs">选择加密的 PDF 文件</string>
@@ -39,7 +39,7 @@
     <string name="summary_unsupported">⚠️ 高级加密（DRM/证书）：%1$d 个</string>
     <string name="summary_error">❌ 失败/读取错误：%1$d 个</string>
     <string name="btn_open_file_manager">打开文件管理器</string>
-    <string name="btn_open_pdf">打开外部 PDF 应用</string>
+    <string name="btn_open_pdf">外部打开</string>
     <string name="btn_preview_pdf">预览 PDF</string>
     <string name="label_page_indicator">第 %1$d / %2$d 页</string>
     <string name="error_pdf_preview">无法预览 PDF 文档</string>
@@ -104,4 +104,17 @@
     <plurals name="processing_files_count">
         <item quantity="other">正在解密 %1$d 个文件...</item>
     </plurals>
+
+    <!-- Settings -->
+    <string name="title_settings">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_screenshot_protection">Screenshot Protection</string>
+    <string name="settings_screenshot_protection_desc">Block screenshots and hide app preview in Recent Tasks</string>
+    <string name="content_desc_settings">Settings</string>
+    <string name="content_desc_whats_new">What\'s New</string>
+    <string name="msg_screenshot_protection_on">Screenshot protection enabled</string>
+    <string name="msg_screenshot_protection_off">Screenshot protection disabled</string>
+    <string name="content_desc_about">关于</string>
+    <string name="privacy_shield_active">隐私安全保护中</string>
 </resources>

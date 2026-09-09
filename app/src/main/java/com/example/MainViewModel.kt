@@ -9,6 +9,7 @@ import androidx.room.Room
 import com.example.data.AppDatabase
 import com.example.data.PasswordEntity
 import com.example.data.PasswordRepository
+import com.example.data.SecurityPreferences
 import com.example.data.ThemeMode
 import com.example.data.ThemePreferences
 import com.example.domain.model.PdfUiState
@@ -61,6 +62,7 @@ class MainViewModel @JvmOverloads constructor(
         .build().passwordDao()
     ),
     private val themePreferences: ThemePreferences = ThemePreferences(application),
+    private val securityPreferences: SecurityPreferences = SecurityPreferences(application),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(ioDispatcher),
     private val passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
@@ -95,11 +97,13 @@ class MainViewModel @JvmOverloads constructor(
     val uiState: StateFlow<MainUiState> = kotlinx.coroutines.flow.combine(
         _uiState,
         themeMode,
-        savedPasswords
-    ) { baseState, theme, passwords ->
+        savedPasswords,
+        securityPreferences.screenshotProtection
+    ) { baseState, theme, passwords, screenshotProtection ->
         baseState.copy(
             themeMode = theme,
-            savedPasswords = passwords
+            savedPasswords = passwords,
+            screenshotProtectionEnabled = screenshotProtection
         )
     }.stateIn(
         scope = viewModelScope,
@@ -246,6 +250,7 @@ class MainViewModel @JvmOverloads constructor(
             }
             is MainUiAction.SetTheme -> setTheme(action.mode)
             is MainUiAction.UpdateConflictSettings -> updateConflictSettings(action.mode, action.remember)
+            is MainUiAction.SetScreenshotProtection -> setScreenshotProtection(action.enabled)
             is MainUiAction.CopyUriStream -> copyUriStream(action.context, action.sourceUri, action.destUri)
             is MainUiAction.OpenPdfExternal -> emitEffect(UiEffect.OpenPdfExternally(action.uri))
             is MainUiAction.SharePdf -> emitEffect(UiEffect.SharePdf(action.uri))
@@ -273,6 +278,14 @@ class MainViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             themePreferences.saveThemeMode(mode)
             _uiState.update { it.copy(themeMode = mode) }
+        }
+    }
+
+    fun setScreenshotProtection(enabled: Boolean) {
+        viewModelScope.launch {
+            securityPreferences.saveScreenshotProtection(enabled)
+            // _uiState is not updated directly — the combine() picks it up
+            // via securityPreferences.screenshotProtection StateFlow automatically.
         }
     }
 

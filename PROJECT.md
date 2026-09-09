@@ -105,6 +105,10 @@ app/src/main/java/com/example/
 | 45 | Roborazzi Visual Regression Suite | Automated multi-device screenshot tests (Pixel 8, Pixel 4a, Fold, Tablet) | M4 | Survey / ORIGINAL_REQUEST |
 | 46 | Turbine StateFlow Test Harness | Add `app.cash.turbine:turbine` for deterministic reactive Flow verification | M4 | Survey / ORIGINAL_REQUEST |
 | 47 | Clean Arch Boundary & JVM Tests | Boundary tests verifying pure domain layer & full suite passing cleanly | M4 | Survey / ORIGINAL_REQUEST |
+| 48 | Screenshot Protection (FLAG_SECURE) | Persistent & dialog-driven hardware window screenshot protection | M6 | ORIGINAL_REQUEST |
+| 49 | Privacy Shield Overlay | Polished branded security overlay on ON_PAUSE & black task header in recents | M6 | ORIGINAL_REQUEST |
+| 50 | M3 Button Hierarchy & Clean Layout | Post-decryption 3-tier emphasis layout (Preview, Share, Open With, File Manager) | M6 | ORIGINAL_REQUEST |
+| 51 | About Dialog & Settings Sheet | Dedicated About & What's New dialog, streamlined M3 theme switcher | M6 | ORIGINAL_REQUEST |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
@@ -114,3 +118,4 @@ app/src/main/java/com/example/
 | M3 | Android 15 & Adaptive Form Factors | R3: Patches 25-35 (Predictive back, IME insets, 16KB ELF, Tablet dual-pane, Foldable tabletop) | M1 | DONE |
 | M4 | Internationalization, Accessibility & Testing | R4: Patches 36-47 (Plurals, zh-rCN/ja/es, WCAG 48dp, TalkBack, Turbine, Clean Arch tests) | M1 | DONE |
 | M5 | Final Milestone: 100% E2E Pass & Hardening | Phase 1 (Pass 100% E2E test suite Tiers 1-4) + Phase 2 (Adversarial Coverage Hardening Tier 5) | M1, M2, M3, M4 | DONE |
+| M6 | Security Protection & M3 UX Polish | Patches 48-51 (FLAG_SECURE, PrivacyShieldOverlay, M3 buttons, AboutDialog, Theme polish) | M1-M5 | DONE |

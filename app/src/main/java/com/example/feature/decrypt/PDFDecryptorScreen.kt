@@ -6,8 +6,10 @@
 package com.example.feature.decrypt
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -36,7 +38,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -81,6 +86,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.MainUiAction
 import com.example.MainUiState
@@ -91,11 +98,14 @@ import com.example.feature.vault.BiometricHelper
 import com.example.feature.vault.SavePasswordDialog
 import com.example.feature.vault.SavedPasswordListDialog
 import com.example.feature.viewer.PdfViewerDialog
+import com.example.ui.components.AboutDialog
 import com.example.ui.components.DocumentDetailsCard
 import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.PasswordInputSection
+import com.example.ui.components.PostDecryptActionSection
+import com.example.ui.components.PrivacyShieldOverlay
 import com.example.ui.components.SelectedFilesCard
-import com.example.ui.components.ThemeDropdownMenu
+import com.example.ui.components.SettingsBottomSheet
 import com.example.ui.components.WhatsNewDialog
 import com.example.util.FileUtils
 import kotlinx.coroutines.Dispatchers
@@ -160,7 +170,16 @@ fun PDFDecryptorScreen(
     val haptic = LocalHapticFeedback.current
     val view = LocalView.current
 
-    var showWhatsNewDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
+    var isAppPaused by remember { mutableStateOf(false) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        isAppPaused = true
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        isAppPaused = false
+    }
 
     // Predictive Back Handling
     BackHandler(
@@ -169,10 +188,10 @@ fun PDFDecryptorScreen(
                 uiState.showSavePasswordDialog ||
                 uiState.showAutoUnlockPasswordPrompt ||
                 uiState.previewPdfUri != null ||
-                showWhatsNewDialog
+                showAboutDialog
     ) {
         when {
-            showWhatsNewDialog -> showWhatsNewDialog = false
+            showAboutDialog -> showAboutDialog = false
             uiState.previewPdfUri != null -> onAction(MainUiAction.SetPreviewPdfUri(null))
             uiState.showPasswordListDialog -> onAction(MainUiAction.SetPasswordListDialogVisible(false))
             uiState.showSavePasswordDialog -> onAction(MainUiAction.SetSavePasswordDialogVisible(false))
@@ -201,7 +220,7 @@ fun PDFDecryptorScreen(
             }
         }
         if (shouldShow) {
-            showWhatsNewDialog = true
+            showAboutDialog = true
         }
     }
 
@@ -209,12 +228,33 @@ fun PDFDecryptorScreen(
     val activity = context as? Activity
     DisposableEffect(isSecureModeActive) {
         if (isSecureModeActive) {
-            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            activity?.window?.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+            activity?.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                activity?.setTaskDescription(
+                    ActivityManager.TaskDescription.Builder()
+                        .setPrimaryColor(android.graphics.Color.BLACK)
+                        .build()
+                )
+            }
         } else {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            activity?.window?.setBackgroundDrawable(null)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                activity?.setTaskDescription(
+                    ActivityManager.TaskDescription.Builder()
+                        .setPrimaryColor(0)
+                        .build()
+                )
+            }
         }
         onDispose {
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            // Do NOT clear FLAG_SECURE on dispose — if the user enabled screenshot
+            // protection, the flag must persist for the entire Activity lifetime.
+            // It is only cleared when isSecureModeActive transitions to false above.
         }
     }
 
@@ -317,20 +357,22 @@ fun PDFDecryptorScreen(
     }
 
     LaunchedEffect(uiState.statusMessage) {
-        uiState.statusMessage?.let { msg ->
-            if (msg.startsWith("Error") || msg.startsWith("Failed") || msg.contains("❌")) {
+        when (uiState.statusLevel) {
+            com.example.StatusLevel.ERROR -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     view.performHapticFeedback(HapticFeedbackConstants.REJECT)
                 } else {
                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 }
-            } else if (msg.contains("✅") || msg.contains("Decrypted & Saved")) {
+            }
+            com.example.StatusLevel.SUCCESS -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 } else {
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 }
             }
+            else -> Unit
         }
     }
 
@@ -353,9 +395,8 @@ fun PDFDecryptorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
-                .padding(bottom = 48.dp)
         ) {
-            // Header Row (App Title + Theme Switcher)
+            // Header Row — App Title | About (Help) | Settings
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -363,15 +404,23 @@ fun PDFDecryptorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.width(48.dp))
+                IconButton(onClick = { showAboutDialog = true }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.HelpOutline,
+                        contentDescription = stringResource(R.string.content_desc_about)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
-                ThemeDropdownMenu(
-                    onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) }
-                )
+                IconButton(onClick = { showSettingsSheet = true }) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.content_desc_settings)
+                    )
+                }
             }
 
             if (isExpandedLayout) {
@@ -448,24 +497,7 @@ fun PDFDecryptorScreen(
                                 onPasswordChange = { onAction(MainUiAction.UpdatePassword(it)) },
                                 onTogglePasswordVisible = { onAction(MainUiAction.TogglePasswordVisibility) },
                                 onOpenPasswordList = {
-                                    val fragmentActivity = context as? FragmentActivity
-                                    if (fragmentActivity != null) {
-                                        BiometricHelper.authenticate(
-                                            activity = fragmentActivity,
-                                            title = context.getString(R.string.biometric_prompt_title),
-                                            subtitle = context.getString(R.string.biometric_prompt_subtitle),
-                                            onSuccess = { onAction(MainUiAction.SetPasswordListDialogVisible(true)) },
-                                            onError = { errorCode, errString ->
-                                                if (errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
-                                                    errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON
-                                                ) {
-                                                    android.widget.Toast.makeText(context, errString, android.widget.Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        )
-                                    } else {
-                                        onAction(MainUiAction.SetPasswordListDialogVisible(true))
-                                    }
+                                    onAction(MainUiAction.RequestOpenPasswordList)
                                 },
                                 onOpenSavePassword = { onAction(MainUiAction.SetSavePasswordDialogVisible(true)) }
                             )
@@ -532,103 +564,26 @@ fun PDFDecryptorScreen(
                                 Text(
                                     text = uiState.statusMessage,
                                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                    color = if (uiState.statusMessage.startsWith("Error") || uiState.statusMessage.startsWith("Failed") || uiState.statusMessage.contains("❌"))
-                                        MaterialTheme.colorScheme.error
-                                    else
-                                        MaterialTheme.colorScheme.primary,
+                                    color = when (uiState.statusLevel) {
+                                        com.example.StatusLevel.ERROR -> MaterialTheme.colorScheme.error
+                                        com.example.StatusLevel.WARNING -> MaterialTheme.colorScheme.tertiary
+                                        else -> MaterialTheme.colorScheme.primary
+                                    },
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = TextAlign.Center
                                 )
 
                                 Spacer(modifier = Modifier.height(24.dp))
 
-                                val previewUri = uiState.activePreviewUri
-                                if (previewUri != null) {
-                                    Button(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                PostDecryptActionSection(
+                                    previewUri = uiState.activePreviewUri,
+                                    lastDecryptedUri = uiState.lastDecryptedUri,
+                                    onPreviewClick = {
+                                        uiState.activePreviewUri?.let { previewUri ->
                                             onAction(MainUiAction.SetPreviewPdfUri(previewUri))
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(48.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                    ) {
-                                        Text("👁️")
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(stringResource(R.string.btn_preview_pdf), fontWeight = FontWeight.Bold)
-                                    }
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
-                                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                            try {
-                                                context.startActivity(intent)
-                                            } catch (_: Exception) {
-                                                val fallback = Intent(Intent.ACTION_VIEW)
-                                                fallback.setDataAndType(Uri.parse("content://"), "*/*")
-                                                try {
-                                                    context.startActivity(fallback)
-                                                } catch (_: Exception) {}
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
-                                    ) {
-                                        Text("📂")
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
-                                    }
-
-                                    if (uiState.lastDecryptedUri != null) {
-                                        OutlinedButton(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                    setDataAndType(uiState.lastDecryptedUri, "application/pdf")
-                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                }
-                                                try {
-                                                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
-                                                } catch (_: Exception) {}
-                                            },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(48.dp)
-                                        ) {
-                                            Text("📄")
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                                    type = "application/pdf"
-                                                    putExtra(Intent.EXTRA_STREAM, uiState.lastDecryptedUri)
-                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                }
-                                                try {
-                                                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
-                                                } catch (_: Exception) {}
-                                            },
-                                            modifier = Modifier.size(48.dp)
-                                        ) {
-                                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.btn_share_file))
                                         }
                                     }
-                                }
+                                )
                             }
                         } else {
                             Card(
@@ -801,103 +756,26 @@ fun PDFDecryptorScreen(
                             Text(
                                 text = uiState.statusMessage,
                                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                color = if (uiState.statusMessage.startsWith("Error") || uiState.statusMessage.startsWith("Failed") || uiState.statusMessage.contains("❌"))
-                                    MaterialTheme.colorScheme.error
-                                else
-                                    MaterialTheme.colorScheme.primary,
+                                color = when (uiState.statusLevel) {
+                                    com.example.StatusLevel.ERROR -> MaterialTheme.colorScheme.error
+                                    com.example.StatusLevel.WARNING -> MaterialTheme.colorScheme.tertiary
+                                    else -> MaterialTheme.colorScheme.primary
+                                },
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            val previewUri = uiState.activePreviewUri
-                            if (previewUri != null) {
-                                Button(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            PostDecryptActionSection(
+                                previewUri = uiState.activePreviewUri,
+                                lastDecryptedUri = uiState.lastDecryptedUri,
+                                onPreviewClick = {
+                                    uiState.activePreviewUri?.let { previewUri ->
                                         onAction(MainUiAction.SetPreviewPdfUri(previewUri))
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                ) {
-                                    Text("👁️")
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(stringResource(R.string.btn_preview_pdf), fontWeight = FontWeight.Bold)
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                OutlinedButton(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        val intent = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
-                                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        try {
-                                            context.startActivity(intent)
-                                        } catch (_: Exception) {
-                                            val fallback = Intent(Intent.ACTION_VIEW)
-                                            fallback.setDataAndType(Uri.parse("content://"), "*/*")
-                                            try {
-                                                context.startActivity(fallback)
-                                            } catch (_: Exception) {}
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                ) {
-                                    Text("📂")
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(stringResource(R.string.btn_open_file_manager), textAlign = TextAlign.Center)
-                                }
-
-                                if (uiState.lastDecryptedUri != null) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                setDataAndType(uiState.lastDecryptedUri, "application/pdf")
-                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                            }
-                                            try {
-                                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
-                                            } catch (_: Exception) {}
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
-                                    ) {
-                                        Text("📄")
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(stringResource(R.string.btn_open_pdf), textAlign = TextAlign.Center)
-                                    }
-
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                                type = "application/pdf"
-                                                putExtra(Intent.EXTRA_STREAM, uiState.lastDecryptedUri)
-                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                            }
-                                            try {
-                                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
-                                            } catch (_: Exception) {}
-                                        },
-                                        modifier = Modifier.size(48.dp)
-                                    ) {
-                                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.btn_share_file))
                                     }
                                 }
-                            }
+                            )
                         }
                     } else {
                         EmptyStateCard()
@@ -906,38 +784,21 @@ fun PDFDecryptorScreen(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.version_info, versionName ?: ""),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-                    .semantics { role = Role.Button }
-                    .clickable { showWhatsNewDialog = true }
-            )
-            TextButton(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Max97k/PDDF"))
-                    try {
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
-                },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.github_link),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
+        PrivacyShieldOverlay(
+            isVisible = uiState.screenshotProtectionEnabled && isAppPaused
+        )
+    }
+
+    if (showSettingsSheet) {
+        SettingsBottomSheet(
+            currentTheme = uiState.themeMode,
+            screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
+            onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
+            onScreenshotProtectionToggled = { enabled ->
+                onAction(MainUiAction.SetScreenshotProtection(enabled))
+            },
+            onDismiss = { showSettingsSheet = false }
+        )
     }
 
     if (uiState.showSavePasswordDialog) {
@@ -1019,9 +880,10 @@ fun PDFDecryptorScreen(
         )
     }
 
-    if (showWhatsNewDialog) {
-        WhatsNewDialog(
-            onDismiss = { showWhatsNewDialog = false }
+    if (showAboutDialog) {
+        AboutDialog(
+            versionName = versionName,
+            onDismiss = { showAboutDialog = false }
         )
     }
 }

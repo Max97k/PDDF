@@ -1,13 +1,18 @@
 package com.example
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -15,12 +20,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.SecurityPreferences
 import com.example.feature.decrypt.PDFDecryptorScreen
+import com.example.feature.vault.BiometricHelper
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.FileUtils
 
@@ -55,6 +63,25 @@ class MainActivity : FragmentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Apply FLAG_SECURE synchronously before setContent{} so that the very first
+        // frame and the Recent-Tasks thumbnail (captured during onPause) are already
+        // protected when the user has the setting enabled.
+        if (SecurityPreferences.readScreenshotProtectionSync(this)) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+            window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                setTaskDescription(
+                    ActivityManager.TaskDescription.Builder()
+                        .setPrimaryColor(android.graphics.Color.BLACK)
+                        .build()
+                )
+            }
+        }
+
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
@@ -62,6 +89,35 @@ class MainActivity : FragmentActivity() {
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
             MyApplicationTheme(themeMode = themeMode) {
                 val snackbarHostState = remember { SnackbarHostState() }
+
+                // Handle TriggerBiometricAuth effect here in Activity scope so
+                // BiometricPrompt has access to the correct FragmentActivity context.
+                LaunchedEffect(Unit) {
+                    viewModel.uiEffect.collect { effect ->
+                        if (effect is UiEffect.TriggerBiometricAuth) {
+                            BiometricHelper.authenticate(
+                                activity = this@MainActivity,
+                                title = getString(R.string.biometric_prompt_title),
+                                subtitle = getString(R.string.biometric_prompt_subtitle),
+                                onSuccess = {
+                                    viewModel.onAction(MainUiAction.SetPasswordListDialogVisible(true))
+                                },
+                                onError = { errorCode, errString ->
+                                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                                        errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
+                                    ) {
+                                        android.widget.Toast.makeText(
+                                            this@MainActivity,
+                                            errString,
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) }

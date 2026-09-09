@@ -58,6 +58,7 @@ sealed interface MainUiAction {
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction
     data class UpdateConflictSettings(val mode: ConflictMode, val remember: Boolean) : MainUiAction
+    data class SetScreenshotProtection(val enabled: Boolean) : MainUiAction
 
     // External Navigation / System Actions
     data class CopyUriStream(val context: Context, val sourceUri: Uri, val destUri: Uri) : MainUiAction

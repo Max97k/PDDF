@@ -58,6 +58,7 @@ data class MainUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val conflictMode: ConflictMode = ConflictMode.SAVE_AS_COPY,
     val rememberConflictChoice: Boolean = false,
+    val screenshotProtectionEnabled: Boolean = false,
 
     // 8. Password Vault Data
     val savedPasswords: List<PasswordEntity> = emptyList()
@@ -78,9 +79,33 @@ data class MainUiState(
     val canDecrypt: Boolean
         get() = hasSelectedFiles && password.isNotBlank() && !isProcessing && !batchState.isProcessing
 
-    val isSecureModeActive: Boolean
+    // True when any sensitive dialog is open (drives temporary FLAG_SECURE).
+    val isDialogSecureModeActive: Boolean
         get() = showPasswordListDialog || showSavePasswordDialog || showAutoUnlockPasswordPrompt
+
+    // Combined: FLAG_SECURE should be active when user-controlled OR a sensitive dialog is open.
+    val isSecureModeActive: Boolean
+        get() = screenshotProtectionEnabled || isDialogSecureModeActive
 
     val activePreviewUri: Uri?
         get() = previewPdfUri ?: lastDecryptedUri ?: if (selectedMetadata?.isEncrypted == false) selectedUris.firstOrNull() else null
+
+    /**
+     * Type-safe indicator for status message severity.
+     * Replaces brittle startsWith("Error") / contains("❌") string checks in UI.
+     */
+    val statusLevel: StatusLevel
+        get() = when {
+            statusMessage == null -> StatusLevel.NONE
+            statusMessage.contains("❌") -> StatusLevel.ERROR
+            statusMessage.contains("⚠️") -> StatusLevel.WARNING
+            statusMessage.contains("✅") -> StatusLevel.SUCCESS
+            else -> StatusLevel.INFO
+        }
 }
+
+/**
+ * Severity level for status messages. Used by UI to pick the correct colour
+ * without relying on fragile string-prefix checks that break under localisation.
+ */
+enum class StatusLevel { NONE, SUCCESS, WARNING, ERROR, INFO }

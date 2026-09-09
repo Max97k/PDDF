@@ -1,1 +1,1 @@
-v0.6.0 Release: Fixed in-app PDF viewer search functionality and bidirectional state synchronization (Find in file & text matching); optimized Compose & AndroidX PdfViewerFragment lifecycle synchronization; enhanced dark theme and accessibility.
+﻿v0.6.5 Release: Added screenshot protection (FLAG_SECURE) with branded privacy shield overlay; streamlined Material 3 settings and theme switcher (System, Light, Dark with Monet dynamic color); restructured post-decryption actions with symmetrical 3-tier layout; improved About dialog.

@@ -46,8 +46,9 @@ Unlike online PDF unlock services that require uploading sensitive documents to 
 | ⚡ **Quick Access & Shortcuts** | Quick Settings (QS) Tile for one-tap access and dynamic App Launcher Shortcuts for fast document selection and password management. |
 | ⚙️ **Smart File Management** | Choose between **Save as Copy** (with custom prefixing) or **Overwrite Original** in-place, plus optional automatic deletion of original encrypted files. |
 | 👁️ **Built-in PDF Preview** | Preview decrypted PDF pages directly within the app before opening in external viewers or sharing. |
+| 🔒 **Screenshot & Privacy Shield** | Hardware `FLAG_SECURE` window protection, blacked-out task switcher cards, and branded in-app privacy overlay shield. |
 | 🎨 **Material You / Material 3 UI** | Modern, responsive interface with dynamic color theming, full Dark/Light mode support, edge-to-edge display, and predictive back gestures. |
-| 🌐 **Bilingual Localization** | Native support for English and Traditional Chinese (`zh-rTW`). |
+| 🌐 **Multi-Language Localization** | Native support for English, Traditional Chinese (`zh-rTW`), Simplified Chinese (`zh-rCN`), Japanese, German, Spanish, and French. |
 
 ---
 

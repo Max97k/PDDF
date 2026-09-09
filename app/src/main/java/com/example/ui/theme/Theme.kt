@@ -15,16 +15,6 @@ import com.example.data.ThemeMode
 private val DarkColorScheme =
   darkColorScheme(primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80)
 
-private val AmoledColorScheme =
-  darkColorScheme(
-    primary = Purple80, 
-    secondary = PurpleGrey80, 
-    tertiary = Pink80,
-    background = Color.Black,
-    surface = Color.Black,
-    surfaceVariant = Color(0xFF1C1C1E)
-  )
-
 private val LightColorScheme =
   lightColorScheme(
     primary = Purple40,
@@ -47,12 +37,10 @@ fun MyApplicationTheme(
 
   val colorScheme =
     when {
-      themeMode == ThemeMode.AMOLED -> AmoledColorScheme
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
         val context = LocalContext.current
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
       }
-
       darkTheme -> DarkColorScheme
       else -> LightColorScheme
     }
