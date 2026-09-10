@@ -375,4 +375,35 @@ class MainViewModelTest {
         assertNotNull(viewModel.uiState.value.previewPdfUri)
         assertNotNull(viewModel.lastDecryptedUri.value)
     }
+
+    @Test
+    fun testClearPasswordAction_wipesPasswordFromStateAndFlow() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        viewModel.onAction(MainUiAction.UpdatePassword("SensitivePass123"))
+        advanceUntilIdle()
+        assertEquals("SensitivePass123", viewModel.password.value)
+        assertEquals("SensitivePass123", viewModel.uiState.value.password)
+
+        viewModel.onAction(MainUiAction.ClearPassword)
+        advanceUntilIdle()
+        assertEquals("", viewModel.password.value)
+        assertEquals("", viewModel.uiState.value.password)
+    }
+
+    @Test
+    fun testClearSelectedFiles_clearsPasswordAndFiles() = runTest(testDispatcher) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+
+        viewModel.onAction(MainUiAction.UpdatePassword("SensitivePass123"))
+        advanceUntilIdle()
+        assertEquals("SensitivePass123", viewModel.password.value)
+
+        viewModel.onAction(MainUiAction.ClearSelectedFiles(application))
+        advanceUntilIdle()
+        assertEquals("", viewModel.password.value)
+        assertEquals("", viewModel.uiState.value.password)
+        assertTrue(viewModel.selectedUris.value.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedUris.isEmpty())
+    }
 }

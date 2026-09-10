@@ -17,6 +17,7 @@ sealed interface MainUiAction {
     // Password input
     data class UpdatePassword(val password: String) : MainUiAction
     data class SetPassword(val password: String) : MainUiAction
+    data object ClearPassword : MainUiAction
     data object TogglePasswordVisibility : MainUiAction
     data object TogglePasswordVisible : MainUiAction
 

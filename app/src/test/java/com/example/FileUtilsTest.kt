@@ -69,4 +69,25 @@ class FileUtilsTest {
         assertTrue(deleted)
         assertFalse(testFile.exists())
     }
+
+    @Test
+    fun testCleanUpDecryptedCache() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val file1 = File(context.cacheDir, "auto_decrypted_12345.pdf").apply { writeText("dummy pdf 1") }
+        val file2 = File(context.cacheDir, "decrypted_99999_0.pdf").apply { writeText("dummy pdf 2") }
+        val nonPdf = File(context.cacheDir, "other_cache.txt").apply { writeText("keep me") }
+
+        assertTrue(file1.exists())
+        assertTrue(file2.exists())
+        assertTrue(nonPdf.exists())
+
+        FileUtils.cleanUpDecryptedCache(context)
+
+        assertFalse(file1.exists())
+        assertFalse(file2.exists())
+        assertTrue(nonPdf.exists())
+
+        // Cleanup
+        nonPdf.delete()
+    }
 }

@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">Bestätigen Sie Ihre Identität, um auf gespeicherte Passwörter zuzugreifen.</string>
 
     <string name="dialog_title_whats_new">Neuigkeiten</string>
-    <string name="changelog_content">- AMOLED reines Schwarz &amp; dynamisches Design\n- Stapel-Entschlüsselungsfortschritt &amp; Abbrechen\n- PDF-Sicherheits- &amp; Metadaten-Inspektor\n- Tablet / Foldable Drag-and-Drop-Unterstützung\n- Hardware-gestützte Keystore-Verschlüsselung\n- Biometrische Entsperrung des Passworttresors</string>
+    <string name="changelog_content">- Automatische Entschlüsselung &amp; direkte Anzeige im integrierten PDF-Viewer\n- Neuer vorrangiger Aktionsbutton \'Entschlüsseln &amp; Anzeigen\'\n- Unverschlüsselte PDF-Dokumente direkt ohne Passwort öffnen\n- Schnellere Passwort-Tresorabgleiche mit Groß-/Kleinschreibungstoleranz\n- Verbesserte sichere Speicherbereinigung &amp; Cache-Schreddern\n- Synchronisierung aller 7 Sprachen &amp; Barrierefreiheitsoptimierungen</string>
     <string name="title_empty_state">Keine PDF ausgewählt</string>
     <string name="desc_empty_state">Wählen Sie eine oder mehrere verschlüsselte PDFs aus, um zu beginnen. Sie können Dateien auch direkt aus dem Dateimanager teilen.</string>
 

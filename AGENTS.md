@@ -72,7 +72,7 @@ Before declaring any task complete, every AI Agent must execute and strictly ver
    $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :app:jacocoTestReport
    ```
 
-3. **MANDATORY On-Device / Emulator E2E Automated Verification**:
+3. **MANDATORY On-Device / Emulator E2E Automated Verification & Screenshot Standard**:
    > [!CRITICAL]
    > **NEVER claim "E2E verified" based solely on JVM unit tests (`testDebugUnitTest`).**  
    > JVM/Robolectric executes in headless host memory with a mocked WindowManager and mocked layout inflator. It CANNOT detect:
@@ -81,19 +81,41 @@ Before declaring any task complete, every AI Agent must execute and strictly ver
    > - Asynchronous FragmentManager transaction lifecycle races
    > - SAF stream truncation bugs on actual DocumentsProviders.
 
-   For ANY changes affecting UI flows, SAF file operations, Fragment embedding, or PDF rendering, the Agent MUST execute the unattended E2E automation script on a running emulator or connected device:
+   For ANY changes affecting UI flows, SAF file operations, Fragment embedding, security wipes, or PDF rendering, the Agent MUST execute the unattended E2E automation script on a running emulator or connected device:
    ```powershell
-   powershell.exe -ExecutionPolicy Bypass -File .\scripts\verify_pdf_viewer.ps1 -DeviceId emulator-5554
+   powershell.exe -ExecutionPolicy Bypass -File .\scripts\verify_pdf_viewer.ps1 -DeviceId emulator-5554 -ScreenshotDir "<brainDir>\e2e_screenshots"
    ```
-   **Pass Criteria for E2E Script (Exit Code 0)**:
+   **Pass Criteria for E2E Script (Exit Code 0 & 0 Logcat Crashes)**:
    - [PASS] Push real AES-256 encrypted PDF asset (`app/src/test/assets/encrypted.pdf`) to `/sdcard/Download/`
    - [PASS] Clean state reset (`pm clear com.max97k.pddf`) and app launch
    - [PASS] Auto-dismiss intro dialogs and select target encrypted file in `documentsui`
-   - [PASS] Auto-type password `"password"` and click "Overwrite Original"
+   - [PASS] Auto-type password `"password"` and test toggle masking
    - [PASS] Assert decryption success and render AndroidX `PdfViewerFragment`
+   - [PASS] Assert Search bar interaction with IME keyboard
    - [PASS] Assert Share button shifts focus to system `ChooserActivity` and cleanly returns
    - [PASS] Assert Save As button shifts focus to `documentsui` and cleanly returns
    - [PASS] Assert Close button destroys PDF viewer and restores main screen
+   - [PASS] Assert Password Vault & Settings BottomSheet interactions
+   - [PASS] Assert DoD 5220.22-M decrypted cache shredding (0 residual files in app cache)
    - [PASS] Assert Logcat continuous monitoring has **0 Fatal Exceptions / 0 Runtime Crashes**.
 
+   **Mandatory 15-Step Granular Visual Screenshot Checklist**:
+   Every AI Agent MUST capture and embed all 15 step-by-step visual proofs into `walkthrough.md` for human review:
+   1. `01_app_launch_empty_state.png` — Cold-launch empty state & Material 3 DayNight layout.
+   2. `02_whats_new_dialog.png` — Version changelog / update release notes dialog.
+   3. `03_documentsui_picker.png` — System Storage Access Framework (SAF) document picker with target asset.
+   4. `04_autounlock_password_dialog.png` — Decryption password modal with remember/overwrite options.
+   5. `05_password_typed_masked.png` — Secure password field with masked bullets (`••••••••`).
+   6. `06_password_toggled_revealed.png` — Visibility toggle revealed plaintext with TalkBack accessibility `stateDescription`.
+   7. `07_autounlock_dialog_ready.png` — Finalized decryption configuration state.
+   8. `08_pdf_viewer_opened.png` — AndroidX `PdfViewerFragment` rendering plaintext document.
+   9. `09_pdf_viewer_search.png` — In-app document text search bar and keyboard interaction.
+   10. `10_system_share_sheet.png` — Android system `ChooserActivity` share intent invocation.
+   11. `11_system_save_as_picker.png` — Android system `documentsui` Save As export intent invocation.
+   12. `12_main_screen_decrypted_status.png` — Restored main screen with counter (`✅ Decrypted & Saved: 1`) & quick action chips.
+   13. `13_saved_passwords_vault.png` — Biometric Password Vault dialog with stored credentials.
+   14. `14_settings_bottom_sheet.png` — Settings ModalBottomSheet with Theme, Screenshot Protection, and History controls.
+   15. `15_cache_clean_verified.png` — Post-session DoD 5220.22-M cache shredding verification (0 residual decrypted files).
+
 4. **Context Optimization**: When reading source files, use line slicing (`StartLine` / `EndLine`) to prevent context window bloat.
+

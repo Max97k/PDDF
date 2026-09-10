@@ -9,7 +9,7 @@ class PdfDecryptorTileService : TileService() {
         super.onStartListening()
         val tile = qsTile
         if (tile != null) {
-            tile.state = Tile.STATE_INACTIVE
+            tile.state = Tile.STATE_ACTIVE
             tile.updateTile()
         }
     }
@@ -17,6 +17,7 @@ class PdfDecryptorTileService : TileService() {
     override fun onClick() {
         super.onClick()
         val intent = Intent(this, MainActivity::class.java).apply {
+            action = "com.max97k.pddf.ACTION_SELECT_PDF"
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         val pendingIntent = android.app.PendingIntent.getActivity(
@@ -25,6 +26,11 @@ class PdfDecryptorTileService : TileService() {
             intent,
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
-        startActivityAndCollapse(pendingIntent)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startActivityAndCollapse(pendingIntent)
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityAndCollapse(intent)
+        }
     }
 }

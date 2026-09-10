@@ -64,45 +64,61 @@ open class DecryptPdfUseCase(
             // Ignore pre-check exception
         }
 
-        // 2. Attempt decryption with password
-        try {
-            openSafeInputStream(context, inputUri)?.use { inputStream ->
-                PDDocument.load(
-                    inputStream.buffered(),
-                    passwordValue,
-                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
-                ).use { document ->
-                    if (!document.isEncrypted) {
-                        return@withContext DecryptStatus.NOT_ENCRYPTED
-                    }
-                    document.setAllSecurityToBeRemoved(true)
-                    val outStream = openSafeOutputStream(context, outputUri)
-                        ?: return@withContext DecryptStatus.ERROR
-                    outStream.buffered().use { outputStream ->
-                        document.save(outputStream)
-                        return@withContext DecryptStatus.SUCCESS
+        // 2. Attempt decryption with password (with case tolerance, e.g. Taiwan ID lower/upper case)
+        val candidatePasswords = if (passwordValue != passwordValue.uppercase()) {
+            listOf(passwordValue, passwordValue.uppercase())
+        } else {
+            listOf(passwordValue)
+        }
+
+        var lastException: Exception? = null
+        for (pwd in candidatePasswords) {
+            try {
+                openSafeInputStream(context, inputUri)?.use { inputStream ->
+                    PDDocument.load(
+                        inputStream.buffered(),
+                        pwd,
+                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                    ).use { document ->
+                        if (!document.isEncrypted) {
+                            return@withContext DecryptStatus.NOT_ENCRYPTED
+                        }
+                        document.setAllSecurityToBeRemoved(true)
+                        val outStream = openSafeOutputStream(context, outputUri)
+                            ?: return@withContext DecryptStatus.ERROR
+                        outStream.buffered().use { outputStream ->
+                            document.save(outputStream)
+                            return@withContext DecryptStatus.SUCCESS
+                        }
                     }
                 }
+            } catch (e: InvalidPasswordException) {
+                lastException = e
+                continue
+            } catch (e: Exception) {
+                val msg = e.message?.lowercase() ?: ""
+                if (msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required")) {
+                    lastException = e
+                    continue
+                }
+                return@withContext when {
+                    msg.contains("security handler") ||
+                    msg.contains("cryptfilter") ||
+                    msg.contains("certificate") ||
+                    msg.contains("public key") ||
+                    msg.contains("unsupported") ||
+                    msg.contains("filter") ||
+                    msg.contains("drm") ||
+                    msg.contains("algorithm") ->
+                        DecryptStatus.UNSUPPORTED_ENCRYPTION
+                    else ->
+                        DecryptStatus.ERROR
+                }
             }
-        } catch (_: InvalidPasswordException) {
+        }
+
+        if (lastException != null) {
             return@withContext DecryptStatus.WRONG_PASSWORD
-        } catch (e: Exception) {
-            val msg = e.message?.lowercase() ?: ""
-            return@withContext when {
-                msg.contains("password") || msg.contains("incorrect password") || msg.contains("password is required") ->
-                    DecryptStatus.WRONG_PASSWORD
-                msg.contains("security handler") ||
-                msg.contains("cryptfilter") ||
-                msg.contains("certificate") ||
-                msg.contains("public key") ||
-                msg.contains("unsupported") ||
-                msg.contains("filter") ||
-                msg.contains("drm") ||
-                msg.contains("algorithm") ->
-                    DecryptStatus.UNSUPPORTED_ENCRYPTION
-                else ->
-                    DecryptStatus.ERROR
-            }
         }
         DecryptStatus.ERROR
     }

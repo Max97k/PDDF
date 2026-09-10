@@ -63,6 +63,7 @@ class MainActivity : FragmentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FileUtils.cleanUpDecryptedCache(this)
 
         // Apply FLAG_SECURE synchronously before setContent{} so that the very first
         // frame and the Recent-Tasks thumbnail (captured during onPause) are already
@@ -141,6 +142,11 @@ class MainActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.onAppForegrounded()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        FileUtils.cleanUpDecryptedCache(this)
     }
 
     override fun onNewIntent(intent: Intent) {

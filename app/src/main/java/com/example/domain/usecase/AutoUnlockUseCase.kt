@@ -90,7 +90,9 @@ open class AutoUnlockUseCase(
         for (saved in savedPasswords) {
             var tempFile: File? = null
             try {
-                tempFile = File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
+                tempFile = File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf").apply {
+                    deleteOnExit()
+                }
                 val status = decryptPdfUseCase.decrypt(
                     context = context,
                     inputUri = uri,
@@ -125,7 +127,9 @@ open class AutoUnlockUseCase(
     ): Pair<DecryptStatus, Uri?> = withContext(ioDispatcher) {
         var tempFile: File? = null
         try {
-            tempFile = File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf")
+            tempFile = File(context.cacheDir, "auto_decrypted_${System.currentTimeMillis()}.pdf").apply {
+                deleteOnExit()
+            }
             val status = decryptPdfUseCase.decrypt(
                 context = context,
                 inputUri = uri,

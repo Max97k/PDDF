@@ -109,7 +109,9 @@ class CryptoManager(private val context: Context? = null) {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
             val iv = cipher.iv
-            val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+            val plainBytes = plainText.toByteArray(Charsets.UTF_8)
+            val encryptedBytes = cipher.doFinal(plainBytes)
+            MemoryUtils.wipe(plainBytes)
             val combined = iv + encryptedBytes
             PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
         } catch (e: Exception) {
@@ -122,6 +124,7 @@ class CryptoManager(private val context: Context? = null) {
             // Not encrypted, return as plaintext (for legacy database entries before migration)
             return encryptedText
         }
+        var decryptedBytes: ByteArray? = null
         return try {
             val actualEncrypted = encryptedText.removePrefix(PREFIX)
             val combined = Base64.decode(actualEncrypted, Base64.NO_WRAP)
@@ -134,10 +137,12 @@ class CryptoManager(private val context: Context? = null) {
             val encryptedBytes = combined.copyOfRange(12, combined.size)
 
             val cipher = initCipherForBiometric(Cipher.DECRYPT_MODE, iv)
-            val decryptedBytes = cipher.doFinal(encryptedBytes)
+            decryptedBytes = cipher.doFinal(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {
             encryptedText
+        } finally {
+            decryptedBytes?.let { MemoryUtils.wipe(it) }
         }
     }
 }

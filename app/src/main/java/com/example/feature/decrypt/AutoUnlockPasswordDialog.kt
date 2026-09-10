@@ -32,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -96,7 +98,12 @@ fun AutoUnlockPasswordDialog(
                         } else {
                             stringResource(R.string.show_password)
                         }
-                        IconButton(onClick = { passVisible = !passVisible }) {
+                        IconButton(
+                            onClick = { passVisible = !passVisible },
+                            modifier = Modifier.semantics {
+                                stateDescription = desc
+                            }
+                        ) {
                             Icon(img, contentDescription = desc)
                         }
                     },

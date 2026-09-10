@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">确认您的身份以访问已保存的密码。</string>
 
     <string name="dialog_title_whats_new">最新功能</string>
-    <string name="changelog_content">- AMOLED 纯黑与 Material 3 动态主题\n- 批量解密进度与即时取消\n- PDF 元数据与安全性检查器\n- 平板 / 折叠屏拖放支持\n- 芯片级 Keystore 硬件数据库加密\n- 生物识别安全解锁密码库</string>
+    <string name="changelog_content">- 选取加密 PDF 后立即启动解密并直开内置阅读器\n- 主界面新增高优先级“解密并预览”快捷按钮\n- 支持无密码直接打开未加密 PDF 文件\n- 密码库自动匹配加速与智能大小写容错\n- 强化安全内存抹除与暂存缓存即时销毁\n- 完善多语言支持与无障碍体验优化</string>
     <string name="title_empty_state">未选择 PDF 文件</string>
     <string name="desc_empty_state">选择一个或多个加密的 PDF 文件以开始。您也可以从文件管理器或其他应用直接分享文件至本应用。</string>
 

@@ -197,8 +197,12 @@ class MainViewModel @JvmOverloads constructor(
                     startAutoUnlockFlow(action.context, action.uris.first())
                 }
             }
-            is MainUiAction.ClearSelectedFiles -> setSelectedUris(action.context, emptyList())
+            is MainUiAction.ClearSelectedFiles -> {
+                setSelectedUris(action.context, emptyList())
+                clearSensitiveData()
+            }
             is MainUiAction.RequestFilePicker -> triggerOpenDocumentPicker()
+            is MainUiAction.ClearPassword -> clearSensitiveData()
             is MainUiAction.UpdatePassword -> {
                 password.value = action.password
                 _uiState.update { it.copy(password = action.password) }
@@ -891,7 +895,7 @@ class MainViewModel @JvmOverloads constructor(
         backgroundTime = 0
     }
 
-    private fun clearSensitiveData() {
+    fun clearSensitiveData() {
         val currentChars = password.value.toCharArray()
         MemoryUtils.wipe(currentChars)
         password.value = ""

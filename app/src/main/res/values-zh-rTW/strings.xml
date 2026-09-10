@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">確認身分以存取已儲存的密碼。</string>
 
     <string name="dialog_title_whats_new">最新功能</string>
-    <string name="changelog_content">- 修復內建 PDF 閱讀器搜尋功能與文字比對\n- 優化 Compose 與 PdfViewerFragment 生命週期同步\n- 強化搜尋列雙向狀態同步與鍵盤互動\n- 深色模式與無障礙體驗提升\n- 嚴格 AutoClose 資源釋放與主線程零 I/O 隔離\n- 升級 SAF 持久權限自動管理</string>
+    <string name="changelog_content">- 選取加密 PDF 後立即啟動解密並直開內建閱讀器\n- 主畫面新增高優先級「解密並預覽」快捷按鈕\n- 支援無密碼直接開啟未加密 PDF 文件\n- 密碼庫自動匹配加速與智慧大小寫容錯\n- 強化安全記憶體抹除與暫存快取即時銷毀\n- 完善多語系支援與無障礙體驗優化</string>
     <string name="title_empty_state">未選擇 PDF 檔案</string>
     <string name="desc_empty_state">請選擇一個或多個加密的 PDF 檔案。您也可以從檔案管理員或其他應用程式直接分享檔案至本工具。</string>
 

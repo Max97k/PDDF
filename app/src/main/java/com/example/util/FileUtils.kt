@@ -210,4 +210,20 @@ object FileUtils {
             }
         } catch (_: Exception) {}
     }
+
+    /**
+     * Shreds and removes any temporary decrypted PDF files remaining in the cache directory.
+     * Prevents unencrypted sensitive documents from lingering on storage across app restarts.
+     */
+    fun cleanUpDecryptedCache(context: Context) {
+        try {
+            val cacheDir = context.cacheDir ?: return
+            val files = cacheDir.listFiles() ?: return
+            for (file in files) {
+                if (file.isFile && (file.name.startsWith("auto_decrypted_") || file.name.startsWith("decrypted_") || file.name.endsWith(".pdf", ignoreCase = true))) {
+                    secureDelete(file)
+                }
+            }
+        } catch (_: Exception) {}
+    }
 }
