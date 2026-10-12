@@ -87,6 +87,10 @@
             <meta-data
                 android:name="com.example.initializer.PdfBoxInitializer"
                 android:value="androidx.startup" />
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
     </application>
 
