@@ -938,3 +938,30 @@ fun PDFDecryptorScreen(
         )
     }
 }
+
+@Composable
+fun PDFDecryptorRoute(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
+) {
+    PDFDecryptorScreen(
+        viewModel = viewModel,
+        modifier = modifier,
+        snackbarHostState = snackbarHostState,
+        windowWidthSizeClass = windowWidthSizeClass
+    )
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun PDFDecryptorScreenPreview() {
+    val context = LocalContext.current
+    val app = context.applicationContext as android.app.Application
+    com.example.ui.theme.MyApplicationTheme {
+        PDFDecryptorScreen(
+            viewModel = MainViewModel(app)
+        )
+    }
+}

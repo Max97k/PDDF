@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+  id("com.google.dagger.hilt.android")
   id("jacoco")
 }
 
@@ -23,8 +24,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 34
     targetSdk = 36
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 12
-    versionName = (project.findProperty("versionName") as? String) ?: "0.7.0"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 13
+    versionName = (project.findProperty("versionName") as? String) ?: "0.7.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -92,8 +93,8 @@ android {
     }
   }
   lint {
-    abortOnError = false
-    checkReleaseBuilds = false
+    abortOnError = true
+    checkReleaseBuilds = true
   }
 }
 
@@ -170,6 +171,7 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.core.splashscreen)
   implementation(libs.androidx.startup)
   implementation(libs.androidx.profileinstaller)
   implementation(libs.androidx.lifecycle.runtime.compose)
@@ -204,5 +206,9 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.hilt.android)
+  implementation(libs.androidx.hilt.navigation.compose)
+  "ksp"(libs.hilt.compiler)
+  "ksp"(libs.androidx.hilt.compiler)
   "ksp"(libs.androidx.room.compiler)
 }

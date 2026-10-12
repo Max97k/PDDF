@@ -2,6 +2,7 @@
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,7 @@ import kotlinx.coroutines.withContext
  */
 class SecurityPreferences(
     context: Context,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

@@ -2,8 +2,10 @@ package com.example.domain.usecase
 
 import android.content.Context
 import android.net.Uri
+import android.system.Os
 import com.example.DecryptStatus
 import com.example.PdfMetadata
+import com.example.di.IoDispatcher
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,7 +18,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 open class DecryptPdfUseCase(
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     open suspend fun decrypt(
@@ -84,11 +86,24 @@ open class DecryptPdfUseCase(
                             return@withContext DecryptStatus.NOT_ENCRYPTED
                         }
                         document.setAllSecurityToBeRemoved(true)
-                        val outStream = openSafeOutputStream(context, outputUri)
-                            ?: return@withContext DecryptStatus.ERROR
-                        outStream.buffered().use { outputStream ->
-                            document.save(outputStream)
-                            return@withContext DecryptStatus.SUCCESS
+
+                        val tempFile = File.createTempFile("decrypt_tmp_", ".pdf", context.cacheDir)
+                        try {
+                            tempFile.outputStream().buffered().use { outputStream ->
+                                document.save(outputStream)
+                            }
+                            if (atomicReplace(context, tempFile, outputUri)) {
+                                return@withContext DecryptStatus.SUCCESS
+                            } else {
+                                return@withContext DecryptStatus.ERROR
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            return@withContext DecryptStatus.ERROR
+                        } finally {
+                            if (tempFile.exists()) {
+                                tempFile.delete()
+                            }
                         }
                     }
                 }
@@ -121,6 +136,27 @@ open class DecryptPdfUseCase(
             return@withContext DecryptStatus.WRONG_PASSWORD
         }
         DecryptStatus.ERROR
+    }
+
+    open fun atomicReplace(context: Context, sourceFile: File, targetUri: Uri): Boolean {
+        return try {
+            if (targetUri.scheme != "file") {
+                try {
+                    context.contentResolver.openFileDescriptor(targetUri, "rw")?.use { pfd ->
+                        Os.ftruncate(pfd.fileDescriptor, 0)
+                    }
+                } catch (_: Exception) {}
+            }
+            openSafeOutputStream(context, targetUri)?.use { outputStream ->
+                sourceFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+                true
+            } ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     suspend fun extractMetadata(context: Context, uri: Uri, passwordValue: String = ""): PdfMetadata? = withContext(ioDispatcher) {
@@ -187,11 +223,7 @@ open class DecryptPdfUseCase(
             if (uri.scheme == "file" && uri.path != null) {
                 FileOutputStream(File(uri.path!!))
             } else {
-                try {
-                    context.contentResolver.openOutputStream(uri, "wt")
-                } catch (_: Exception) {
-                    context.contentResolver.openOutputStream(uri)
-                }
+                context.contentResolver.openOutputStream(uri, "wt")
             }
         } catch (_: Exception) {
             null

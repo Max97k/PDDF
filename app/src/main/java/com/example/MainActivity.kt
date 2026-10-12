@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.SecurityPreferences
@@ -31,7 +32,9 @@ import com.example.feature.decrypt.PDFDecryptorScreen
 import com.example.feature.vault.BiometricHelper
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.FileUtils
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
@@ -62,6 +65,7 @@ class MainActivity : FragmentActivity() {
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         FileUtils.cleanUpDecryptedCache(this)
 
@@ -160,10 +164,10 @@ class MainActivity : FragmentActivity() {
         val action = intent.action
 
         if (action == "com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS" || action == "com.example.ACTION_SHOW_SAVED_PASSWORDS") {
-            viewModel.showPasswordListDialog.value = true
+            viewModel.onAction(MainUiAction.SetPasswordListDialogVisible(true))
             return
         } else if (action == "com.max97k.pddf.ACTION_SELECT_PDF" || action == "com.example.ACTION_SELECT_PDF") {
-            viewModel.triggerOpenDocumentPicker()
+            viewModel.onAction(MainUiAction.RequestFilePicker)
             val pickerIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "application/pdf"

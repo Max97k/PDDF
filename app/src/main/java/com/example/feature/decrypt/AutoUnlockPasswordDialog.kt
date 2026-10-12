@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -61,14 +64,17 @@ fun AutoUnlockPasswordDialog(
     }
 
     AlertDialog(
+        modifier = modifier
+            .imePadding()
+            .padding(24.dp)
+            .wrapContentWidth()
+            .wrapContentHeight(),
         onDismissRequest = onDismiss,
-        properties = DialogProperties(dismissOnClickOutside = false),
+        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
         title = { Text(stringResource(R.string.title_unlock_pdf)) },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .imePadding()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = fileName.ifBlank { "Document" },
@@ -145,7 +151,6 @@ fun AutoUnlockPasswordDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.btn_cancel))
             }
-        },
-        modifier = modifier
+        }
     )
 }

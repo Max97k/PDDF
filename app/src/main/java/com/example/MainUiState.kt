@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.example.data.PasswordEntity
 import com.example.data.ThemeMode
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * State representation for batch decryption progress.
@@ -25,8 +27,8 @@ data class BatchState(
 @Immutable
 data class MainUiState(
     // 1. File Selection State
-    val selectedUris: List<Uri> = emptyList(),
-    val selectedFileNames: List<String> = emptyList(),
+    val selectedUris: ImmutableList<Uri> = persistentListOf(),
+    val selectedFileNames: ImmutableList<String> = persistentListOf(),
     val selectedMetadata: PdfMetadata? = null,
 
     // 2. Password Input State
@@ -61,7 +63,7 @@ data class MainUiState(
     val screenshotProtectionEnabled: Boolean = false,
 
     // 8. Password Vault Data
-    val savedPasswords: List<PasswordEntity> = emptyList()
+    val savedPasswords: ImmutableList<PasswordEntity> = persistentListOf()
 ) {
     // Computed Properties for Clean Leaf Composable Consumption
     val hasSelectedFiles: Boolean

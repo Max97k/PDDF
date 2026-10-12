@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "th
 class ThemePreferences(
     private val context: Context,
     private val dataStore: DataStore<Preferences> = context.dataStore,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     companion object {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")

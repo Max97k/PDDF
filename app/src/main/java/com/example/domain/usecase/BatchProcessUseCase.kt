@@ -6,6 +6,7 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.example.ConflictMode
 import com.example.DecryptStatus
+import com.example.di.IoDispatcher
 import com.example.util.FileUtils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +16,7 @@ import java.io.File
 
 class BatchProcessUseCase(
     private val decryptPdfUseCase: DecryptPdfUseCase,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     data class BatchResult(

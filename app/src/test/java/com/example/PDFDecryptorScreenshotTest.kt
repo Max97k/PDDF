@@ -7,7 +7,9 @@ import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.PasswordEntity
 import com.example.data.ThemeMode
+import com.example.feature.decrypt.AutoUnlockPasswordDialog
 import com.example.feature.decrypt.PDFDecryptorScreen
+import com.example.feature.vault.SavedPasswordListDialog
 import com.example.ui.theme.MyApplicationTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -121,5 +123,39 @@ class PDFDecryptorScreenshotTest {
     }
 
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/real_ss_4_light_theme.png")
+  }
+
+  @Test
+  fun screenshot_5_autounlock_dialog() {
+    composeTestRule.setContent {
+      MyApplicationTheme(themeMode = ThemeMode.LIGHT) {
+        AutoUnlockPasswordDialog(
+          fileName = "encrypted.pdf",
+          errorMessage = null,
+          onUnlock = { _, _ -> },
+          onDismiss = {}
+        )
+      }
+    }
+    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/real_ss_5_autounlock_dialog.png")
+  }
+
+  @Test
+  fun screenshot_6_vault_dialog() {
+    val samplePasswords = listOf(
+      PasswordEntity(id = 1, name = "Bank Statement", passwordValue = "password123"),
+      PasswordEntity(id = 2, name = "Tax Return 2024", passwordValue = "mypassword")
+    )
+    composeTestRule.setContent {
+      MyApplicationTheme(themeMode = ThemeMode.LIGHT) {
+        SavedPasswordListDialog(
+          savedPasswords = samplePasswords,
+          onDismiss = {},
+          onSelectPassword = {},
+          onDeletePassword = {}
+        )
+      }
+    }
+    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/real_ss_6_vault_dialog.png")
   }
 }

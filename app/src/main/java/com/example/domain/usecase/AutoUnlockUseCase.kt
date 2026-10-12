@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import com.example.DecryptStatus
+import com.example.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,7 +13,7 @@ import java.io.File
 open class AutoUnlockUseCase(
     private val decryptPdfUseCase: DecryptPdfUseCase,
     private val passwordVaultUseCase: PasswordVaultUseCase,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     sealed interface AutoUnlockResult {

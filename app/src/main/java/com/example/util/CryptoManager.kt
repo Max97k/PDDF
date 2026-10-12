@@ -115,7 +115,7 @@ class CryptoManager(private val context: Context? = null) {
             val combined = iv + encryptedBytes
             PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
         } catch (e: Exception) {
-            plainText
+            throw IllegalStateException("Failed to encrypt text safely", e)
         }
     }
 
@@ -130,7 +130,7 @@ class CryptoManager(private val context: Context? = null) {
             val combined = Base64.decode(actualEncrypted, Base64.NO_WRAP)
 
             if (combined.size < 12) {
-                return encryptedText
+                throw IllegalArgumentException("Invalid encrypted payload size")
             }
 
             val iv = combined.copyOfRange(0, 12)
@@ -140,7 +140,7 @@ class CryptoManager(private val context: Context? = null) {
             decryptedBytes = cipher.doFinal(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {
-            encryptedText
+            throw IllegalStateException("Failed to decrypt text safely", e)
         } finally {
             decryptedBytes?.let { MemoryUtils.wipe(it) }
         }

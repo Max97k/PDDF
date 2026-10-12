@@ -12,6 +12,7 @@ import com.example.data.PasswordRepository
 import com.example.data.SecurityPreferences
 import com.example.data.ThemeMode
 import com.example.data.ThemePreferences
+import com.example.di.IoDispatcher
 import com.example.domain.model.PdfUiState
 import com.example.domain.usecase.AutoUnlockUseCase
 import com.example.domain.usecase.BatchProcessUseCase
@@ -21,6 +22,10 @@ import com.example.util.FileUtils
 import com.example.util.MemoryUtils
 import com.example.util.Result
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -36,6 +41,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 enum class DecryptStatus {
     SUCCESS,
@@ -50,7 +56,8 @@ enum class ConflictMode {
     SAVE_AS_COPY
 }
 
-class MainViewModel @JvmOverloads constructor(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     application: Application,
     private val repository: PasswordRepository = PasswordRepository(
         Room.databaseBuilder(
@@ -58,12 +65,11 @@ class MainViewModel @JvmOverloads constructor(
             AppDatabase::class.java, "pdf-decryptor-db"
         )
         .addMigrations(AppDatabase.MIGRATION_1_2)
-        .fallbackToDestructiveMigration(dropAllTables = true)
         .build().passwordDao()
     ),
     private val themePreferences: ThemePreferences = ThemePreferences(application),
     private val securityPreferences: SecurityPreferences = SecurityPreferences(application),
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(ioDispatcher),
     private val passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
     private val autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
@@ -77,17 +83,17 @@ class MainViewModel @JvmOverloads constructor(
             initialValue = ThemeMode.SYSTEM
         )
 
-    val savedPasswords: StateFlow<List<PasswordEntity>> = passwordVaultUseCase.allPasswords
+    val savedPasswords: StateFlow<ImmutableList<PasswordEntity>> = passwordVaultUseCase.allPasswords
         .map { result ->
             when (result) {
-                is Result.Success -> result.data
-                else -> emptyList()
+                is Result.Success -> result.data.toImmutableList()
+                else -> persistentListOf()
             }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = persistentListOf()
         )
 
     // ---------------------------------------------------------------------------------------------
@@ -353,8 +359,8 @@ class MainViewModel @JvmOverloads constructor(
 
             _uiState.update {
                 it.copy(
-                    selectedUris = pdfUris,
-                    selectedFileNames = pdfNames,
+                    selectedUris = pdfUris.toImmutableList(),
+                    selectedFileNames = pdfNames.toImmutableList(),
                     selectedMetadata = null,
                     statusMessage = null
                 )
