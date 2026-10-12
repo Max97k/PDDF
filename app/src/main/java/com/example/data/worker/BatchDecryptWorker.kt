@@ -3,26 +3,27 @@ package com.example.data.worker
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.example.ConflictMode
-import com.example.R
 import com.example.domain.usecase.BatchProcessUseCase
-import com.example.domain.usecase.DecryptPdfUseCase
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class BatchDecryptWorker(
-    context: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class BatchDecryptWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val batchProcessUseCase: BatchProcessUseCase
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -72,11 +73,6 @@ class BatchDecryptWorker(
             PDFBoxResourceLoader.init(applicationContext)
         } catch (_: Exception) {}
 
-        // Initial foreground notification & progress
-        try {
-            setForeground(createForegroundInfo(0, uriStrings.size))
-        } catch (_: Exception) {}
-
         setProgress(
             workDataOf(
                 KEY_PROGRESS_CURRENT to 0,
@@ -85,8 +81,6 @@ class BatchDecryptWorker(
         )
 
         val inputUris = uriStrings.map { Uri.parse(it) }
-        val decryptPdfUseCase = DecryptPdfUseCase(Dispatchers.IO)
-        val batchProcessUseCase = BatchProcessUseCase(decryptPdfUseCase, Dispatchers.IO)
 
         val progressCallback: (Int, Int) -> Unit = { current, total ->
             if (!isStopped) {
@@ -151,15 +145,6 @@ class BatchDecryptWorker(
         )
 
         Result.success(outputData)
-    }
-
-    private fun createForegroundInfo(current: Int, total: Int): ForegroundInfo {
-        val notification = buildNotification(current, total)
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            ForegroundInfo(NOTIFICATION_ID, notification)
-        }
     }
 
     private fun buildNotification(current: Int, total: Int): android.app.Notification {

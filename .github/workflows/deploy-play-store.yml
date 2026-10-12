@@ -39,6 +39,14 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease assembleRelease
 
+      - name: Upload Signed Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-bundle
+          path: |
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/release/app-release.apk
+
       # 2. 自動將簽名後的 AAB 上傳至 Google Play Console 內部測試軌 (Internal Track)
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
