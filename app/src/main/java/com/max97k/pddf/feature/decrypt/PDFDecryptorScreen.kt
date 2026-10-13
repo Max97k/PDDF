@@ -894,6 +894,7 @@ fun PDFDecryptorScreen(
     }
 
     if (uiState.previewPdfUri != null) {
+        val shareFileTitle = stringResource(R.string.btn_share_file)
         PdfViewerDialog(
             uri = uiState.previewPdfUri,
             title = uiState.selectedFileNames.firstOrNull() ?: "",
@@ -905,7 +906,7 @@ fun PDFDecryptorScreen(
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 try {
-                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_share_file)))
+                    context.startActivity(Intent.createChooser(intent, shareFileTitle))
                 } catch (_: Exception) {}
             },
             onSaveAs = {

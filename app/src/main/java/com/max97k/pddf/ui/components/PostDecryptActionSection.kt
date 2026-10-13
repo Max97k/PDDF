@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui.components
+package com.max97k.pddf.ui.components
 
 import android.app.DownloadManager
 import android.content.Intent
@@ -50,6 +50,8 @@ fun PostDecryptActionSection(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val shareFileTitle = stringResource(R.string.btn_share_file)
+    val openPdfTitle = stringResource(R.string.btn_open_pdf)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -97,7 +99,7 @@ fun PostDecryptActionSection(
                         }
                         try {
                             context.startActivity(
-                                Intent.createChooser(intent, context.getString(R.string.btn_share_file))
+                                Intent.createChooser(intent, shareFileTitle)
                             )
                         } catch (_: Exception) {}
                     },
@@ -127,7 +129,7 @@ fun PostDecryptActionSection(
                         }
                         try {
                             context.startActivity(
-                                Intent.createChooser(intent, context.getString(R.string.btn_open_pdf))
+                                Intent.createChooser(intent, openPdfTitle)
                             )
                         } catch (_: Exception) {}
                     },
