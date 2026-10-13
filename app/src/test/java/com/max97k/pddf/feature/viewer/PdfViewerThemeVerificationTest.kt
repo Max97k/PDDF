@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.content.Context
 import android.util.TypedValue
@@ -27,7 +27,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class PdfViewerThemeVerificationTest {
 
     private val context: Context

@@ -1,4 +1,4 @@
-package com.max97k.pddf.feature.viewer
+﻿package com.max97k.pddf.feature.viewer
 
 import android.net.Uri
 import androidx.activity.ComponentActivity
@@ -35,7 +35,7 @@ import java.io.File
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class PdfViewerWindowIsolationTest {
 
     @get:Rule

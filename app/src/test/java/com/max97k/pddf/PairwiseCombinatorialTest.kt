@@ -42,7 +42,7 @@ import javax.crypto.KeyGenerator
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(ParameterizedRobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class PairwiseCombinatorialTest(
     private val conflictMode: ConflictMode,
     private val passwordState: PasswordState,

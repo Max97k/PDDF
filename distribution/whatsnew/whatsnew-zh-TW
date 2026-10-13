@@ -1,1 +1,1 @@
-v0.7.4 版本更新：Clean Architecture 領域層深度解耦與純粹化；高敏感字元陣列 (CharArray) 記憶體安全擦除；@HiltWorker 背景工作注入；導入 Jetpack Navigation 導航架構；全專案遷移至 com.max97k.pddf 套件命名空間。
+v0.7.6 版本更新：Target SDK 37 (Android 17) 架構升級；徹底清除歷史相容性分支；次世代原生 ART 效能優化；溫啟動與記憶體佔用極致輕量化；維持 100% 嚴格 DoD 5220.22-M 快取粉碎與安全性。

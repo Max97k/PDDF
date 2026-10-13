@@ -15,7 +15,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class BiometricHelperTest {
 
     @Before

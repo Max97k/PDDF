@@ -47,7 +47,7 @@ import javax.crypto.KeyGenerator
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class AutoCloseableAndThreadingSafetyTest {
 
     private val testDispatcher = StandardTestDispatcher()

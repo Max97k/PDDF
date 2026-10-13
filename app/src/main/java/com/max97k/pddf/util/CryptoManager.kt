@@ -1,8 +1,7 @@
-﻿package com.max97k.pddf.util
+package com.max97k.pddf.util
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -28,11 +27,7 @@ class CryptoManager(private val context: Context? = null) {
         var testKeyOverride: SecretKey? = null
 
         fun isStrongBoxSupported(context: Context): Boolean {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
-            } else {
-                false
-            }
+            return context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
         }
     }
 
@@ -60,7 +55,7 @@ class CryptoManager(private val context: Context? = null) {
         val keyGenerator = KeyGenerator.getInstance(ALGORITHM, "AndroidKeyStore")
         val hasStrongBox = context?.let { isStrongBoxSupported(it) } ?: false
 
-        if (hasStrongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (hasStrongBox) {
             try {
                 val strongBoxSpec = KeyGenParameterSpec.Builder(
                     KEY_ALIAS,

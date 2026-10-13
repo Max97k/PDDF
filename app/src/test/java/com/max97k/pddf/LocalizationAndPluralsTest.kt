@@ -19,7 +19,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * XML integrity, and plural handling.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class LocalizationAndPluralsTest {
 
     private val resDir = File("src/main/res")

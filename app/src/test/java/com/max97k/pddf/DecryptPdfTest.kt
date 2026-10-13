@@ -17,7 +17,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class DecryptPdfTest {
 
     private lateinit var context: Context

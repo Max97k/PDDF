@@ -34,7 +34,7 @@ import javax.crypto.KeyGenerator
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class MainViewModelUdfTurbineTest {
 
     private val testDispatcher = StandardTestDispatcher()

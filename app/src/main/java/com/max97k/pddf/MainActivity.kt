@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -80,13 +79,11 @@ class MainActivity : FragmentActivity() {
                 WindowManager.LayoutParams.FLAG_SECURE
             )
             window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                setTaskDescription(
-                    ActivityManager.TaskDescription.Builder()
-                        .setPrimaryColor(android.graphics.Color.BLACK)
-                        .build()
-                )
-            }
+            setTaskDescription(
+                ActivityManager.TaskDescription.Builder()
+                    .setPrimaryColor(android.graphics.Color.BLACK)
+                    .build()
+            )
         }
 
         enableEdgeToEdge()

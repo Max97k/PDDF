@@ -34,7 +34,7 @@ import java.io.File
  * End-to-end integration test with real PDF documents protected by real encryption algorithms.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class RealEncryptedPdfIntegrationTest {
 
     private lateinit var context: Context

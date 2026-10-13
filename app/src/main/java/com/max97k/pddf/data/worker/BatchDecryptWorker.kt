@@ -1,10 +1,9 @@
-﻿package com.max97k.pddf.data.worker
+package com.max97k.pddf.data.worker
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -158,15 +157,13 @@ class BatchDecryptWorker @AssistedInject constructor(
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "PDF Batch Decryption",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Shows real-time progress for PDF decryption jobs"
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "PDF Batch Decryption",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shows real-time progress for PDF decryption jobs"
         }
+        notificationManager.createNotificationChannel(channel)
     }
 }

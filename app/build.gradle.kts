@@ -17,15 +17,14 @@ jacoco {
 
 android {
   namespace = "com.max97k.pddf"
-  compileSdk = 36
-  compileSdkExtension = 19
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "com.max97k.pddf"
-    minSdk = 34
-    targetSdk = 36
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 14
-    versionName = (project.findProperty("versionName") as? String) ?: "0.7.4"
+    minSdk = 36
+    targetSdk = 37
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 15
+    versionName = (project.findProperty("versionName") as? String) ?: "0.7.6"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

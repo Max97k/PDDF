@@ -1,4 +1,4 @@
-﻿@file:OptIn(
+@file:OptIn(
     androidx.compose.foundation.ExperimentalFoundationApi::class,
     androidx.compose.material3.ExperimentalMaterial3Api::class
 )
@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -234,23 +233,19 @@ fun PDFDecryptorScreen(
                 WindowManager.LayoutParams.FLAG_SECURE
             )
             activity?.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                activity?.setTaskDescription(
-                    ActivityManager.TaskDescription.Builder()
-                        .setPrimaryColor(android.graphics.Color.BLACK)
-                        .build()
-                )
-            }
+            activity?.setTaskDescription(
+                ActivityManager.TaskDescription.Builder()
+                    .setPrimaryColor(android.graphics.Color.BLACK)
+                    .build()
+            )
         } else {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             activity?.window?.setBackgroundDrawable(null)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                activity?.setTaskDescription(
-                    ActivityManager.TaskDescription.Builder()
-                        .setPrimaryColor(0)
-                        .build()
-                )
-            }
+            activity?.setTaskDescription(
+                ActivityManager.TaskDescription.Builder()
+                    .setPrimaryColor(0)
+                    .build()
+            )
         }
         onDispose {
             // Do NOT clear FLAG_SECURE on dispose — if the user enabled screenshot
@@ -338,9 +333,7 @@ fun PDFDecryptorScreen(
                 val dragEvent = event.toAndroidDragEvent()
                 val clipData = dragEvent.clipData ?: return false
                 val act = context as? Activity
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    act?.requestDragAndDropPermissions(dragEvent)
-                }
+                act?.requestDragAndDropPermissions(dragEvent)
                 val uris = mutableListOf<Uri>()
                 for (i in 0 until clipData.itemCount) {
                     val uri = clipData.getItemAt(i).uri
@@ -360,18 +353,10 @@ fun PDFDecryptorScreen(
     LaunchedEffect(uiState.statusMessage) {
         when (uiState.statusLevel) {
             com.max97k.pddf.StatusLevel.ERROR -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    view.performHapticFeedback(HapticFeedbackConstants.REJECT)
-                } else {
-                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                }
+                view.performHapticFeedback(HapticFeedbackConstants.REJECT)
             }
             com.max97k.pddf.StatusLevel.SUCCESS -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                } else {
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                }
+                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
             }
             else -> Unit
         }

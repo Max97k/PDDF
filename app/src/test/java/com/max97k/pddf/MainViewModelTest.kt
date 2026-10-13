@@ -37,7 +37,7 @@ import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class MainViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()

@@ -33,7 +33,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class PdfViewerStateAndLifecycleTest {
 
     @get:Rule

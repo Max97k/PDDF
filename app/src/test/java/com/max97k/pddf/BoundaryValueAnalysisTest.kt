@@ -42,7 +42,7 @@ import javax.crypto.KeyGenerator
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [36])
 class BoundaryValueAnalysisTest {
 
     private val testDispatcher = StandardTestDispatcher()

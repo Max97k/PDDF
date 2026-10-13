@@ -5,7 +5,7 @@ This document establishes the official development standards, architectural cont
 ---
 
 ## 1. Environment & Build Tooling (Windows / PowerShell)
-- **Target Platform**: Android (Min SDK 24, Target SDK 35)
+- **Target Platform**: Android (Min SDK 36, Target SDK 37, Compile SDK 37)
 - **Host OS**: Windows (Shell: PowerShell)
 - **Gradle Command Standard**:
   - Always use `.\gradlew.bat` for CLI executions (e.g., `.\gradlew.bat assembleDebug`).

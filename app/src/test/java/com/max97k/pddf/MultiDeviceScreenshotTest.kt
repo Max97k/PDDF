@@ -25,7 +25,7 @@ class MultiDeviceScreenshotTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [34])
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
     fun screenshot_phone_pixel8_light() {
         val application = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createTestMainViewModel(application)
@@ -42,7 +42,7 @@ class MultiDeviceScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [34])
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
     fun screenshot_phone_pixel8_dark() {
         val application = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createTestMainViewModel(application)
@@ -59,7 +59,7 @@ class MultiDeviceScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel4a, sdk = [34])
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel4a, sdk = [36])
     fun screenshot_phone_pixel4a_compact() {
         val application = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createTestMainViewModel(application)
@@ -76,7 +76,7 @@ class MultiDeviceScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = RobolectricDeviceQualifiers.PixelFold, sdk = [34])
+    @Config(qualifiers = RobolectricDeviceQualifiers.PixelFold, sdk = [36])
     fun screenshot_foldable_pixel_fold() {
         val application = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createTestMainViewModel(application)
@@ -93,7 +93,7 @@ class MultiDeviceScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = RobolectricDeviceQualifiers.PixelTablet, sdk = [34])
+    @Config(qualifiers = RobolectricDeviceQualifiers.PixelTablet, sdk = [36])
     fun screenshot_tablet_pixel_tablet() {
         val application = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createTestMainViewModel(application)

@@ -1,1 +1,1 @@
-v0.7.4 Release: Complete Clean Architecture refactoring with domain layer decoupling; sensitive CharArray memory wipes; @HiltWorker background dependency injection; Jetpack Navigation integration; full package migration to com.max97k.pddf.
+v0.7.6 Release: Target SDK 37 (Android 17) upgrade; eliminated all legacy version branching; streamlined native Android 17 ART performance; optimized cold and warm startup latency; verified DoD 5220.22-M secure shredding.
