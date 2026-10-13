@@ -51,7 +51,7 @@ class BatchDecryptWorker @AssistedInject constructor(
         applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val uriStrings = inputData.getStringArray(KEY_INPUT_URIS) ?: emptyArray()
+        val uriStrings = inputData.getNullableStringArray(KEY_INPUT_URIS)?.filterNotNull()?.toTypedArray() ?: emptyArray()
         val passwordValue = inputData.getString(KEY_PASSWORD) ?: ""
         val outputDirectoryUriString = inputData.getString(KEY_OUTPUT_DIRECTORY_URI)
         val conflictModeName = inputData.getString(KEY_CONFLICT_MODE) ?: ConflictMode.SAVE_AS_COPY.name

@@ -266,7 +266,7 @@ class LocalizationAndPluralsTest {
 
         // 5. Test Spanish (es)
         val esConfig = Configuration(context.resources.configuration)
-        esConfig.setLocale(Locale("es"))
+        esConfig.setLocale(Locale.forLanguageTag("es"))
         val esContext = context.createConfigurationContext(esConfig)
         assertEquals("Seleccionar PDFs cifrados", esContext.getString(R.string.btn_select_pdfs))
         assertEquals("1 archivo seleccionado", esContext.resources.getQuantityString(R.plurals.selected_files_count, 1, 1))

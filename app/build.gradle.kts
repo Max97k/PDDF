@@ -3,11 +3,12 @@ import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesS
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
-  id("com.google.dagger.hilt.android")
+  alias(libs.plugins.hilt)
   id("jacoco")
 }
 
@@ -23,8 +24,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 36
     targetSdk = 37
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 15
-    versionName = (project.findProperty("versionName") as? String) ?: "0.7.6"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 16
+    versionName = (project.findProperty("versionName") as? String) ?: "0.7.9"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -71,8 +72,8 @@ android {
     }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
   buildFeatures {
     compose = true
@@ -86,7 +87,8 @@ android {
         it.jvmArgs(
           "-Drobolectric.dependency.repo.url=https://repo1.maven.org/maven2/",
           "--add-opens=java.base/java.lang=ALL-UNNAMED",
-          "--add-opens=java.base/java.util=ALL-UNNAMED"
+          "--add-opens=java.base/java.util=ALL-UNNAMED",
+          "--enable-native-access=ALL-UNNAMED"
         )
       }
     }
@@ -161,7 +163,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
-  implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+  implementation(libs.kotlinx.collections.immutable)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
@@ -176,16 +178,16 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
-  implementation("androidx.documentfile:documentfile:1.0.1")
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.serialization.json)
   implementation(libs.pdfbox.android)
-  implementation("androidx.biometric:biometric:1.1.0")
+  implementation(libs.androidx.biometric)
   implementation(libs.androidx.fragment.ktx)
   implementation(libs.androidx.pdf.viewer.fragment)
-  implementation("androidx.datastore:datastore-preferences:1.1.1")
+  implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.work.runtime.ktx)
   testImplementation(libs.androidx.work.testing)
   testImplementation(libs.androidx.compose.ui.test.junit4)

@@ -14,7 +14,7 @@ import com.max97k.pddf.feature.decrypt.PDFDecryptorScreen
 
 /**
  * Main NavHost for PDDF application.
- * Manages top-level navigation routes while strictly adhering to the Fragment & Window
+ * Manages top-level type-safe navigation routes while strictly adhering to the Fragment & Window
  * Isolation Contract (AndroidX PdfViewerFragment and dialog overlays share the host window).
  */
 @Composable
@@ -27,10 +27,10 @@ fun PddfNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = PddfNavDestination.Decrypt.route,
+        startDestination = PddfNavDestination.Decrypt,
         modifier = modifier
     ) {
-        composable(route = PddfNavDestination.Decrypt.route) {
+        composable<PddfNavDestination.Decrypt> {
             PDFDecryptorScreen(
                 viewModel = viewModel,
                 modifier = Modifier,
@@ -38,7 +38,7 @@ fun PddfNavHost(
                 windowWidthSizeClass = windowWidthSizeClass
             )
         }
-        composable(route = PddfNavDestination.SavedPasswords.route) {
+        composable<PddfNavDestination.SavedPasswords> {
             PDFDecryptorScreen(
                 viewModel = viewModel,
                 modifier = Modifier,
@@ -46,7 +46,7 @@ fun PddfNavHost(
                 windowWidthSizeClass = windowWidthSizeClass
             )
         }
-        composable(route = PddfNavDestination.Settings.route) {
+        composable<PddfNavDestination.Settings> {
             PDFDecryptorScreen(
                 viewModel = viewModel,
                 modifier = Modifier,
@@ -54,7 +54,7 @@ fun PddfNavHost(
                 windowWidthSizeClass = windowWidthSizeClass
             )
         }
-        composable(route = PddfNavDestination.Viewer.route) {
+        composable<PddfNavDestination.Viewer> {
             PDFDecryptorScreen(
                 viewModel = viewModel,
                 modifier = Modifier,

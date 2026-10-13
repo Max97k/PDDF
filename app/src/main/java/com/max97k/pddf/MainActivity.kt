@@ -1,6 +1,5 @@
 package com.max97k.pddf
 
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
@@ -12,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -41,26 +41,17 @@ class MainActivity : FragmentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     private val pickPdfLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            val uris = mutableListOf<Uri>()
-            data?.clipData?.let { clipData ->
-                for (i in 0 until clipData.itemCount) {
-                    uris.add(clipData.getItemAt(i).uri)
-                }
-            } ?: data?.data?.let { uris.add(it) }
-            if (uris.isNotEmpty()) {
-                val flags = data?.flags ?: 0
-                val takeFlags = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                if (takeFlags != 0) {
-                    uris.forEach { uri ->
-                        FileUtils.takePersistableUriPermissionSafely(this, uri, takeFlags)
-                    }
-                }
-                viewModel.onAction(MainUiAction.SelectFiles(uris))
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.forEach { uri ->
+                FileUtils.takePersistableUriPermissionSafely(
+                    this,
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
             }
+            viewModel.onAction(MainUiAction.SelectFiles(uris))
         }
     }
 
@@ -79,11 +70,6 @@ class MainActivity : FragmentActivity() {
                 WindowManager.LayoutParams.FLAG_SECURE
             )
             window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
-            setTaskDescription(
-                ActivityManager.TaskDescription.Builder()
-                    .setPrimaryColor(android.graphics.Color.BLACK)
-                    .build()
-            )
         }
 
         enableEdgeToEdge()
@@ -128,13 +114,19 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) }
                 ) { innerPadding ->
-                    PddfNavHost(
-                        navController = navController,
-                        viewModel = viewModel,
-                        modifier = Modifier.padding(innerPadding),
-                        snackbarHostState = snackbarHostState,
-                        windowWidthSizeClass = windowSizeClass.widthSizeClass
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = innerPadding.calculateBottomPadding())
+                    ) {
+                        PddfNavHost(
+                            navController = navController,
+                            viewModel = viewModel,
+                            modifier = Modifier.fillMaxSize(),
+                            snackbarHostState = snackbarHostState,
+                            windowWidthSizeClass = windowSizeClass.widthSizeClass
+                        )
+                    }
                 }
             }
         }
@@ -170,13 +162,7 @@ class MainActivity : FragmentActivity() {
             return
         } else if (action == "com.max97k.pddf.ACTION_SELECT_PDF") {
             viewModel.onAction(MainUiAction.RequestFilePicker)
-            val pickerIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-            }
-            pickPdfLauncher.launch(pickerIntent)
+            pickPdfLauncher.launch(arrayOf("application/pdf"))
             return
         }
 

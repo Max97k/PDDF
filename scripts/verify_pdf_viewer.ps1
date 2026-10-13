@@ -286,7 +286,7 @@ if (-not $fileNode) {
 Save-Screenshot "03_documentsui_picker.png"
 
 $tapX = $fileNode.CenterX
-$tapY = [Math]::Max(100, $fileNode.Y1 - 150)
+$tapY = $fileNode.CenterY
 Write-Host "  -> Tapping encrypted.pdf card at ($tapX, $tapY)..."
 & $adb -s $DeviceId shell input tap $tapX $tapY
 

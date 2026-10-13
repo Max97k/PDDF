@@ -214,7 +214,7 @@ class RealWorldScenarioE2ETest {
             Locale.ENGLISH to "Select Encrypted PDFs",
             Locale.TRADITIONAL_CHINESE to "選擇加密的 PDF 檔案",
             Locale.JAPANESE to "暗号化されたPDFを選択",
-            Locale("es") to "Seleccionar PDFs cifrados"
+            Locale.forLanguageTag("es") to "Seleccionar PDFs cifrados"
         )
 
         for ((locale, expectedSelectBtn) in locales) {

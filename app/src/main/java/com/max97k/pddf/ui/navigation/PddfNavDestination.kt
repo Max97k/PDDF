@@ -1,11 +1,20 @@
 ﻿package com.max97k.pddf.ui.navigation
 
+import kotlinx.serialization.Serializable
+
 /**
  * Type-safe navigation destinations for PDDF Jetpack Compose navigation.
  */
-sealed class PddfNavDestination(val route: String) {
-    data object Decrypt : PddfNavDestination("decrypt_route")
-    data object SavedPasswords : PddfNavDestination("saved_passwords_route")
-    data object Settings : PddfNavDestination("settings_route")
-    data object Viewer : PddfNavDestination("viewer_route")
+sealed interface PddfNavDestination {
+    @Serializable
+    data object Decrypt : PddfNavDestination
+
+    @Serializable
+    data object SavedPasswords : PddfNavDestination
+
+    @Serializable
+    data object Settings : PddfNavDestination
+
+    @Serializable
+    data object Viewer : PddfNavDestination
 }

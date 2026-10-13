@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -367,6 +368,7 @@ fun PDFDecryptorScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .dragAndDropTarget(
                 shouldStartDragAndDrop = { event ->
                     val dragEvent = event.toAndroidDragEvent()
@@ -685,10 +687,12 @@ fun PDFDecryptorScreen(
                             onOpenPasswordList = {
                                 val fragmentActivity = context as? FragmentActivity
                                 if (fragmentActivity != null) {
+                                    val promptTitle = context.resources.getString(R.string.biometric_prompt_title)
+                                    val promptSubtitle = context.resources.getString(R.string.biometric_prompt_subtitle)
                                     BiometricHelper.authenticate(
                                         activity = fragmentActivity,
-                                        title = context.getString(R.string.biometric_prompt_title),
-                                        subtitle = context.getString(R.string.biometric_prompt_subtitle),
+                                        title = promptTitle,
+                                        subtitle = promptSubtitle,
                                         onSuccess = { onAction(MainUiAction.SetPasswordListDialogVisible(true)) },
                                         onError = { errorCode, errString ->
                                             if (errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
@@ -858,8 +862,8 @@ fun PDFDecryptorScreen(
                 onAction(MainUiAction.DeletePassword(savedPass))
                 scope.launch {
                     val result = snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.msg_password_deleted),
-                        actionLabel = context.getString(R.string.btn_undo),
+                        message = context.resources.getString(R.string.msg_password_deleted),
+                        actionLabel = context.resources.getString(R.string.btn_undo),
                         duration = SnackbarDuration.Short
                     )
                     if (result == SnackbarResult.ActionPerformed) {

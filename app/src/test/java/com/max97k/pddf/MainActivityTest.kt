@@ -1,6 +1,10 @@
 ﻿package com.max97k.pddf
 
+import android.content.ContentProvider
+import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
+import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.viewModels
@@ -9,14 +13,32 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.Shadows.shadowOf
-import org.robolectric.fakes.RoboCursor
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class MainActivityTest {
+
+    class TestContentProvider : ContentProvider() {
+        override fun onCreate(): Boolean = true
+        override fun query(
+            uri: Uri,
+            projection: Array<out String>?,
+            selection: String?,
+            selectionArgs: Array<out String>?,
+            sortOrder: String?
+        ): Cursor? = testCursor
+        override fun getType(uri: Uri): String? = null
+        override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+        override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
+        override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int = 0
+
+        companion object {
+            var testCursor: Cursor? = null
+        }
+    }
 
     @Test
     fun getFileName_fileScheme_returnsFileName() {
@@ -31,13 +53,13 @@ class MainActivityTest {
     @Test
     fun getFileName_contentScheme_withCursor_returnsDisplayName() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val uri = Uri.parse("content://com.max97k.pddf.provider/document/1")
+        val uri = Uri.parse("content://com.max97k.pddf.provider.test1/document/1")
 
-        val cursor = RoboCursor()
-        cursor.setColumnNames(listOf(OpenableColumns.DISPLAY_NAME))
-        cursor.setResults(arrayOf(arrayOf("bank_statement.pdf")))
+        val matrixCursor = MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME))
+        matrixCursor.addRow(arrayOf("bank_statement.pdf"))
 
-        shadowOf(context.contentResolver).setCursor(uri, cursor)
+        TestContentProvider.testCursor = matrixCursor
+        Robolectric.setupContentProvider(TestContentProvider::class.java, "com.max97k.pddf.provider.test1")
 
         val result = getFileName(context, uri)
 
@@ -47,14 +69,12 @@ class MainActivityTest {
     @Test
     fun getFileName_contentScheme_emptyCursor_fallsBackToPath() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val uri = Uri.parse("content://com.max97k.pddf.provider/document/fallback_file.pdf")
+        val uri = Uri.parse("content://com.max97k.pddf.provider.test2/document/fallback_file.pdf")
 
-        val cursor = RoboCursor()
-        cursor.setColumnNames(listOf(OpenableColumns.DISPLAY_NAME))
-        // No results
-        cursor.setResults(arrayOf())
+        val matrixCursor = MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME))
 
-        shadowOf(context.contentResolver).setCursor(uri, cursor)
+        TestContentProvider.testCursor = matrixCursor
+        Robolectric.setupContentProvider(TestContentProvider::class.java, "com.max97k.pddf.provider.test2")
 
         val result = getFileName(context, uri)
 

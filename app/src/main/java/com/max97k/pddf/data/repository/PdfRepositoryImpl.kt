@@ -2,9 +2,9 @@
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.system.Os
 import androidx.core.content.FileProvider
-import androidx.documentfile.provider.DocumentFile
 import com.max97k.pddf.DecryptStatus
 import com.max97k.pddf.PdfMetadata
 import com.max97k.pddf.di.IoDispatcher
@@ -348,8 +348,15 @@ open class PdfRepositoryImpl @Inject constructor(
     ): String? = withContext(ioDispatcher) {
         try {
             val treeUri = parseUri(directoryUriString)
-            val documentTree = DocumentFile.fromTreeUri(context, treeUri)
-            documentTree?.createFile(mimeType, displayName)?.uri?.toString()
+            val docId = DocumentsContract.getTreeDocumentId(treeUri)
+            val parentDocUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+            val createdUri = DocumentsContract.createDocument(
+                context.contentResolver,
+                parentDocUri,
+                mimeType,
+                displayName
+            )
+            createdUri?.toString()
         } catch (_: Exception) {
             null
         }
@@ -361,8 +368,7 @@ open class PdfRepositoryImpl @Inject constructor(
     ): String? = withContext(ioDispatcher) {
         try {
             val treeUri = parseUri(directoryUriString)
-            val documentTree = DocumentFile.fromTreeUri(context, treeUri)
-            documentTree?.findFile(displayName)?.uri?.toString()
+            FileUtils.findChildUriInTree(context, treeUri, displayName)?.toString()
         } catch (_: Exception) {
             null
         }
@@ -374,8 +380,10 @@ open class PdfRepositoryImpl @Inject constructor(
     ): Boolean = withContext(ioDispatcher) {
         try {
             val treeUri = parseUri(directoryUriString)
-            val documentTree = DocumentFile.fromTreeUri(context, treeUri)
-            documentTree?.findFile(displayName)?.delete() ?: false
+            val childUri = FileUtils.findChildUriInTree(context, treeUri, displayName)
+            if (childUri != null) {
+                DocumentsContract.deleteDocument(context.contentResolver, childUri)
+            } else false
         } catch (_: Exception) {
             false
         }

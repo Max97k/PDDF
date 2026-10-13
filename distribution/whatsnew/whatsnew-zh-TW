@@ -1,1 +1,1 @@
-v0.7.6 版本更新：Target SDK 37 (Android 17) 架構升級；徹底清除歷史相容性分支；次世代原生 ART 效能優化；溫啟動與記憶體佔用極致輕量化；維持 100% 嚴格 DoD 5220.22-M 快取粉碎與安全性。
+v0.7.9 版本更新：建置工具鏈升級至 Gradle 9.8.1 與 AGP 9.4.1；全面升級 Navigation Compose 2.10.2 強型別路由；徹底移除 documentfile 依賴改用原生 DocumentsContract 直連優化；修復 Material 3 設定選單背景色差與滿版 Edge-to-Edge 排版。

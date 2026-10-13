@@ -1,1 +1,1 @@
-v0.7.6 Release: Target SDK 37 (Android 17) upgrade; eliminated all legacy version branching; streamlined native Android 17 ART performance; optimized cold and warm startup latency; verified DoD 5220.22-M secure shredding.
+v0.7.9 Release: Upgraded toolchain to Gradle 9.8.1 & AGP 9.4.1; type-safe Jetpack Navigation Compose 2.10.2; native DocumentsContract optimization with documentfile removed; refined Material 3 dark/light modal contrast and edge-to-edge layout.

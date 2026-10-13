@@ -7,21 +7,21 @@ import org.junit.Test
 class PddfNavigationTest {
 
     @Test
-    fun navDestinations_haveCorrectRouteStrings() {
-        assertEquals("decrypt_route", PddfNavDestination.Decrypt.route)
-        assertEquals("saved_passwords_route", PddfNavDestination.SavedPasswords.route)
-        assertEquals("settings_route", PddfNavDestination.Settings.route)
-        assertEquals("viewer_route", PddfNavDestination.Viewer.route)
+    fun navDestinations_areInstantiableAndNotNull() {
+        assertNotNull(PddfNavDestination.Decrypt)
+        assertNotNull(PddfNavDestination.SavedPasswords)
+        assertNotNull(PddfNavDestination.Settings)
+        assertNotNull(PddfNavDestination.Viewer)
     }
 
     @Test
     fun navDestinations_areDistinct() {
-        val routes = listOf(
-            PddfNavDestination.Decrypt.route,
-            PddfNavDestination.SavedPasswords.route,
-            PddfNavDestination.Settings.route,
-            PddfNavDestination.Viewer.route
+        val destinations = listOf(
+            PddfNavDestination.Decrypt,
+            PddfNavDestination.SavedPasswords,
+            PddfNavDestination.Settings,
+            PddfNavDestination.Viewer
         )
-        assertEquals(routes.size, routes.distinct().size)
+        assertEquals(destinations.size, destinations.distinct().size)
     }
 }

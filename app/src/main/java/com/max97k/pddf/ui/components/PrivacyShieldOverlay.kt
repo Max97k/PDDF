@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,7 +47,7 @@ fun PrivacyShieldOverlay(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0D0E11)),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -58,14 +57,14 @@ fun PrivacyShieldOverlay(
                 Surface(
                     modifier = Modifier.size(72.dp),
                     shape = CircleShape,
-                    color = Color(0xFF1E222A)
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
                             modifier = Modifier.size(36.dp),
-                            tint = Color(0xFF8AB4F8)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -76,7 +75,7 @@ fun PrivacyShieldOverlay(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -84,7 +83,7 @@ fun PrivacyShieldOverlay(
                 Text(
                     text = stringResource(R.string.privacy_shield_active),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF9AA0A6)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
