@@ -1,1 +1,1 @@
-v0.7.2 版本更新：全面升級 Hilt 依賴注入架構；強化 PDF 檔案原子替換與 SAF 截斷防護；解密對話框佈局穩定性最佳化；升級端到端自動化與雙軌硬體防截圖視覺驗證機制。
+v0.7.4 版本更新：Clean Architecture 領域層深度解耦與純粹化；高敏感字元陣列 (CharArray) 記憶體安全擦除；@HiltWorker 背景工作注入；導入 Jetpack Navigation 導航架構；全專案遷移至 com.max97k.pddf 套件命名空間。

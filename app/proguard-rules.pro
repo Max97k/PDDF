@@ -47,7 +47,7 @@
 -keep class * implements androidx.room.RoomDatabase$Callback {
     <init>();
 }
--keep class com.example.data.** { *; }
+-keep class com.max97k.pddf.data.** { *; }
 -keep @androidx.room.Dao interface * { *; }
 -keep @androidx.room.Entity class * { *; }
 
@@ -66,9 +66,9 @@
 }
 
 # App Utilities & Models
--keep class com.example.util.CryptoManager { *; }
--keep class com.example.PdfMetadata { *; }
--keep class com.example.data.ThemeMode { *; }
+-keep class com.max97k.pddf.util.CryptoManager { *; }
+-keep class com.max97k.pddf.PdfMetadata { *; }
+-keep class com.max97k.pddf.data.ThemeMode { *; }
 
 # AndroidX PDF Viewer
 -keep class androidx.pdf.** { *; }

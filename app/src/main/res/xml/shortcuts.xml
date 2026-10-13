@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="shortcut_select_pdf"
@@ -9,7 +9,7 @@
         <intent
             android:action="com.max97k.pddf.ACTION_SELECT_PDF"
             android:targetPackage="com.max97k.pddf"
-            android:targetClass="com.example.MainActivity" />
+            android:targetClass="com.max97k.pddf.MainActivity" />
         <categories android:name="android.intent.category.DEFAULT" />
     </shortcut>
     <shortcut
@@ -21,7 +21,7 @@
         <intent
             android:action="com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS"
             android:targetPackage="com.max97k.pddf"
-            android:targetClass="com.example.MainActivity" />
+            android:targetClass="com.max97k.pddf.MainActivity" />
         <categories android:name="android.intent.category.DEFAULT" />
     </shortcut>
 </shortcuts>

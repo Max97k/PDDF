@@ -16,7 +16,7 @@ jacoco {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.max97k.pddf"
   compileSdk = 36
   compileSdkExtension = 19
 
@@ -24,8 +24,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 34
     targetSdk = 36
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 13
-    versionName = (project.findProperty("versionName") as? String) ?: "0.7.2"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 14
+    versionName = (project.findProperty("versionName") as? String) ?: "0.7.4"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -208,6 +208,7 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
   implementation(libs.hilt.android)
   implementation(libs.androidx.hilt.navigation.compose)
+  implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.hilt.work)
   "ksp"(libs.hilt.compiler)
   "ksp"(libs.androidx.hilt.compiler)

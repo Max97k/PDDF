@@ -1,25 +1,25 @@
 # Baseline Profiles rule file for PDF Decryptor (PDDF)
 # Pre-compiles core app startup, Material3 Compose layout rendering, and ViewModel initialization paths.
 
-HSPLcom/example/PdfApplication;-><init>()V
-HSPLcom/example/PdfApplication;->onCreate()V
+HSPLcom/max97k/pddf/PdfApplication;-><init>()V
+HSPLcom/max97k/pddf/PdfApplication;->onCreate()V
 
-HSPLcom/example/MainActivity;-><init>()V
-HSPLcom/example/MainActivity;->onCreate(Landroid/os/Bundle;)V
-HSPLcom/example/MainActivity;->handleIntent(Landroid/content/Intent;)V
+HSPLcom/max97k/pddf/MainActivity;-><init>()V
+HSPLcom/max97k/pddf/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLcom/max97k/pddf/MainActivity;->handleIntent(Landroid/content/Intent;)V
 
-HSPLcom/example/MainViewModel;-><init>(Landroid/app/Application;Lcom/example/data/PasswordRepository;Lcom/example/data/ThemePreferences;Lcom/example/data/SecurityPreferences;Lkotlinx/coroutines/CoroutineDispatcher;Lcom/example/domain/usecase/DecryptPdfUseCase;Lcom/example/domain/usecase/PasswordVaultUseCase;Lcom/example/domain/usecase/AutoUnlockUseCase;Lcom/example/domain/usecase/BatchProcessUseCase;)V
-HSPLcom/example/MainViewModel;->onAction(Lcom/example/MainUiAction;)V
+HSPLcom/max97k/pddf/MainViewModel;-><init>(Landroid/app/Application;Lcom/max97k/pddf/domain/repository/PasswordRepository;Lcom/max97k/pddf/data/ThemePreferences;Lcom/max97k/pddf/data/SecurityPreferences;Lkotlinx/coroutines/CoroutineDispatcher;Lcom/max97k/pddf/domain/usecase/DecryptPdfUseCase;Lcom/max97k/pddf/domain/usecase/PasswordVaultUseCase;Lcom/max97k/pddf/domain/usecase/AutoUnlockUseCase;Lcom/max97k/pddf/domain/usecase/BatchProcessUseCase;)V
+HSPLcom/max97k/pddf/MainViewModel;->onAction(Lcom/max97k/pddf/MainUiAction;)V
 
-HSPLcom/example/feature/decrypt/PDFDecryptorScreenKt;->PDFDecryptorScreen(Lcom/example/MainViewModel;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/SnackbarHostState;Landroidx/compose/material3/windowsizeclass/WindowWidthSizeClass;Landroidx/compose/runtime/Composer;II)V
+HSPLcom/max97k/pddf/feature/decrypt/PDFDecryptorScreenKt;->PDFDecryptorScreen(Lcom/max97k/pddf/MainViewModel;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/SnackbarHostState;Landroidx/compose/material3/windowsizeclass/WindowWidthSizeClass;Landroidx/compose/runtime/Composer;II)V
 
-HSPLcom/example/feature/viewer/PdfViewerScreenKt;->PdfViewerScreen(Landroid/net/Uri;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+HSPLcom/max97k/pddf/feature/viewer/PdfViewerScreenKt;->PdfViewerScreen(Landroid/net/Uri;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 
-Lcom/example/MainUiState;
-Lcom/example/MainUiAction;
-Lcom/example/UiEffect;
-Lcom/example/domain/usecase/DecryptPdfUseCase;
-Lcom/example/domain/usecase/BatchProcessUseCase;
-Lcom/example/domain/usecase/AutoUnlockUseCase;
-Lcom/example/data/SecurityPreferences;
-Lcom/example/data/ThemePreferences;
+Lcom/max97k/pddf/MainUiState;
+Lcom/max97k/pddf/MainUiAction;
+Lcom/max97k/pddf/UiEffect;
+Lcom/max97k/pddf/domain/usecase/DecryptPdfUseCase;
+Lcom/max97k/pddf/domain/usecase/BatchProcessUseCase;
+Lcom/max97k/pddf/domain/usecase/AutoUnlockUseCase;
+Lcom/max97k/pddf/data/SecurityPreferences;
+Lcom/max97k/pddf/data/ThemePreferences;

@@ -219,7 +219,7 @@ Start-Sleep -Seconds 1
 Write-Host "`n[Step 3] Launching MainActivity..."
 & $adb -s $DeviceId shell input keyevent 224
 & $adb -s $DeviceId shell wm dismiss-keyguard
-& $adb -s $DeviceId shell am start -n com.max97k.pddf/com.example.MainActivity
+& $adb -s $DeviceId shell am start -n com.max97k.pddf/.MainActivity
 Start-Sleep -Seconds 2
 
 # Step 4: Handle What's New dialog & capture screenshots
