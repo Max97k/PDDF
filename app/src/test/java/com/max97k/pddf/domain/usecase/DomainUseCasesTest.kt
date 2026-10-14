@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.domain.usecase
+package com.max97k.pddf.domain.usecase
 
 import com.max97k.pddf.DecryptStatus
 import com.max97k.pddf.PdfMetadata
@@ -36,6 +36,25 @@ class DomainUseCasesTest {
         override suspend fun deletePasswordById(id: Int) {
             list.removeAll { it.id == id }
         }
+
+        override suspend fun incrementUsage(id: Int, timestamp: Long) {
+            val index = list.indexOfFirst { it.id == id }
+            if (index >= 0) {
+                val current = list[index]
+                list[index] = current.copy(
+                    useCount = current.useCount + 1,
+                    lastUsedAt = timestamp
+                )
+            }
+        }
+
+        override suspend fun clearAllPasswords() {
+            list.clear()
+        }
+
+        override suspend fun deletePassword(password: PasswordEntity) {
+            list.removeAll { it.id == password.id }
+        }
     }
 
     class FakePasswordRepository : PasswordRepository {
@@ -66,6 +85,18 @@ class DomainUseCasesTest {
 
         override suspend fun deleteById(id: Int): com.max97k.pddf.util.Result<Unit> {
             list.removeAll { it.id == id }
+            return com.max97k.pddf.util.Result.Success(Unit)
+        }
+
+        override suspend fun recordPasswordHit(id: Int): com.max97k.pddf.util.Result<Unit> {
+            val index = list.indexOfFirst { it.id == id }
+            if (index >= 0) {
+                val current = list[index]
+                list[index] = current.copy(
+                    useCount = current.useCount + 1,
+                    lastUsedAt = System.currentTimeMillis()
+                )
+            }
             return com.max97k.pddf.util.Result.Success(Unit)
         }
     }
