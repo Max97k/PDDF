@@ -57,6 +57,30 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusable
+import android.print.PrintManager
+import android.os.ParcelFileDescriptor
+import android.print.PrintDocumentAdapter
+import android.print.PrintAttributes
+import android.os.Bundle
+import android.os.CancellationSignal
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import com.max97k.pddf.feature.viewer.PdfViewerScreen
+
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -113,7 +137,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun PDFDecryptorScreen(
     viewModel: MainViewModel,
@@ -157,7 +181,7 @@ fun PDFDecryptorScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun PDFDecryptorScreen(
     uiState: MainUiState,
@@ -166,6 +190,24 @@ fun PDFDecryptorScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
 ) {
+
+    val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(uiState.previewPdfUri) {
+        if (uiState.previewPdfUri != null) {
+            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+        } else {
+            if (navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.Detail) {
+                navigator.navigateBack()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
@@ -365,20 +407,95 @@ fun PDFDecryptorScreen(
 
     val isExpandedLayout = windowWidthSizeClass == WindowWidthSizeClass.Expanded
 
-    Box(
+    ListDetailPaneScaffold(
+        directive = navigator.scaffoldDirective,
+        value = navigator.scaffoldValue,
         modifier = modifier
             .fillMaxSize()
-            .safeDrawingPadding()
-            .dragAndDropTarget(
-                shouldStartDragAndDrop = { event ->
-                    val dragEvent = event.toAndroidDragEvent()
-                    val clipDescription = dragEvent.clipDescription
-                    clipDescription != null && clipDescription.hasMimeType("application/pdf")
-                },
-                target = dragAndDropTarget
-            )
-            .background(if (isDragging) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.background)
-    ) {
+            .focusRequester(focusRequester)
+            .focusable()
+            .onKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp) {
+                    when {
+                        event.isCtrlPressed && event.key == Key.O -> {
+                            onAction(MainUiAction.RequestFilePicker)
+                            true
+                        }
+                        event.isCtrlPressed && event.key == Key.P -> {
+                            if (uiState.previewPdfUri != null) {
+                                val printManager = context.getSystemService(Context.PRINT_SERVICE) as? PrintManager
+                                val jobName = "PDDF_Document"
+                                printManager?.print(jobName, object : PrintDocumentAdapter() {
+                                    override fun onLayout(
+                                        oldAttributes: PrintAttributes?,
+                                        newAttributes: PrintAttributes?,
+                                        cancellationSignal: CancellationSignal?,
+                                        callback: LayoutResultCallback?,
+                                        extras: Bundle?
+                                    ) {
+                                        if (cancellationSignal?.isCanceled == true) {
+                                            callback?.onLayoutCancelled()
+                                            return
+                                        }
+                                        val info = android.print.PrintDocumentInfo.Builder(jobName)
+                                            .setContentType(android.print.PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                                            .build()
+                                        callback?.onLayoutFinished(info, true)
+                                    }
+
+                                    override fun onWrite(
+                                        pages: Array<out android.print.PageRange>?,
+                                        destination: ParcelFileDescriptor?,
+                                        cancellationSignal: CancellationSignal?,
+                                        callback: WriteResultCallback?
+                                    ) {
+                                        if (destination == null || cancellationSignal?.isCanceled == true) {
+                                            callback?.onWriteCancelled()
+                                            return
+                                        }
+                                        try {
+                                            context.contentResolver.openInputStream(uiState.previewPdfUri)?.use { input ->
+                                                FileOutputStream(destination.fileDescriptor).use { output ->
+                                                    input.copyTo(output)
+                                                }
+                                            }
+                                            callback?.onWriteFinished(arrayOf(android.print.PageRange.ALL_PAGES))
+                                        } catch (e: Exception) {
+                                            callback?.onWriteFailed(e.message)
+                                        }
+                                    }
+                                }, null)
+                                true
+                            } else false
+                        }
+                        event.key == Key.Escape -> {
+                            if (uiState.previewPdfUri != null) {
+                                onAction(MainUiAction.SetPreviewPdfUri(null))
+                                true
+                            } else if (uiState.showAutoUnlockPasswordPrompt) {
+                                onAction(MainUiAction.DismissAutoUnlockPrompt)
+                                true
+                            } else false
+                        }
+                        else -> false
+                    }
+                } else false
+            },
+        listPane = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding()
+                    .dragAndDropTarget(
+                        shouldStartDragAndDrop = { event ->
+                            val dragEvent = event.toAndroidDragEvent()
+                            val clipDescription = dragEvent.clipDescription
+                            clipDescription != null && clipDescription.hasMimeType("application/pdf")
+                        },
+                        target = dragAndDropTarget
+                    )
+                    .background(if (isDragging) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.background)
+            ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -839,7 +956,40 @@ fun PDFDecryptorScreen(
             },
             onDismiss = { showSettingsSheet = false }
         )
-    }
+    }    },
+        detailPane = {
+            if (uiState.previewPdfUri != null) {
+                val shareFileTitle = stringResource(R.string.btn_share_file)
+                PdfViewerScreen(
+                    uri = uiState.previewPdfUri,
+                    modifier = Modifier.fillMaxSize(),
+                    title = uiState.selectedFileNames.firstOrNull() ?: "",
+                    onClose = { onAction(MainUiAction.SetPreviewPdfUri(null)) },
+                    onShare = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_STREAM, uiState.previewPdfUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        try {
+                            context.startActivity(Intent.createChooser(intent, shareFileTitle))
+                        } catch (_: Exception) {}
+                    },
+                    onSaveAs = {
+                        val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_TITLE, fileName)
+                        }
+                        savePreviewDocumentLauncher.launch(intent)
+                    }
+                )
+            }
+        }
+    )
+
+
 
     if (uiState.showSavePasswordDialog) {
         SavePasswordDialog(
@@ -893,33 +1043,7 @@ fun PDFDecryptorScreen(
         )
     }
 
-    if (uiState.previewPdfUri != null) {
-        val shareFileTitle = stringResource(R.string.btn_share_file)
-        PdfViewerDialog(
-            uri = uiState.previewPdfUri,
-            title = uiState.selectedFileNames.firstOrNull() ?: "",
-            onDismiss = { onAction(MainUiAction.SetPreviewPdfUri(null)) },
-            onShare = {
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/pdf"
-                    putExtra(Intent.EXTRA_STREAM, uiState.previewPdfUri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                try {
-                    context.startActivity(Intent.createChooser(intent, shareFileTitle))
-                } catch (_: Exception) {}
-            },
-            onSaveAs = {
-                val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
-                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "application/pdf"
-                    putExtra(Intent.EXTRA_TITLE, fileName)
-                }
-                savePreviewDocumentLauncher.launch(intent)
-            }
-        )
-    }
+
 
     if (showAboutDialog) {
         AboutDialog(
