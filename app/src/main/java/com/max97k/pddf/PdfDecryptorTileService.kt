@@ -11,7 +11,7 @@ class PdfDecryptorTileService : TileService() {
         super.onStartListening()
         val tile = qsTile
         if (tile != null) {
-            tile.state = Tile.STATE_ACTIVE
+            tile.state = Tile.STATE_INACTIVE
             tile.updateTile()
         }
     }
