@@ -1,1 +1,1 @@
-v0.7.9 Release: Upgraded toolchain to Gradle 9.8.1 & AGP 9.4.1; type-safe Jetpack Navigation Compose 2.10.2; native DocumentsContract optimization with documentfile removed; refined Material 3 dark/light modal contrast and edge-to-edge layout.
+v0.8.0 Release: Resolved app launch crash caused by R8 obfuscation missing kotlinx.serialization type-safe navigation route rules; hardened Proguard configuration and improved release build stability.

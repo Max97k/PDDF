@@ -74,3 +74,21 @@
 -keep class androidx.pdf.** { *; }
 -dontwarn androidx.pdf.**
 
+
+# kotlinx.serialization (Navigation type-safe routes)
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.**
+-keep,includedescriptorclasses class com.max97k.pddf.**$$serializer { *; }
+-keepclassmembers class com.max97k.pddf.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.max97k.pddf.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep class com.max97k.pddf.ui.navigation.** { *; }
+-keepclassmembers @kotlinx.serialization.Serializable class ** {
+    static **$* *;
+    *** Companion;
+    *** INSTANCE;
+    kotlinx.serialization.KSerializer serializer(...);
+}

@@ -1,1 +1,1 @@
-v0.7.9 版本更新：建置工具鏈升級至 Gradle 9.8.1 與 AGP 9.4.1；全面升級 Navigation Compose 2.10.2 強型別路由；徹底移除 documentfile 依賴改用原生 DocumentsContract 直連優化；修復 Material 3 設定選單背景色差與滿版 Edge-to-Edge 排版。
+v0.8.0 版本更新：修復 R8 / Proguard 代碼混淆導致的 kotlinx.serialization 型別安全路由序列化遺失與啟動閃退問題；增強發布版混淆防護與執行穩定度。
