@@ -122,5 +122,5 @@
     <string name="privacy_shield_active">Security protection active</string>
 
 
-    <string name="btn_print" translatable="false">Print Document</string>
+    <string name="btn_print">Print Document</string>
 </resources>
