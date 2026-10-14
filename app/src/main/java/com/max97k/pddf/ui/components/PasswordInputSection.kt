@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -41,6 +42,7 @@ fun PasswordInputSection(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    val view = androidx.compose.ui.platform.LocalView.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -67,10 +69,10 @@ fun PasswordInputSection(
                 }
                 IconButton(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
                         onTogglePasswordVisible()
                     },
-                    modifier = Modifier.semantics {
+                    modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).semantics {
                         stateDescription = description
                     }
                 ) {
@@ -83,7 +85,7 @@ fun PasswordInputSection(
         )
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
             onOpenPasswordList()
         }) {
             Icon(
@@ -93,7 +95,7 @@ fun PasswordInputSection(
         }
         IconButton(
             onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
                 onOpenSavePassword()
             },
             enabled = password.isNotBlank()
