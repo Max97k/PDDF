@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.max97k.pddf.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -82,7 +84,7 @@ fun PdfPageItem(
         if (pageBitmap != null) {
             Image(
                 bitmap = pageBitmap!!.asImageBitmap(),
-                contentDescription = "Page ${pageIndex + 1}",
+                contentDescription = stringResource(R.string.content_desc_page, pageIndex + 1),
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth()
             )

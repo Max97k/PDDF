@@ -77,7 +77,7 @@ fun AutoUnlockPasswordDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = fileName.ifBlank { "Document" },
+                    text = fileName.ifBlank { stringResource(R.string.label_document) },
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

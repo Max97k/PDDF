@@ -614,13 +614,13 @@ fun PDFDecryptorScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "🔒 Password & Decryption Actions",
+                                        text = stringResource(R.string.title_password_actions),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Select a PDF file on the left pane to enter password and decrypt.",
+                                        text = stringResource(R.string.desc_password_actions),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center

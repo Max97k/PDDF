@@ -23,6 +23,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.max97k.pddf.R
 import com.max97k.pddf.data.ThemeMode
 
@@ -85,7 +87,7 @@ fun SettingsBottomSheet(
                     trailingContent = {
                         if (currentTheme == mode) {
                             Text(
-                                text = "✓",
+                                text = stringResource(R.string.symbol_checkmark),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -103,6 +105,56 @@ fun SettingsBottomSheet(
                         .semantics { role = Role.RadioButton }
                 )
             }
+
+
+            // ── Language Section ─────────────────────────────────────────
+            Text(
+                text = stringResource(R.string.settings_section_language),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            val currentLanguage = if (currentLocales.isEmpty) "" else currentLocales.get(0)?.toLanguageTag() ?: ""
+
+            val languageEntries = listOf(
+                "" to stringResource(R.string.language_system_default),
+                "en" to stringResource(R.string.language_en),
+                "zh-TW" to stringResource(R.string.language_zh_tw),
+                "zh-CN" to stringResource(R.string.language_zh_cn),
+                "ja" to stringResource(R.string.language_ja),
+                "es" to stringResource(R.string.language_es),
+                "de" to stringResource(R.string.language_de),
+                "fr" to stringResource(R.string.language_fr)
+            )
+
+            languageEntries.forEach { (languageTag, label) ->
+                ListItem(
+                    headlineContent = { Text(label) },
+                    trailingContent = {
+                        val isSelected = if (languageTag.isEmpty()) currentLanguage.isEmpty() else currentLanguage.equals(languageTag, ignoreCase = true) || (currentLanguage.startsWith("zh", ignoreCase = true) && languageTag.startsWith("zh", ignoreCase = true) && currentLanguage.contains("CN", ignoreCase = true) == languageTag.contains("CN", ignoreCase = true))
+                        if (isSelected) {
+                            Text(
+                                text = stringResource(R.string.symbol_checkmark),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClick = {
+                                val locales = if (languageTag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(languageTag)
+                                AppCompatDelegate.setApplicationLocales(locales)
+                            }
+                        )
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // ── Privacy Section ────────────────────────────────────────────
             Spacer(modifier = Modifier.height(8.dp))
