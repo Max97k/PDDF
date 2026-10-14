@@ -22,10 +22,10 @@ android {
 
   defaultConfig {
     applicationId = "com.max97k.pddf"
-    minSdk = 37
+    minSdk = 36
     targetSdk = 37
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 17
-    versionName = (project.findProperty("versionName") as? String) ?: "0.8.0"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 18
+    versionName = (project.findProperty("versionName") as? String) ?: "0.9.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
