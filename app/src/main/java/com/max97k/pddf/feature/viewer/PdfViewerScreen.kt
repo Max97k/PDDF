@@ -217,7 +217,6 @@ fun PdfViewerScreen(
                                         if (!fragmentManager.isDestroyed && fragment.isAdded && !fragment.isDetached) {
                                             try {
                                                 fragment.documentUri = uri
-                                                fragment.isToolboxVisible = false
                                                 fragment.setSearchActive(isSearchActive)
                                                 fragment.onImmersiveModeRequest = { enter ->
                                                     topBarVisible = !enter
@@ -238,7 +237,6 @@ fun PdfViewerScreen(
                                     if (existing.documentUri != uri) {
                                         existing.documentUri = uri
                                     }
-                                    existing.isToolboxVisible = false
                                     // Sync search state whenever the Compose state changes.
                                     existing.setSearchActive(isSearchActive)
                                     // Ensure the lambdas are always up-to-date after recomposition.

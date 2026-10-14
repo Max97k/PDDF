@@ -47,11 +47,6 @@ class InkPdfViewerFragment : PdfViewerFragment() {
 
     override fun onRequestImmersiveMode(enterImmersive: Boolean) {
         super.onRequestImmersiveMode(enterImmersive)
-        try {
-            isToolboxVisible = false
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to suppress toolbox in onRequestImmersiveMode", e)
-        }
         onImmersiveModeRequest?.invoke(enterImmersive)
     }
 
@@ -67,11 +62,6 @@ class InkPdfViewerFragment : PdfViewerFragment() {
 
     private fun handleDocumentLoadedSuccess() {
         isDocumentLoaded = true
-        try {
-            isToolboxVisible = false
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to suppress toolbox in onLoadDocumentSuccess", e)
-        }
         if (pendingSearchActive) {
             try {
                 if (isAdded && !isDetached) {
