@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.data
+package com.max97k.pddf.data
 
 import com.max97k.pddf.util.CryptoManager
 import com.max97k.pddf.util.MemoryUtils
@@ -73,6 +73,15 @@ open class PasswordRepository(
     override suspend fun deleteById(id: Int): Result<Unit> = withContext(ioDispatcher) {
         try {
             passwordDao.deletePasswordById(id)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun recordPasswordHit(id: Int): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            passwordDao.incrementUsage(id, System.currentTimeMillis())
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e)

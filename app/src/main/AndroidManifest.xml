@@ -7,6 +7,7 @@
     <application
         android:name=".PdfApplication"
         android:enableOnBackInvokedCallback="true"
+        android:intentMatchingFlags="enforceIntentFilter"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -20,7 +21,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:configChanges="locale|layoutDirection"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|locale|layoutDirection|keyboard|keyboardHidden|density"
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

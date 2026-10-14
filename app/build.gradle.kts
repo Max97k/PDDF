@@ -22,7 +22,7 @@ android {
 
   defaultConfig {
     applicationId = "com.max97k.pddf"
-    minSdk = 36
+    minSdk = 37
     targetSdk = 37
     versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 17
     versionName = (project.findProperty("versionName") as? String) ?: "0.8.0"

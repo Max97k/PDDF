@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.initializer
+package com.max97k.pddf.initializer
 
 import android.content.Context
 import androidx.startup.Initializer
@@ -14,7 +14,9 @@ class PdfBoxInitializer : Initializer<Unit> {
             try {
                 PDFBoxResourceLoader.init(context.applicationContext)
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (com.max97k.pddf.BuildConfig.DEBUG) {
+                    android.util.Log.w("PdfBoxInitializer", "Failed to initialize PDFBox resources", e)
+                }
             }
         }
     }

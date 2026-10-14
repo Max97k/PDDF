@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="database" path="pdf-decryptor-db"/>
-        <exclude domain="sharedpref" path="pdf_decryptor_prefs.xml"/>
+        <!-- Exclude Room password database because ciphertexts are bound to non-exportable AndroidKeyStore/StrongBox keys -->
+        <exclude domain="database" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="external" path="." />
+        <include domain="sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="database" path="pdf-decryptor-db"/>
-        <exclude domain="sharedpref" path="pdf_decryptor_prefs.xml"/>
+        <exclude domain="database" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="external" path="." />
+        <include domain="sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>

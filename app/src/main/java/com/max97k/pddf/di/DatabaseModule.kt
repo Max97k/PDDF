@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.di
+package com.max97k.pddf.di
 
 import android.content.Context
 import androidx.room.Room
@@ -28,7 +28,7 @@ class DatabaseModule {
             AppDatabase::class.java,
             "pdf-decryptor-db"
         )
-        .addMigrations(AppDatabase.MIGRATION_1_2)
+        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
         .build()
     }
 

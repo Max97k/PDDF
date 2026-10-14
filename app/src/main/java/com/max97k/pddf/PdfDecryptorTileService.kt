@@ -1,5 +1,7 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
+import android.app.ActivityOptions
+import android.app.PendingIntent
 import android.content.Intent
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -20,11 +22,17 @@ class PdfDecryptorTileService : TileService() {
             action = "com.max97k.pddf.ACTION_SELECT_PDF"
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
-        val pendingIntent = android.app.PendingIntent.getActivity(
+        val options = ActivityOptions.makeBasic().apply {
+            setPendingIntentCreatorBackgroundActivityStartMode(
+                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_IF_VISIBLE
+            )
+        }
+        val pendingIntent = PendingIntent.getActivity(
             this,
             0,
             intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            options.toBundle()
         )
         startActivityAndCollapse(pendingIntent)
     }

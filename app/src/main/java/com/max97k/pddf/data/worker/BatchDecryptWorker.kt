@@ -12,7 +12,6 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.max97k.pddf.ConflictMode
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
-import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -66,11 +65,6 @@ class BatchDecryptWorker @AssistedInject constructor(
         }
 
         createNotificationChannel()
-
-        // Initialize PDFBox
-        try {
-            PDFBoxResourceLoader.init(applicationContext)
-        } catch (_: Exception) {}
 
         setProgress(
             workDataOf(

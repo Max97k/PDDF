@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.app.Application
 import android.content.Context
@@ -322,7 +322,8 @@ class MainViewModel @Inject constructor(
     fun setSelectedUris(context: Context, uris: List<Uri>) {
         viewModelScope.launch(ioDispatcher) {
             val currentUris = selectedUris.value
-            val removedUris = currentUris.filter { !uris.contains(it) }
+            val uriSet = uris.toHashSet()
+            val removedUris = currentUris.filterNot { it in uriSet }
             for (removedUri in removedUris) {
                 FileUtils.releasePersistableUriPermissionSafely(context, removedUri)
             }
@@ -843,7 +844,9 @@ class MainViewModel @Inject constructor(
                     emitEffect(UiEffect.ShowToast(errMsg))
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.e("MainViewModel", "Unexpected error in batch process", e)
+                }
                 val errMsg = context.getString(R.string.summary_error, 1)
                 statusMessage.value = errMsg
                 _uiState.update { it.copy(isProcessing = false, statusMessage = errMsg) }
