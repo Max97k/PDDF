@@ -145,12 +145,23 @@
     <string name="status_update_downloaded">更新已下載完成，請重新啟動以套用。</string>
     <string name="btn_restart_update">重新啟動</string>
     <string name="status_update_failed">無法檢查更新</string>
-
     <!-- Cache Settings -->
-    <string name="settings_section_storage">Storage &amp; Cache</string>
-    <string name="settings_auto_clean_cache">Auto-Clean Cache</string>
-    <string name="settings_auto_clean_cache_desc">Clean decrypted files on app exit</string>
-    <string name="settings_cache_footprint">%1$d files (%2$.2f MB)</string>
-    <string name="btn_clear_cache_now">Clear Decrypted Cache Now</string>
-    <string name="msg_cache_cleared">Decrypted cache cleared securely.</string>
+    <string name="settings_section_storage">儲存空間與快取</string>
+    <string name="settings_auto_clean_cache">結束時自動清空快取</string>
+    <string name="settings_auto_clean_cache_desc">於結束應用程式時粉碎解密暫存檔</string>
+    <string name="settings_cache_footprint">%1$d 個檔案 (%2$.2f MB)</string>
+    <string name="btn_clear_cache_now">立即粉碎清除解密快取</string>
+    <string name="msg_cache_cleared">解密快取已安全抹除。</string>
+
+    <string name="label_signatures">數位簽章</string>
+    <string name="label_signer">簽署者：%1$s</string>
+    <string name="label_sign_date">日期：%1$s</string>
+    <string name="label_reason">原因：%1$s</string>
+    <string name="label_location">地點：%1$s</string>
+    <string name="label_cert_subject">主體：%1$s</string>
+    <string name="label_cert_issuer">簽發者：%1$s</string>
+    <string name="label_valid_signature">有效簽章</string>
+    <string name="label_invalid_signature">無效或不受信任的簽章</string>
+    <string name="label_unsigned">未簽署文件</string>
+    <string name="label_validity">狀態：%1$s</string>
 </resources>

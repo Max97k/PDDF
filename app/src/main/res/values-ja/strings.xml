@@ -145,12 +145,23 @@
     <string name="status_update_downloaded">更新がダウンロードされました。再起動して適用してください。</string>
     <string name="btn_restart_update">再起動</string>
     <string name="status_update_failed">更新の確認に失敗しました</string>
-
     <!-- Cache Settings -->
-    <string name="settings_section_storage">Storage &amp; Cache</string>
-    <string name="settings_auto_clean_cache">Auto-Clean Cache</string>
-    <string name="settings_auto_clean_cache_desc">Clean decrypted files on app exit</string>
-    <string name="settings_cache_footprint">%1$d files (%2$.2f MB)</string>
-    <string name="btn_clear_cache_now">Clear Decrypted Cache Now</string>
-    <string name="msg_cache_cleared">Decrypted cache cleared securely.</string>
+    <string name="settings_section_storage">ストレージとキャッシュ</string>
+    <string name="settings_auto_clean_cache">終了時にキャッシュを自動削除</string>
+    <string name="settings_auto_clean_cache_desc">アプリ終了時に復号済みファイルを安全に粉砕削除</string>
+    <string name="settings_cache_footprint">%1$d 件のファイル (%2$.2f MB)</string>
+    <string name="btn_clear_cache_now">今すぐ復号キャッシュを完全消去</string>
+    <string name="msg_cache_cleared">復号キャッシュを安全に消去しました。</string>
+
+    <string name="label_signatures">デジタル署名</string>
+    <string name="label_signer">署名者: %1$s</string>
+    <string name="label_sign_date">日付: %1$s</string>
+    <string name="label_reason">理由: %1$s</string>
+    <string name="label_location">場所: %1$s</string>
+    <string name="label_cert_subject">サブジェクト: %1$s</string>
+    <string name="label_cert_issuer">発行者: %1$s</string>
+    <string name="label_valid_signature">有効な署名</string>
+    <string name="label_invalid_signature">無効または信頼できない署名</string>
+    <string name="label_unsigned">署名なしドキュメント</string>
+    <string name="label_validity">状態: %1$s</string>
 </resources>

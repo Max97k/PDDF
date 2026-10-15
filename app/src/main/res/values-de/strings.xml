@@ -147,12 +147,23 @@
     <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
     <string name="btn_restart_update">Neu starten</string>
     <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
-
     <!-- Cache Settings -->
-    <string name="settings_section_storage">Storage &amp; Cache</string>
-    <string name="settings_auto_clean_cache">Auto-Clean Cache</string>
-    <string name="settings_auto_clean_cache_desc">Clean decrypted files on app exit</string>
-    <string name="settings_cache_footprint">%1$d files (%2$.2f MB)</string>
-    <string name="btn_clear_cache_now">Clear Decrypted Cache Now</string>
-    <string name="msg_cache_cleared">Decrypted cache cleared securely.</string>
+    <string name="settings_section_storage">Speicher &amp; Cache</string>
+    <string name="settings_auto_clean_cache">Cache beim Beenden leeren</string>
+    <string name="settings_auto_clean_cache_desc">Entschlüsselte Dateien beim Beenden der App bereinigen</string>
+    <string name="settings_cache_footprint">%1$d Dateien (%2$.2f MB)</string>
+    <string name="btn_clear_cache_now">Entschlüsselten Cache jetzt leeren</string>
+    <string name="msg_cache_cleared">Entschlüsselter Cache sicher gelöscht.</string>
+
+    <string name="label_signatures">Digitale Signaturen</string>
+    <string name="label_signer">Unterzeichner: %1$s</string>
+    <string name="label_sign_date">Datum: %1$s</string>
+    <string name="label_reason">Grund: %1$s</string>
+    <string name="label_location">Ort: %1$s</string>
+    <string name="label_cert_subject">Betreff: %1$s</string>
+    <string name="label_cert_issuer">Aussteller: %1$s</string>
+    <string name="label_valid_signature">Gültige Signatur</string>
+    <string name="label_invalid_signature">Ungültige/Nicht vertrauenswürdige Signatur</string>
+    <string name="label_unsigned">Unsigniertes Dokument</string>
+    <string name="label_validity">Status: %1$s</string>
 </resources>

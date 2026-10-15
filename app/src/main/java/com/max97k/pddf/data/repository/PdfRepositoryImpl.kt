@@ -13,8 +13,19 @@ import com.max97k.pddf.domain.repository.PdfRepository
 import com.max97k.pddf.util.FileUtils
 import com.max97k.pddf.util.MemoryUtils
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.max97k.pddf.SignatureInfo
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.bouncycastle.cert.X509CertificateHolder
+import org.bouncycastle.cms.CMSProcessableByteArray
+import org.bouncycastle.cms.CMSSignedData
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder
+import org.bouncycastle.util.Selector
+import java.io.ByteArrayInputStream
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -264,23 +275,22 @@ open class PdfRepositoryImpl @Inject constructor(
         val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
+                val fileBytes = inputStream.readBytes()
                 var doc: PDDocument? = null
                 try {
                     doc = PDDocument.load(
-                        inputStream.buffered(),
+                        ByteArrayInputStream(fileBytes),
                         passwordValue,
                         MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
                 } catch (e: Exception) {
                     if (e.message?.contains("xref", ignoreCase = true) == true) {
                         try {
-                            openSafeInputStream(sourceUri)?.use { fallbackInput ->
-                                doc = PDDocument.load(
-                                    fallbackInput.buffered(),
-                                    passwordValue,
-                                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
-                                )
-                            }
+                            doc = PDDocument.load(
+                                ByteArrayInputStream(fileBytes),
+                                passwordValue,
+                                com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
+                            )
                         } catch (_: Exception) {}
                     }
                 }
@@ -295,6 +305,72 @@ open class PdfRepositoryImpl @Inject constructor(
                     val perm = it.currentAccessPermission
                     val canPrint = perm?.canPrint() ?: true
                     val canCopy = perm?.canExtractContent() ?: true
+
+                    val signatures = mutableListOf<SignatureInfo>()
+                    try {
+                        val sigDicts = it.signatureDictionaries
+                        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                        for (sig in sigDicts) {
+                            val name = sig.name ?: "Unknown"
+                            val reason = sig.reason ?: "Unknown"
+                            val location = sig.location ?: "Unknown"
+                            val dateStr = sig.signDate?.let { date -> sdf.format(date.time) } ?: "Unknown"
+
+                            var isValid = false
+                            var certSubject = "Unknown"
+                            var certIssuer = "Unknown"
+
+                            try {
+                                val contents = sig.contents
+                                val signedContent = sig.getSignedContent(fileBytes)
+
+                                if (contents != null && signedContent != null) {
+                                    val cms = CMSSignedData(CMSProcessableByteArray(signedContent), contents)
+                                    val signers = cms.signerInfos.signers
+                                    val certificates = cms.certificates
+
+                                    for (signer in signers) {
+                                        @Suppress("UNCHECKED_CAST")
+                                        val selector = signer.sid as? Selector<X509CertificateHolder>
+                                        val certCollection = if (selector != null) certificates.getMatches(selector) else certificates.getMatches(null)
+
+                                        for (certHolder in certCollection) {
+                                            val holder = certHolder as? X509CertificateHolder ?: continue
+                                            val certFactory = CertificateFactory.getInstance("X.509")
+                                            val cert = certFactory.generateCertificate(ByteArrayInputStream(holder.encoded)) as X509Certificate
+
+                                            certSubject = cert.subjectDN?.name ?: "Unknown"
+                                            certIssuer = cert.issuerDN?.name ?: "Unknown"
+
+                                            val verifier = JcaSimpleSignerInfoVerifierBuilder().build(cert)
+                                            if (signer.verify(verifier)) {
+                                                isValid = true
+                                                break
+                                            }
+                                        }
+                                        if (isValid) break
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+
+                            signatures.add(
+                                SignatureInfo(
+                                    signerName = name,
+                                    signingDate = dateStr,
+                                    reason = reason,
+                                    location = location,
+                                    isValid = isValid,
+                                    certificateSubject = certSubject,
+                                    certificateIssuer = certIssuer
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
                     return@withContext PdfMetadata(
                         title = title,
                         author = author,
@@ -302,7 +378,8 @@ open class PdfRepositoryImpl @Inject constructor(
                         fileSizeMb = sizeMb,
                         encryptionMethod = encMethod,
                         canPrint = canPrint,
-                        canCopy = canCopy
+                        canCopy = canCopy,
+                        signatures = signatures
                     )
                 }
             }
