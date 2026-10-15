@@ -39,13 +39,9 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-<<<<<<< HEAD
+    decryptionDurationMs: Long? = null,
     onPreview: (() -> Unit)? = null,
     onFlattenForms: (() -> Unit)? = null
-=======
-    decryptionDurationMs: Long? = null,
-    onPreview: (() -> Unit)? = null
->>>>>>> origin/implement-zero-cloud-decryption-benchmarks-11395716764554938998
 ) {
     var expanded by remember { mutableStateOf(false) }
     var exportMenuExpanded by remember { mutableStateOf(false) }
