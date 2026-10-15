@@ -118,6 +118,51 @@ fun DocumentDetailsCard(
                     text = stringResource(R.string.label_doc_permissions, permText),
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.label_signatures),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                if (metadata.signatures.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.label_unsigned),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    metadata.signatures.forEach { sig ->
+                        val validText = if (sig.isValid) stringResource(R.string.label_valid_signature) else stringResource(R.string.label_invalid_signature)
+                        Text(
+                            text = stringResource(R.string.label_validity, validText),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_signer, sig.signerName),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_sign_date, sig.signingDate),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_reason, sig.reason),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_location, sig.location),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_cert_subject, sig.certificateSubject),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.label_cert_issuer, sig.certificateIssuer),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
             }
         }
     }

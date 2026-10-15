@@ -10,7 +10,8 @@ data class PdfMetadata(
     val fileSizeMb: Double,
     val encryptionMethod: String,
     val canPrint: Boolean,
-    val canCopy: Boolean
+    val canCopy: Boolean,
+    val signatures: List<SignatureInfo> = emptyList()
 ) {
     val isEncrypted: Boolean
         get() = encryptionMethod.isNotBlank() && encryptionMethod != "None"
