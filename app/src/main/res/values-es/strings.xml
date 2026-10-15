@@ -147,4 +147,12 @@
     <string name="status_update_downloaded">Actualización descargada. Reinicia para aplicar.</string>
     <string name="btn_restart_update">Reiniciar</string>
     <string name="status_update_failed">No se pudo comprobar la actualización</string>
+
+    <!-- Cache Settings -->
+    <string name="settings_section_storage">Storage &amp; Cache</string>
+    <string name="settings_auto_clean_cache">Auto-Clean Cache</string>
+    <string name="settings_auto_clean_cache_desc">Clean decrypted files on app exit</string>
+    <string name="settings_cache_footprint">%1$d files (%2$.2f MB)</string>
+    <string name="btn_clear_cache_now">Clear Decrypted Cache Now</string>
+    <string name="msg_cache_cleared">Decrypted cache cleared securely.</string>
 </resources>
