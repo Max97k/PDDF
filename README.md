@@ -45,10 +45,13 @@ Unlike online PDF unlock services that require uploading sensitive documents to 
 | 📲 **Seamless Android Integration** | Open or share PDFs directly from File Managers, WhatsApp, LINE, Email, or Web Browsers via system `ACTION_VIEW` and `ACTION_SEND` intents. |
 | ⚡ **Quick Access & Shortcuts** | Quick Settings (QS) Tile for one-tap access and dynamic App Launcher Shortcuts for fast document selection and password management. |
 | ⚙️ **Smart File Management** | Choose between **Save as Copy** (with custom prefixing) or **Overwrite Original** in-place, plus optional automatic deletion of original encrypted files. |
-| 👁️ **Built-in PDF Preview** | Preview decrypted PDF pages directly within the app before opening in external viewers or sharing. |
-| 🔒 **Screenshot & Privacy Shield** | Hardware `FLAG_SECURE` window protection, blacked-out task switcher cards, and branded in-app privacy overlay shield. |
-| 🎨 **Material You / Material 3 UI** | Modern, responsive interface with dynamic color theming, full Dark/Light mode support, edge-to-edge display, and predictive back gestures. |
-| 🌐 **Multi-Language Localization** | Native support for English, Traditional Chinese (`zh-rTW`), Simplified Chinese (`zh-rCN`), Japanese, German, Spanish, and French. |
+| 👁️ **Built-in PDF Preview & Search** | Preview decrypted PDF pages with native asynchronous full-text search, keyword highlighting, match counter, and thumbnail scrubber. |
+| 🖨️ **Wireless PDF Printing** | Direct 1-tap wireless printing via Android `PrintManager` without generating unencrypted temporary files on disk. |
+| 📱 **Adaptive Large Screen & DeX** | `ListDetailPaneScaffold` dual-pane layout on tablets and foldables, desktop drag-and-drop file ingestion, and physical keyboard shortcuts (`Ctrl+O`, `Ctrl+P`, `Esc`). |
+| 🔒 **Screenshot & Privacy Shield** | Strict hardware `FLAG_SECURE` protection across all windows and credential dialogs, blacked-out task switcher cards, and privacy shield overlay. |
+| 🎨 **Material 3 Expressive UI** | Modern interface with dynamic tonal palettes, `AnimatedContent` fluid transitions, spring-physics haptics, and accessible 48dp touch targets. |
+| 🌐 **7-Language In-App Switcher & RTL** | Dynamic runtime language switching in settings with native support for English, Traditional Chinese (`zh-rTW`), Simplified Chinese (`zh-rCN`), Japanese, German, Spanish, French, and RTL mirroring. |
+| ⚡ **Dynamic Shortcuts & Multi-Share** | Dynamic launcher shortcuts, QS tile, and batch PDF share receiver (`ACTION_SEND_MULTIPLE`) from Files or chat apps. |
 
 ---
 

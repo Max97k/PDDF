@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">Confirm your identity to access saved passwords.</string>
 
     <string name="dialog_title_whats_new">What\'s New</string>
-    <string name="changelog_content">- Instant auto-unlock and direct opening in built-in PDF viewer\n- Added high-priority \'Decrypt &amp; View\' action button\n- Open unencrypted PDF documents directly without password\n- Password vault auto-matching &amp; case-insensitive tolerance\n- Enhanced secure memory wiping and cache shredding\n- Comprehensive 7-locale sync and accessibility improvements</string>
+    <string name="changelog_content">- Built-in wireless PDF printing via Android PrintManager\n- In-document full-text search, highlights &amp; thumbnail scrubber\n- In-app runtime language selector across 7 languages &amp; RTL support\n- Adaptive ListDetailPaneScaffold layout for foldables, tablets &amp; DeX\n- Material 3 Expressive UI, fluid motion &amp; spring haptics\n- Dynamic App Shortcuts &amp; multi-file batch share receiver\n- Enhanced FLAG_SECURE protection across all credential dialogs</string>
     <string name="title_empty_state">No PDF Selected</string>
     <string name="desc_empty_state">Select one or more encrypted PDFs to begin. You can also share files directly from your file manager or other apps.</string>
 

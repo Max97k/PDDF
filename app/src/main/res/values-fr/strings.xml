@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">Confirmez votre identité pour accéder aux mots de passe enregistrés.</string>
 
     <string name="dialog_title_whats_new">Nouveautés</string>
-    <string name="changelog_content">- Déverrouillage automatique &amp; affichage direct dans la visionneuse PDF\n- Ajout du bouton d\'action prioritaire \'Déchiffrer &amp; afficher\'\n- Ouverture directe sans mot de passe des PDF non chiffrés\n- Correspondance rapide du coffre-fort avec tolérance majuscule/minuscule\n- Nettoyage sécurisé de la mémoire et destruction du cache temporaire\n- Synchronisation des 7 langues et améliorations d\'accessibilité</string>
+    <string name="changelog_content">- Impression sans fil intégrée via Android PrintManager sans fichiers temporaires\n- Recherche en texte intégral dans les PDF, surlignage et défilement des miniatures\n- Sélecteur de langue dynamique dans les paramètres pour 7 langues et prise en charge RTL\n- Disposition adaptative à deux volets (ListDetailPaneScaffold) pour tablettes et pliables\n- Interface Material 3 Expressive avec animations fluides et retour haptique\n- Raccourcis d\'application dynamiques et réception du partage de plusieurs fichiers\n- Protection anti-capture d\'écran FLAG_SECURE renforcée sur tous les dialogues de mots de passe</string>
     <string name="title_empty_state">Aucun PDF sélectionné</string>
     <string name="desc_empty_state">Sélectionnez un ou plusieurs fichiers PDF chiffrés pour commencer. Vous pouvez également partager des fichiers depuis votre gestionnaire de fichiers.</string>
 

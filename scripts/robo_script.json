@@ -1,0 +1,62 @@
+[
+  {
+    "eventType": "VIEW_CLICKED",
+    "canScrollTo": false,
+    "elementDescriptors": [
+      {
+        "text": "Close"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAYED_MESSAGE_POSTED",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "canScrollTo": false,
+    "elementDescriptors": [
+      {
+        "contentDescription": "Settings"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAYED_MESSAGE_POSTED",
+    "delayTime": 2000
+  },
+  {
+    "eventType": "KEY_EVENT",
+    "keyCode": 4
+  },
+  {
+    "eventType": "DELAYED_MESSAGE_POSTED",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "canScrollTo": false,
+    "elementDescriptors": [
+      {
+        "contentDescription": "About"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAYED_MESSAGE_POSTED",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "canScrollTo": false,
+    "elementDescriptors": [
+      {
+        "text": "Close"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAYED_MESSAGE_POSTED",
+    "delayTime": 1000
+  }
+]

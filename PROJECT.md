@@ -109,6 +109,13 @@ app/src/main/java/com/example/
 | 49 | Privacy Shield Overlay | Polished branded security overlay on ON_PAUSE & black task header in recents | M6 | ORIGINAL_REQUEST |
 | 50 | M3 Button Hierarchy & Clean Layout | Post-decryption 3-tier emphasis layout (Preview, Share, Open With, File Manager) | M6 | ORIGINAL_REQUEST |
 | 51 | About Dialog & Settings Sheet | Dedicated About & What's New dialog, streamlined M3 theme switcher | M6 | ORIGINAL_REQUEST |
+| 52 | Native Wireless PDF Printing | Direct PrintManager spooling with `PdfPrintDocumentAdapter` without temp disk files | M7 | Jules Swarm (PR #11) |
+| 53 | Built-in PDF Search & Navigation | Unsuppress native AndroidX search toolbox, hit highlighting, and page scrubber | M7 | Jules Swarm (PR #12) |
+| 54 | 7-Locale Dynamic Switcher & RTL | In-app language switching via `AppCompatDelegate.setApplicationLocales` with full RTL | M7 | Jules Swarm (PR #14) |
+| 55 | Dynamic Shortcuts & Batch Share | Dynamic app launcher shortcuts, QS tile refresh, and `ACTION_SEND_MULTIPLE` | M7 | Jules Swarm (PR #15) |
+| 56 | Material 3 Expressive UI & Haptics | Typography & color hierarchy, `AnimatedContent` card transitions, spring haptics | M7 | Jules Swarm (PR #16) |
+| 57 | Foldable/Tablet Dual-Pane Layout | `ListDetailPaneScaffold` master-detail layout, DeX drag/drop, keyboard shortcuts | M7 | Jules Swarm (PR #17) |
+| 58 | Dialog Hardware Window Protection | Strict `SecureFlagPolicy.SecureOn` across all credential and vault dialogs | M7 | Jules Swarm (Sentinel) |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
@@ -119,3 +126,4 @@ app/src/main/java/com/example/
 | M4 | Internationalization, Accessibility & Testing | R4: Patches 36-47 (Plurals, zh-rCN/ja/es, WCAG 48dp, TalkBack, Turbine, Clean Arch tests) | M1 | DONE |
 | M5 | Final Milestone: 100% E2E Pass & Hardening | Phase 1 (Pass 100% E2E test suite Tiers 1-4) + Phase 2 (Adversarial Coverage Hardening Tier 5) | M1, M2, M3, M4 | DONE |
 | M6 | Security Protection & M3 UX Polish | Patches 48-51 (FLAG_SECURE, PrivacyShieldOverlay, M3 buttons, AboutDialog, Theme polish) | M1-M5 | DONE |
+| M7 | Multi-Agent Swarm Modernization (v0.9.2) | Patches 52-58 (Printing, Search Toolbox, 7-Locale Switcher, Adaptive Dual-Pane, M3 Expressive, Shortcuts) | M1-M6 | DONE |

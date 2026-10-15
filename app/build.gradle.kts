@@ -24,15 +24,15 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 36
     targetSdk = 37
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 18
-    versionName = (project.findProperty("versionName") as? String) ?: "0.9.1"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 19
+    versionName = (project.findProperty("versionName") as? String) ?: "0.9.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   androidResources {
-        generateLocaleConfig = true
-        localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en")
-        localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en") }
+    generateLocaleConfig = true
+    localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en")
+  }
 
   signingConfigs {
     create("release") {

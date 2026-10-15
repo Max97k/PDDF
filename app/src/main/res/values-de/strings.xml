@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">Bestätigen Sie Ihre Identität, um auf gespeicherte Passwörter zuzugreifen.</string>
 
     <string name="dialog_title_whats_new">Neuigkeiten</string>
-    <string name="changelog_content">- Automatische Entschlüsselung &amp; direkte Anzeige im integrierten PDF-Viewer\n- Neuer vorrangiger Aktionsbutton \'Entschlüsseln &amp; Anzeigen\'\n- Unverschlüsselte PDF-Dokumente direkt ohne Passwort öffnen\n- Schnellere Passwort-Tresorabgleiche mit Groß-/Kleinschreibungstoleranz\n- Verbesserte sichere Speicherbereinigung &amp; Cache-Schreddern\n- Synchronisierung aller 7 Sprachen &amp; Barrierefreiheitsoptimierungen</string>
+    <string name="changelog_content">- Integriertes drahtloses Drucken über Android PrintManager ohne Zwischendateien\n- Volltextsuche in PDFs, Suchtreffer-Hervorhebung und Miniaturansichten-Leiste\n- Dynamische Sprachauswahl in den Einstellungen mit Unterstützung für 7 Sprachen &amp; RTL\n- Adaptives Zwei-Spalten-Layout (ListDetailPaneScaffold) für Foldables und Tablets\n- Material 3 Expressive UI mit flüssigen Animationen und haptischem Feedback\n- Dynamische App-Shortcuts und Empfang mehrerer geteilter PDF-Dateien\n- Erweiterter FLAG_SECURE-Screenshot-Schutz für alle Passwort-Dialoge</string>
     <string name="title_empty_state">Keine PDF ausgewählt</string>
     <string name="desc_empty_state">Wählen Sie eine oder mehrere verschlüsselte PDFs aus, um zu beginnen. Sie können Dateien auch direkt aus dem Dateimanager teilen.</string>
 
