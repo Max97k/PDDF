@@ -35,7 +35,8 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-    onPreview: (() -> Unit)? = null
+    onPreview: (() -> Unit)? = null,
+    onStamp: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
@@ -60,6 +61,11 @@ fun DocumentDetailsCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onStamp != null) {
+                        TextButton(onClick = onStamp) {
+                            Text("📝 " + stringResource(R.string.btn_stamp_pages))
+                        }
+                    }
                     if (onPreview != null) {
                         TextButton(onClick = onPreview) {
                             Text("👁️ " + stringResource(R.string.btn_preview_pdf))

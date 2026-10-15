@@ -45,6 +45,11 @@ sealed interface UiEffect {
     data class LaunchSavePreviewPdf(val sourceUri: Uri, val defaultFileName: String) : UiEffect
 
     /**
+     * Launch the system create document picker for stamping page numbers.
+     */
+    data class LaunchCreateStampedDocument(val defaultFileName: String, val config: com.max97k.pddf.domain.model.StampConfig) : UiEffect
+
+    /**
      * Trigger hardware-backed BiometricPrompt authentication.
      */
     data object TriggerBiometricAuth : UiEffect

@@ -54,4 +54,13 @@ class UseCaseModule {
     ): BatchProcessUseCase {
         return BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher)
     }
+
+    @Provides
+    @Singleton
+    fun provideStampPageNumbersUseCase(
+        pdfRepository: PdfRepository,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): com.max97k.pddf.domain.usecase.StampPageNumbersUseCase {
+        return com.max97k.pddf.domain.usecase.StampPageNumbersUseCase(pdfRepository, ioDispatcher)
+    }
 }

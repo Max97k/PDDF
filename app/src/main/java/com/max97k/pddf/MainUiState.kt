@@ -55,6 +55,7 @@ data class MainUiState(
     val showSavePasswordDialog: Boolean = false,
     val showPasswordListDialog: Boolean = false,
     val showWhatsNewDialog: Boolean = false,
+    val showStampDialog: Boolean = false,
 
     // 7. User Preferences & Settings
     val themeMode: ThemeMode = ThemeMode.SYSTEM,

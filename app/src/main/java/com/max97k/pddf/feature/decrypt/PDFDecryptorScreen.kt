@@ -157,6 +157,16 @@ fun PDFDecryptorScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    var currentStampConfig by remember { mutableStateOf<com.max97k.pddf.domain.model.StampConfig?>(null) }
+    val stampDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf"),
+        onResult = { destUri ->
+            if (destUri != null && currentStampConfig != null) {
+                viewModel.onAction(MainUiAction.StampPages(destUri, currentStampConfig!!))
+            }
+        }
+    )
+
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -174,6 +184,10 @@ fun PDFDecryptorScreen(
                 }
                 is UiEffect.ShowToast -> {
                     android.widget.Toast.makeText(context, effect.message, android.widget.Toast.LENGTH_SHORT).show()
+                }
+                is UiEffect.LaunchCreateStampedDocument -> {
+                    currentStampConfig = effect.config
+                    stampDocumentLauncher.launch(effect.defaultFileName)
                 }
                 else -> { /* Other effects handled in UI branches */ }
             }
@@ -620,7 +634,8 @@ fun PDFDecryptorScreen(
                                                     metadata = metadata,
                                                     onPreview = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                                    } else null
+                                                    } else null,
+                                                    onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) }
                                                 )
                                             }
                                         }
@@ -854,7 +869,8 @@ fun PDFDecryptorScreen(
                                                 metadata = metadata,
                                                 onPreview = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                                } else null
+                                                } else null,
+                                                onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) }
                                             )
                                         }
                                     }
@@ -1123,6 +1139,16 @@ fun PDFDecryptorScreen(
     }
 
 
+
+    if (uiState.showStampDialog) {
+        com.max97k.pddf.ui.components.StampConfigDialog(
+            onDismiss = { onAction(MainUiAction.SetStampDialogVisible(false)) },
+            onConfirm = { config ->
+                onAction(MainUiAction.SetStampDialogVisible(false))
+                onAction(MainUiAction.RequestStampSaveAsPicker(config))
+            }
+        )
+    }
 
     if (showAboutDialog) {
         AboutDialog(
