@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui.components
+package com.max97k.pddf.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -48,9 +48,11 @@ import com.max97k.pddf.data.DensityMode
 fun SettingsBottomSheet(
     currentTheme: ThemeMode,
     currentDensity: DensityMode,
+    currentBatchNotificationPreference: com.max97k.pddf.data.NotificationPreference,
     screenshotProtectionEnabled: Boolean,
     onThemeSelected: (ThemeMode) -> Unit,
     onDensitySelected: (DensityMode) -> Unit,
+    onBatchNotificationSelected: (com.max97k.pddf.data.NotificationPreference) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
     onExportCsv: () -> Unit,
     onExportJson: () -> Unit,
@@ -208,9 +210,54 @@ fun SettingsBottomSheet(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // ── Notifications Section ──────────────────────────────────────
+            Text(
+                text = stringResource(R.string.settings_section_notifications),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.settings_notify_batch_completion),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            val notificationEntries = listOf(
+                com.max97k.pddf.data.NotificationPreference.SOUND to stringResource(R.string.settings_notify_sound),
+                com.max97k.pddf.data.NotificationPreference.VIBRATION to stringResource(R.string.settings_notify_vibration),
+                com.max97k.pddf.data.NotificationPreference.SILENT to stringResource(R.string.settings_notify_silent)
+            )
+            notificationEntries.forEach { (mode, label) ->
+                ListItem(
+                    headlineContent = { Text(label) },
+                    trailingContent = {
+                        if (currentBatchNotificationPreference == mode) {
+                            Text(
+                                text = stringResource(R.string.symbol_checkmark),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClick = {
+                                onBatchNotificationSelected(mode)
+                            }
+                        )
+                        .semantics { role = Role.RadioButton }
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             // ── Export Section ────────────────────────────────────────────
             Text(
-                text = "Export Metadata", // Better to use string resource, but string missing so use hardcoded for now or use generic
+                text = "Export Metadata",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)

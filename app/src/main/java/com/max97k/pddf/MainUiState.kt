@@ -67,6 +67,7 @@ data class MainUiState(
     val conflictMode: ConflictMode = ConflictMode.SAVE_AS_COPY,
     val rememberConflictChoice: Boolean = false,
     val screenshotProtectionEnabled: Boolean = false,
+    val batchNotificationPreference: com.max97k.pddf.data.NotificationPreference = com.max97k.pddf.data.NotificationPreference.SOUND,
 
     // 8. Password Vault Data
     val savedPasswords: ImmutableList<PasswordEntity> = persistentListOf(),

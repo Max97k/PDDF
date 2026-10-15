@@ -1191,9 +1191,11 @@ fun PDFDecryptorScreen(
         SettingsBottomSheet(
             currentTheme = uiState.themeMode,
             currentDensity = uiState.densityMode,
+            currentBatchNotificationPreference = uiState.batchNotificationPreference,
             screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
             onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
             onDensitySelected = { mode -> onAction(MainUiAction.SetDensityMode(mode)) },
+            onBatchNotificationSelected = { pref -> onAction(MainUiAction.SetBatchNotificationPreference(pref)) },
             onScreenshotProtectionToggled = { enabled ->
                 onAction(MainUiAction.SetScreenshotProtection(enabled))
             },

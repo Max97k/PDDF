@@ -115,6 +115,11 @@
     <string name="settings_screenshot_protection">截圖保護</string>
     <string name="settings_screenshot_protection_desc">防止截圖，並在多工視窗中隱藏 App 內容預覽</string>
     <string name="content_desc_settings">設定</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notify_batch_completion">Notify on Batch Completion</string>
+    <string name="settings_notify_sound">Sound</string>
+    <string name="settings_notify_vibration">Vibration</string>
+    <string name="settings_notify_silent">Silent</string>
     <string name="content_desc_whats_new">最新功能</string>
     <string name="msg_screenshot_protection_on">截圖保護已啟用</string>
     <string name="msg_screenshot_protection_off">截圖保護已停用</string>
