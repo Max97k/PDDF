@@ -30,14 +30,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import dagger.hilt.android.EntryPointAccessors
+import com.max97k.pddf.di.DatabaseModule
+import com.max97k.pddf.data.AppDatabase
+import com.max97k.pddf.data.local.ReadingProgressEntity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -67,6 +79,9 @@ fun PdfViewerScreen(
     onSaveAs: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val uriHash = remember(uri) { uri.toString().hashCode() }
     val view = LocalView.current
     val fragmentActivity = remember(context) { context.findFragmentActivity() }
     val insetsController = remember(fragmentActivity, view) {
@@ -111,6 +126,7 @@ fun PdfViewerScreen(
     Scaffold(
         modifier = modifier,
         contentWindowInsets = contentInsets,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AnimatedVisibility(
                 visible = topBarVisible,
@@ -243,6 +259,39 @@ fun PdfViewerScreen(
                                                         isSearchActive = active
                                                     }
                                                 }
+
+                                                val database = AppDatabase.getDatabase(context)
+                                                val dao = database.readingProgressDao()
+
+                                                fragment.onDocumentLoaded = { totalPages ->
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        val progress = dao.getProgress(uriHash)
+                                                        if (progress != null && progress.lastViewedPage > 0) {
+                                                            withContext(Dispatchers.Main) {
+                                                                val result = snackbarHostState.showSnackbar(
+                                                                    message = "Resume from page ${progress.lastViewedPage + 1}?",
+                                                                    actionLabel = "Resume",
+                                                                    duration = SnackbarDuration.Short
+                                                                )
+                                                                if (result == SnackbarResult.ActionPerformed) {
+                                                                    fragment.scrollToPage(progress.lastViewedPage)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                fragment.onPageChanged = { page, totalPages ->
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        dao.saveProgress(
+                                                            ReadingProgressEntity(
+                                                                documentUriHash = uriHash,
+                                                                lastViewedPage = page,
+                                                                totalPages = totalPages
+                                                            )
+                                                        )
+                                                    }
+                                                }
                                             } catch (e: Exception) {
                                                 Log.e("PdfViewerScreen", "Failed to setup fragment in runOnCommit", e)
                                             }
@@ -265,6 +314,39 @@ fun PdfViewerScreen(
                                             isSearchActive = active
                                         }
                                     }
+
+                                    val database = AppDatabase.getDatabase(context)
+                                    val dao = database.readingProgressDao()
+
+                                    existing.onDocumentLoaded = { totalPages ->
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            val progress = dao.getProgress(uriHash)
+                                            if (progress != null && progress.lastViewedPage > 0) {
+                                                withContext(Dispatchers.Main) {
+                                                    val result = snackbarHostState.showSnackbar(
+                                                        message = "Resume from page ${progress.lastViewedPage + 1}?",
+                                                        actionLabel = "Resume",
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                    if (result == SnackbarResult.ActionPerformed) {
+                                                        existing.scrollToPage(progress.lastViewedPage)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    existing.onPageChanged = { page, totalPages ->
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            dao.saveProgress(
+                                                ReadingProgressEntity(
+                                                    documentUriHash = uriHash,
+                                                    lastViewedPage = page,
+                                                    totalPages = totalPages
+                                                )
+                                            )
+                                        }
+                                    }
                                 } catch (e: Exception) {
                                     Log.e("PdfViewerScreen", "Failed to update existing fragment", e)
                                 }
@@ -282,6 +364,8 @@ fun PdfViewerScreen(
                                 (fragment as? InkPdfViewerFragment)?.let { inkFrag ->
                                     inkFrag.onImmersiveModeRequest = null
                                     inkFrag.onSearchModeChanged = null
+                                    inkFrag.onDocumentLoaded = null
+                                    inkFrag.onPageChanged = null
                                 }
                                 try {
                                     fragmentManager.commitNow(allowStateLoss = true) {

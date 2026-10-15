@@ -10,9 +10,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.max97k.pddf.BuildConfig
 import com.max97k.pddf.util.CryptoManager
 
-@Database(entities = [PasswordEntity::class], version = 3, exportSchema = false)
+import com.max97k.pddf.data.local.ReadingProgressEntity
+import com.max97k.pddf.data.local.ReadingProgressDao
+
+@Database(entities = [PasswordEntity::class, ReadingProgressEntity::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun passwordDao(): PasswordDao
+    abstract fun readingProgressDao(): ReadingProgressDao
 
     companion object {
         private const val TAG = "AppDatabase"
@@ -50,6 +54,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `reading_progress` (`documentUriHash` INTEGER NOT NULL, `lastViewedPage` INTEGER NOT NULL, `totalPages` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY(`documentUriHash`))"
+                )
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 try {
@@ -73,7 +85,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pdf-decryptor-db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigrationOnDowngrade(true)
                     .build()
                 INSTANCE = instance

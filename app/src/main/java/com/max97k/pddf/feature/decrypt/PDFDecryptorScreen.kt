@@ -620,7 +620,8 @@ fun PDFDecryptorScreen(
                                                     metadata = metadata,
                                                     onPreview = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                                    } else null
+                                                    } else null,
+                                                    uriHash = uiState.selectedUris.firstOrNull()?.toString()?.hashCode()
                                                 )
                                             }
                                         }
@@ -854,7 +855,8 @@ fun PDFDecryptorScreen(
                                                 metadata = metadata,
                                                 onPreview = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                                } else null
+                                                } else null,
+                                                uriHash = uiState.selectedUris.firstOrNull()?.toString()?.hashCode()
                                             )
                                         }
                                     }
