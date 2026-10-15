@@ -16,6 +16,14 @@ import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -429,7 +437,7 @@ fun PDFDecryptorScreen(
                     ) {
                         Button(
                             onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                                     addCategory(Intent.CATEGORY_OPENABLE)
                                     type = "application/pdf"
@@ -447,26 +455,48 @@ fun PDFDecryptorScreen(
                             Text(stringResource(R.string.btn_select_pdfs))
                         }
 
-                        if (uiState.hasSelectedFiles) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            SelectedFilesCard(
-                                fileNames = uiState.selectedFileNames,
-                                fileCount = uiState.fileCount,
-                                onClear = { onAction(MainUiAction.ClearSelectedFiles) }
-                            )
-
-                            if (uiState.selectedMetadata != null) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                DocumentDetailsCard(
-                                    metadata = uiState.selectedMetadata,
-                                    onPreview = if (uiState.activePreviewUri != null) {
-                                        { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                    } else null
+                        AnimatedContent(
+                            targetState = uiState.hasSelectedFiles,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(220, delayMillis = 90)) + expandVertically()).togetherWith(
+                                    fadeOut(animationSpec = tween(90)) + shrinkVertically()
                                 )
+                            },
+                            label = "LeftPaneContentAnimation"
+                        ) { hasFiles ->
+                            if (hasFiles) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    SelectedFilesCard(
+                                        fileNames = uiState.selectedFileNames,
+                                        fileCount = uiState.fileCount,
+                                        onClear = { onAction(MainUiAction.ClearSelectedFiles) }
+                                    )
+
+                                    AnimatedVisibility(
+                                        visible = uiState.selectedMetadata != null,
+                                        enter = fadeIn() + expandVertically(),
+                                        exit = fadeOut() + shrinkVertically()
+                                    ) {
+                                        Column {
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            uiState.selectedMetadata?.let { metadata ->
+                                                DocumentDetailsCard(
+                                                    metadata = metadata,
+                                                    onPreview = if (uiState.activePreviewUri != null) {
+                                                        { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                    } else null
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    EmptyStateCard()
+                                }
                             }
-                        } else {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            EmptyStateCard()
                         }
                     }
 
@@ -502,7 +532,7 @@ fun PDFDecryptorScreen(
                                 if (uiState.isSingleFile) {
                                     Button(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             uiState.selectedUris.firstOrNull()?.let { uri ->
                                                 onAction(MainUiAction.DecryptAndPreview(uri, uiState.password))
                                             }
@@ -530,7 +560,7 @@ fun PDFDecryptorScreen(
                                 ) {
                                     Button(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             onAction(MainUiAction.DecryptInPlace)
                                         },
                                         modifier = Modifier
@@ -547,7 +577,7 @@ fun PDFDecryptorScreen(
 
                                     Button(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             if (uiState.isBatch) {
                                                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                                                 openDocumentTreeLauncher.launch(intent)
@@ -641,7 +671,7 @@ fun PDFDecryptorScreen(
                 ) {
                     Button(
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                                 addCategory(Intent.CATEGORY_OPENABLE)
                                 type = "application/pdf"
@@ -659,27 +689,59 @@ fun PDFDecryptorScreen(
                         Text(stringResource(R.string.btn_select_pdfs))
                     }
 
-                    if (uiState.hasSelectedFiles) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        SelectedFilesCard(
-                            fileNames = uiState.selectedFileNames,
-                            fileCount = uiState.fileCount,
-                            onClear = { onAction(MainUiAction.ClearSelectedFiles) }
-                        )
-
-                        if (uiState.selectedMetadata != null) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            DocumentDetailsCard(
-                                metadata = uiState.selectedMetadata,
-                                onPreview = if (uiState.activePreviewUri != null) {
-                                    { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
-                                } else null
+                    AnimatedContent(
+                        targetState = uiState.hasSelectedFiles,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(220, delayMillis = 90)) + expandVertically()).togetherWith(
+                                fadeOut(animationSpec = tween(90)) + shrinkVertically()
                             )
+                        },
+                        label = "CompactContentAnimation"
+                    ) { hasFiles ->
+                        if (hasFiles) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                SelectedFilesCard(
+                                    fileNames = uiState.selectedFileNames,
+                                    fileCount = uiState.fileCount,
+                                    onClear = { onAction(MainUiAction.ClearSelectedFiles) }
+                                )
+
+                                AnimatedVisibility(
+                                    visible = uiState.selectedMetadata != null,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        uiState.selectedMetadata?.let { metadata ->
+                                            DocumentDetailsCard(
+                                                metadata = metadata,
+                                                onPreview = if (uiState.activePreviewUri != null) {
+                                                    { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                } else null
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                EmptyStateCard()
+                            }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    AnimatedVisibility(
+                        visible = uiState.hasSelectedFiles,
+                        enter = fadeIn(animationSpec = tween(220, delayMillis = 90)) + expandVertically(),
+                        exit = fadeOut(animationSpec = tween(90)) + shrinkVertically()
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        PasswordInputSection(
+                            PasswordInputSection(
                             password = uiState.password,
                             passwordVisible = uiState.passwordVisible,
                             onPasswordChange = { onAction(MainUiAction.UpdatePassword(it)) },
@@ -721,7 +783,7 @@ fun PDFDecryptorScreen(
                             if (uiState.isSingleFile) {
                                 Button(
                                     onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                         uiState.selectedUris.firstOrNull()?.let { uri ->
                                             onAction(MainUiAction.DecryptAndPreview(uri, uiState.password))
                                         }
@@ -749,7 +811,7 @@ fun PDFDecryptorScreen(
                             ) {
                                 Button(
                                     onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                         onAction(MainUiAction.DecryptInPlace)
                                     },
                                     modifier = Modifier
@@ -766,7 +828,7 @@ fun PDFDecryptorScreen(
 
                                 Button(
                                     onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                         if (uiState.isBatch) {
                                             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                                             openDocumentTreeLauncher.launch(intent)
@@ -817,8 +879,7 @@ fun PDFDecryptorScreen(
                                 }
                             )
                         }
-                    } else {
-                        EmptyStateCard()
+                        }
                     }
                 }
             }

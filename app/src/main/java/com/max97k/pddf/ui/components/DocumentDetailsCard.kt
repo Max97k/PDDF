@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -37,10 +38,15 @@ fun DocumentDetailsCard(
     onPreview: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val view = androidx.compose.ui.platform.LocalView.current
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded },
+            .defaultMinSize(minHeight = 48.dp)
+            .clickable {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
+                expanded = !expanded
+            },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
