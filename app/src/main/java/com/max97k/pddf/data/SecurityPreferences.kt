@@ -28,6 +28,7 @@ class SecurityPreferences(
     companion object {
         const val PREFS_NAME = "security_prefs"
         const val KEY_SCREENSHOT_PROTECTION = "screenshot_protection"
+        const val KEY_AUTO_LOCK_DURATION = "auto_lock_duration"
 
         /**
          * Synchronous read for use in Activity.onCreate() before setContent{}.
@@ -47,5 +48,15 @@ class SecurityPreferences(
     suspend fun saveScreenshotProtection(enabled: Boolean) = withContext(ioDispatcher) {
         prefs.edit().putBoolean(KEY_SCREENSHOT_PROTECTION, enabled).apply()
         _screenshotProtection.value = enabled
+    }
+
+    private val _autoLockDuration = MutableStateFlow(
+        prefs.getLong(KEY_AUTO_LOCK_DURATION, 60000L)
+    )
+    val autoLockDuration: StateFlow<Long> = _autoLockDuration.asStateFlow()
+
+    suspend fun saveAutoLockDuration(duration: Long) = withContext(ioDispatcher) {
+        prefs.edit().putLong(KEY_AUTO_LOCK_DURATION, duration).apply()
+        _autoLockDuration.value = duration
     }
 }

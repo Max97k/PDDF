@@ -1029,9 +1029,13 @@ fun PDFDecryptorScreen(
         SettingsBottomSheet(
             currentTheme = uiState.themeMode,
             screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
+            currentAutoLockDuration = uiState.autoLockDuration,
             onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
             onScreenshotProtectionToggled = { enabled ->
                 onAction(MainUiAction.SetScreenshotProtection(enabled))
+            },
+            onAutoLockDurationSelected = { duration ->
+                onAction(MainUiAction.SetAutoLockDuration(duration))
             },
             onDismiss = { showSettingsSheet = false }
         )

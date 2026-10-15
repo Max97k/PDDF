@@ -61,6 +61,7 @@ data class MainUiState(
     val conflictMode: ConflictMode = ConflictMode.SAVE_AS_COPY,
     val rememberConflictChoice: Boolean = false,
     val screenshotProtectionEnabled: Boolean = false,
+    val autoLockDuration: Long = 60000L,
 
     // 8. Password Vault Data
     val savedPasswords: ImmutableList<PasswordEntity> = persistentListOf(),
