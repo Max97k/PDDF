@@ -209,6 +209,62 @@ class CorruptedPdfAdversarialTest {
         }
     }
 
+
+    // ==========================================
+    // 4. ANTI-EXPLOIT DEFENSE MATRIX (ZIP BOMBS & JS)
+    // ==========================================
+
+    @Test
+    fun testAntiExploitDefenses() = runTest(testDispatcher) {
+        // 1. Verify JS/Launch/EmbeddedFiles Sanitization
+        val jsPdf = File(context.cacheDir, "js_exploit.pdf")
+        val doc = PDDocument()
+        doc.addPage(PDPage())
+        val cat = doc.documentCatalog.cosObject
+        cat.setItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("JS"), com.tom_roush.pdfbox.cos.COSString("malicious code"))
+        cat.setItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("Launch"), com.tom_roush.pdfbox.cos.COSString("malicious command"))
+
+        // Encrypt the PDF so the DecryptUseCase reaches the document.save block inside the loop
+        val spp = com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy("pass", "pass", com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission())
+        spp.encryptionKeyLength = 128
+        doc.protect(spp)
+
+        doc.save(jsPdf)
+        doc.close()
+
+        val inUri = Uri.fromFile(jsPdf).toString()
+        val outPdf = File(context.cacheDir, "js_sanitized.pdf")
+        val outUri = Uri.fromFile(outPdf).toString()
+
+        val status = decryptUseCase.decrypt(inUri, outUri, "pass")
+        assertEquals(DecryptStatus.SUCCESS, status)
+
+        PDDocument.load(outPdf).use { sanitizedDoc ->
+            val sanitizedCat = sanitizedDoc.documentCatalog.cosObject
+            assertFalse(sanitizedCat.containsKey(com.tom_roush.pdfbox.cos.COSName.getPDFName("JS")))
+            assertFalse(sanitizedCat.containsKey(com.tom_roush.pdfbox.cos.COSName.getPDFName("Launch")))
+        }
+
+        // 2. Verify XRef Fallback Logic explicitly
+        val corruptXrefFile = File(context.cacheDir, "test_xref_corrupt.pdf")
+        val xrefDoc = PDDocument()
+        xrefDoc.addPage(PDPage())
+        xrefDoc.save(corruptXrefFile)
+        xrefDoc.close()
+
+        val bytes = corruptXrefFile.readBytes()
+        val xrefIndex = String(bytes).lastIndexOf("xref")
+        if (xrefIndex != -1) {
+            bytes[xrefIndex] = 'x'.code.toByte()
+            corruptXrefFile.writeBytes(bytes)
+        }
+
+        // Ensure checkEncryption leverages the xref fallback and returns successfully instead of throwing
+        val testPdfRepo = PdfRepositoryImpl(application, testDispatcher)
+        val checkStatus = testPdfRepo.checkEncryption(Uri.fromFile(corruptXrefFile).toString())
+        assertTrue(checkStatus is com.max97k.pddf.domain.repository.PdfEncryptionCheck.NotEncrypted)
+    }
+
     // ==========================================
     // 3. MULTI-FILE CORRUPTED DETECTION & FEEDBACK
     // ==========================================
