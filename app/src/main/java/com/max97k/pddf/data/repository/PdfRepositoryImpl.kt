@@ -252,6 +252,7 @@ open class PdfRepositoryImpl @Inject constructor(
                     val perm = it.currentAccessPermission
                     val canPrint = perm?.canPrint() ?: true
                     val canCopy = perm?.canExtractContent() ?: true
+                    val version = it.version
                     return@withContext PdfMetadata(
                         title = title,
                         author = author,
@@ -259,7 +260,8 @@ open class PdfRepositoryImpl @Inject constructor(
                         fileSizeMb = sizeMb,
                         encryptionMethod = encMethod,
                         canPrint = canPrint,
-                        canCopy = canCopy
+                        canCopy = canCopy,
+                        version = version
                     )
                 }
             }
