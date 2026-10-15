@@ -11,6 +11,7 @@ import com.max97k.pddf.di.IoDispatcher
 import com.max97k.pddf.domain.repository.PdfEncryptionCheck
 import com.max97k.pddf.domain.repository.PdfRepository
 import com.max97k.pddf.util.FileUtils
+import com.max97k.pddf.util.MemoryUtils
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -47,11 +48,12 @@ open class PdfRepositoryImpl @Inject constructor(
         } ?: return@withContext PdfEncryptionCheck.Error("Unable to open file stream")
 
         var isEncrypted = false
+        val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             inputStream.use { input ->
                 val doc = PDDocument.load(
                     input.buffered(),
-                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                    MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                 )
                 doc.use {
                     isEncrypted = it.isEncrypted
@@ -100,12 +102,13 @@ open class PdfRepositoryImpl @Inject constructor(
         passwordValue: String
     ): DecryptStatus = withContext(ioDispatcher) {
         // 1. Check if unencrypted
+        val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
                 val docWithoutPass = try {
                     PDDocument.load(
                         inputStream.buffered(),
-                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                        MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
                 } catch (_: Exception) {
                     null
@@ -139,7 +142,7 @@ open class PdfRepositoryImpl @Inject constructor(
                     PDDocument.load(
                         inputStream.buffered(),
                         pwd,
-                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                        MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     ).use { document ->
                         if (!document.isEncrypted) {
                             return@withContext DecryptStatus.NOT_ENCRYPTED
@@ -231,13 +234,14 @@ open class PdfRepositoryImpl @Inject constructor(
             }
         } catch (_: Exception) {}
 
+        val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
                 val doc = try {
                     PDDocument.load(
                         inputStream.buffered(),
                         passwordValue,
-                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                        MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
                 } catch (_: Exception) {
                     null
