@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">確認身分以存取已儲存的密碼。</string>
 
     <string name="dialog_title_whats_new">最新功能</string>
-    <string name="changelog_content">- 內建系統無線列印（Android PrintManager 直出，零磁碟暫存）\n- 內嵌 PDF 原生全文搜尋、關鍵字高亮與頁面縮圖捲軸\n- 設定頁支援 7 國語言執行期動態切換與 RTL 佈局相容\n- 折疊螢幕與平板雙欄自適應佈局（ListDetailPaneScaffold）與 DeX 拖曳\n- Material 3 Expressive 動態視覺、流暢轉場與 Spring 物理觸覺回饋\n- 新增長按圖示動態捷徑與外部多檔批次分享接收（ACTION_SEND_MULTIPLE）\n- 全面強化密碼輸入彈窗之 FLAG_SECURE 防截圖保護</string>
+    <string name="changelog_content">- 整合 Google Play 應用程式內更新（In-App Updates），支援彈性背景下載\n- 下載完成後顯示常駐 Snackbar 提醒，一鍵重新啟動套用更新\n- 關於對話框內建版本檢查卡片、即時下載進度指示器與重試機制\n- 完善非 GMS 裝置與側載安裝例外防護，確保系統零崩潰穩定度\n- 遵循 Clean Architecture 領域層隔離規範，具備完整單元測試防護</string>
     <string name="title_empty_state">未選擇 PDF 檔案</string>
     <string name="desc_empty_state">請選擇一個或多個加密的 PDF 檔案。您也可以從檔案管理員或其他應用程式直接分享檔案至本工具。</string>
 

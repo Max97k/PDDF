@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">保存されたパスワードにアクセスするには生体認証を行ってください。</string>
 
     <string name="dialog_title_whats_new">新機能</string>
-    <string name="changelog_content">- Android PrintManager による直接ワイヤレス印刷（中間一時ファイル不使用）\n- PDF 内蔵の全文検索、ハイライト表示、およびサムネイルスクラバー\n- 設定画面での 7 言語動的切り替えおよび RTL レイアウト対応\n- 折りたたみ端末およびタブレット向け 2 ペイン適応レイアウトと DeX ドラッグ＆ドロップ\n- Material 3 Expressive の流暢なアニメーションとハプティクスフィードバック\n- 動的アプリショートカットと複数ファイルの一括共有受信対応\n- すべての認証ダイアログにおけるスクリーンショット保護（FLAG_SECURE）の徹底</string>
+    <string name="changelog_content">- Google Play アプリ内アップデート（In-App Updates）とバックグラウンドダウンロードに対応\n- ダウンロード完了時に常駐 Snackbar を表示し、ワンタップで再起動・更新適用\n- 「アプリ情報」ダイアログにアップデート確認カード、進行状況表示、再試行機能を追加\n- 非 GMS 端末やサイドロード環境での例外安全処理によりクラッシュを完全防止\n- Clean Architecture のドメイン層分離に準拠し、包括的な単元テストを実施</string>
     <string name="title_empty_state">PDF が選択されていません</string>
     <string name="desc_empty_state">暗号化された PDF ファイルを選択してください。ファイルマネージャーや他のアプリから直接共有することもできます。</string>
 

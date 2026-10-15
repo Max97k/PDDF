@@ -52,6 +52,7 @@ Unlike online PDF unlock services that require uploading sensitive documents to 
 | 🎨 **Material 3 Expressive UI** | Modern interface with dynamic tonal palettes, `AnimatedContent` fluid transitions, spring-physics haptics, and accessible 48dp touch targets. |
 | 🌐 **7-Language In-App Switcher & RTL** | Dynamic runtime language switching in settings with native support for English, Traditional Chinese (`zh-rTW`), Simplified Chinese (`zh-rCN`), Japanese, German, Spanish, French, and RTL mirroring. |
 | ⚡ **Dynamic Shortcuts & Multi-Share** | Dynamic launcher shortcuts, QS tile, and batch PDF share receiver (`ACTION_SEND_MULTIPLE`) from Files or chat apps. |
+| 🔄 **In-App Updates API** | Google Play In-App Updates integration with flexible background downloading, real-time progress, restart snackbars, and About dialog updater. |
 
 ---
 

@@ -116,6 +116,7 @@ app/src/main/java/com/example/
 | 56 | Material 3 Expressive UI & Haptics | Typography & color hierarchy, `AnimatedContent` card transitions, spring haptics | M7 | Jules Swarm (PR #16) |
 | 57 | Foldable/Tablet Dual-Pane Layout | `ListDetailPaneScaffold` master-detail layout, DeX drag/drop, keyboard shortcuts | M7 | Jules Swarm (PR #17) |
 | 58 | Dialog Hardware Window Protection | Strict `SecureFlagPolicy.SecureOn` across all credential and vault dialogs | M7 | Jules Swarm (Sentinel) |
+| 59 | Google Play In-App Updates | Flexible background updates, download progress, restart snackbar, and AboutDialog checker | M8 | feature/in-app-updates |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
@@ -127,3 +128,4 @@ app/src/main/java/com/example/
 | M5 | Final Milestone: 100% E2E Pass & Hardening | Phase 1 (Pass 100% E2E test suite Tiers 1-4) + Phase 2 (Adversarial Coverage Hardening Tier 5) | M1, M2, M3, M4 | DONE |
 | M6 | Security Protection & M3 UX Polish | Patches 48-51 (FLAG_SECURE, PrivacyShieldOverlay, M3 buttons, AboutDialog, Theme polish) | M1-M5 | DONE |
 | M7 | Multi-Agent Swarm Modernization (v0.9.2) | Patches 52-58 (Printing, Search Toolbox, 7-Locale Switcher, Adaptive Dual-Pane, M3 Expressive, Shortcuts) | M1-M6 | DONE |
+| M8 | Google Play In-App Updates (v0.9.3) | Feature 59 (Play Core In-App Updates, background download progress, restart prompt, domain isolation) | M1-M7 | DONE |

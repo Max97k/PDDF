@@ -67,7 +67,7 @@
     <string name="biometric_prompt_subtitle">Confirma tu identidad para acceder a las contraseñas guardadas.</string>
 
     <string name="dialog_title_whats_new">Novedades</string>
-    <string name="changelog_content">- Impresión inalámbrica integrada mediante Android PrintManager sin archivos temporales\n- Búsqueda de texto completo en PDF, resaltado y barra de desplazamiento de miniaturas\n- Selector de idioma dinámico en ajustes con soporte para 7 idiomas y RTL\n- Diseño adaptable de dos paneles (ListDetailPaneScaffold) para plegables y tablets\n- Interfaz Material 3 Expressive con transiciones fluidas y respuesta háptica táctil\n- Accesos directos dinámicos en lanzador y recepción de múltiples archivos compartidos\n- Protección FLAG_SECURE reforzada en todos los cuadros de diálogo de contraseñas</string>
+    <string name="changelog_content">- Integración de actualizaciones integradas de Google Play con descargas en segundo plano\n- Notificación Snackbar persistente al completar la descarga para reiniciar y aplicar\n- Verificador de actualizaciones, indicador de progreso y reintento en el diálogo Acerca de\n- Manejo seguro de excepciones para dispositivos sin GMS y cargas laterales\n- Aislamiento estricto de Clean Architecture con cobertura completa de pruebas unitarias</string>
     <string name="title_empty_state">No hay PDF seleccionado</string>
     <string name="desc_empty_state">Selecciona uno o más archivos PDF cifrados para comenzar. También puedes compartir archivos directamente desde tu administrador de archivos.</string>
 
