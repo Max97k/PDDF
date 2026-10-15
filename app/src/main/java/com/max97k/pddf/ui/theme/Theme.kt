@@ -80,6 +80,21 @@ private val AmoledColorScheme =
     surfaceVariant = Color(0xFF1C1C1E)
   )
 
+private val OledBlackColorScheme =
+  DarkColorScheme.copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceContainer = Color.Black,
+    surfaceContainerLow = Color.Black,
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerHigh = Color.Black,
+    surfaceContainerHighest = Color.Black,
+    onBackground = Color.White,
+    onSurface = Color.White,
+    surfaceVariant = Color.Black,
+    onSurfaceVariant = Color.White
+  )
+
 @Composable
 fun MyApplicationTheme(
   themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -89,12 +104,33 @@ fun MyApplicationTheme(
 ) {
   val darkTheme = when (themeMode) {
       ThemeMode.LIGHT -> false
-      ThemeMode.DARK, ThemeMode.AMOLED -> true
+      ThemeMode.DARK, ThemeMode.AMOLED, ThemeMode.OLED_BLACK -> true
       ThemeMode.SYSTEM -> isSystemInDarkTheme()
   }
 
   val colorScheme =
     when {
+      themeMode == ThemeMode.OLED_BLACK -> {
+          if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              val context = LocalContext.current
+              val dynamicDark = dynamicDarkColorScheme(context)
+              dynamicDark.copy(
+                  background = Color.Black,
+                  surface = Color.Black,
+                  surfaceContainer = Color.Black,
+                  surfaceContainerLow = Color.Black,
+                  surfaceContainerLowest = Color.Black,
+                  surfaceContainerHigh = Color.Black,
+                  surfaceContainerHighest = Color.Black,
+                  onBackground = Color.White,
+                  onSurface = Color.White,
+                  surfaceVariant = Color.Black,
+                  onSurfaceVariant = Color.White
+              )
+          } else {
+              OledBlackColorScheme
+          }
+      }
       themeMode == ThemeMode.AMOLED -> {
           if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
               val context = LocalContext.current

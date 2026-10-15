@@ -92,6 +92,7 @@
     <string name="theme_light">淺色模式</string>
     <string name="theme_dark">深色模式</string>
     <string name="theme_amoled">AMOLED 純黑</string>
+    <string name="theme_oled_black">OLED 純黑</string>
     <string name="title_processing_batch">批次處理中</string>
     <string name="label_batch_progress">已完成 %1$d / %2$d</string>
     <string name="label_search">搜尋</string>

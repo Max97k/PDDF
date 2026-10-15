@@ -92,6 +92,7 @@
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_amoled">Negro AMOLED</string>
+    <string name="theme_oled_black">Negro OLED</string>
     <string name="title_processing_batch">Procesando lote</string>
     <string name="label_batch_progress">%1$d de %2$d completados</string>
     <string name="label_search">Buscar</string>

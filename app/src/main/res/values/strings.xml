@@ -92,6 +92,7 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_amoled">AMOLED Black</string>
+    <string name="theme_oled_black">OLED Pitch Black</string>
     <string name="title_processing_batch">Processing Batch</string>
     <string name="label_batch_progress">%1$d of %2$d completed</string>
     <string name="label_search">Search</string>

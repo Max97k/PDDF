@@ -84,7 +84,8 @@ fun SettingsBottomSheet(
             val themeEntries = listOf(
                 ThemeMode.SYSTEM to stringResource(R.string.theme_system_default),
                 ThemeMode.LIGHT  to stringResource(R.string.theme_light),
-                ThemeMode.DARK   to stringResource(R.string.theme_dark)
+                ThemeMode.DARK   to stringResource(R.string.theme_dark),
+                ThemeMode.OLED_BLACK to stringResource(R.string.theme_oled_black)
             )
             themeEntries.forEach { (mode, label) ->
                 ListItem(
