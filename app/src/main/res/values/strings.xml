@@ -120,4 +120,7 @@
     <string name="msg_screenshot_protection_off">Screenshot protection disabled</string>
     <string name="content_desc_about">About</string>
     <string name="privacy_shield_active">Security protection active</string>
+
+
+    <string name="btn_print">Print Document</string>
 </resources>

@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Print
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -148,6 +150,21 @@ fun PdfViewerScreen(
                                 } else {
                                     stringResource(R.string.btn_search_pdf)
                                 }
+                            )
+                        }
+
+                        IconButton(onClick = {
+                            val printManager = context.getSystemService(Context.PRINT_SERVICE) as? android.print.PrintManager
+                            printManager?.let {
+                                val fileName = com.max97k.pddf.util.FileUtils.getFileName(context, uri)
+                                val adapter = com.max97k.pddf.print.PdfPrintDocumentAdapter(context, uri, fileName)
+                                val builder = android.print.PrintAttributes.Builder()
+                                it.print(fileName, adapter, builder.build())
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Print,
+                                contentDescription = stringResource(R.string.btn_print)
                             )
                         }
                         if (onSaveAs != null) {
