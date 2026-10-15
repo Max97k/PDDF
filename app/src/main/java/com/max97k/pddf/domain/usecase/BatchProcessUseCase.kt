@@ -1,9 +1,12 @@
-﻿package com.max97k.pddf.domain.usecase
+package com.max97k.pddf.domain.usecase
 
 import com.max97k.pddf.ConflictMode
 import com.max97k.pddf.DecryptStatus
 import com.max97k.pddf.di.IoDispatcher
 import com.max97k.pddf.domain.repository.PdfRepository
+import com.max97k.pddf.domain.repository.PasswordRepository
+import com.max97k.pddf.data.PasswordEntity
+import com.max97k.pddf.util.MemoryUtils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -12,6 +15,7 @@ import kotlinx.coroutines.withContext
 class BatchProcessUseCase(
     private val pdfRepository: PdfRepository,
     private val decryptPdfUseCase: DecryptPdfUseCase,
+    private val passwordRepository: PasswordRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
@@ -26,6 +30,44 @@ class BatchProcessUseCase(
         val errorOutputDir: Boolean = false
     )
 
+    private suspend fun tryDecrypt(
+        inputUriString: String,
+        outputUriString: String,
+        manualPasswordValue: String,
+        vaultPasswords: List<PasswordEntity>
+    ): DecryptStatus {
+        val allPasswordChars = mutableListOf<CharArray>()
+
+        allPasswordChars.add(manualPasswordValue.toCharArray())
+
+        for (password in vaultPasswords) {
+            allPasswordChars.add(password.getPasswordChars())
+        }
+
+        var status = DecryptStatus.WRONG_PASSWORD
+        try {
+            for (chars in allPasswordChars) {
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                val currentStatus = decryptPdfUseCase.decrypt(
+                    inputUriString = inputUriString,
+                    outputUriString = outputUriString,
+                    passwordChars = chars
+                )
+
+                if (currentStatus != DecryptStatus.WRONG_PASSWORD) {
+                    status = currentStatus
+                    break
+                }
+            }
+        } finally {
+            for (chars in allPasswordChars) {
+                MemoryUtils.wipe(chars)
+            }
+        }
+
+        return status
+    }
+
     suspend fun processInPlace(
         inputUriStrings: List<String>,
         passwordValue: String,
@@ -39,17 +81,15 @@ class BatchProcessUseCase(
         var cancelledCount = 0
         var lastUri: String? = null
 
+        val vaultPasswords = passwordRepository.getAllDecryptedPasswords()
+
         try {
             for ((index, inputUri) in inputUriStrings.withIndex()) {
-                ensureActive()
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 var tempUri: String? = null
                 try {
                     tempUri = pdfRepository.createTempFile("decrypted_${System.currentTimeMillis()}_$index", ".pdf")
-                    val status = decryptPdfUseCase.decrypt(
-                        inputUriString = inputUri,
-                        outputUriString = tempUri,
-                        passwordValue = passwordValue
-                    )
+                    val status = tryDecrypt(inputUri, tempUri, passwordValue, vaultPasswords)
 
                     when (status) {
                         DecryptStatus.SUCCESS -> {
@@ -102,17 +142,15 @@ class BatchProcessUseCase(
         var cancelledCount = 0
         var lastUri: String? = null
 
+        val vaultPasswords = passwordRepository.getAllDecryptedPasswords()
+
         try {
             for ((index, inputUri) in inputUriStrings.withIndex()) {
-                ensureActive()
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 var tempUri: String? = null
                 try {
                     tempUri = pdfRepository.createTempFile("decrypted_${System.currentTimeMillis()}_$index", ".pdf")
-                    val status = decryptPdfUseCase.decrypt(
-                        inputUriString = inputUri,
-                        outputUriString = tempUri,
-                        passwordValue = passwordValue
-                    )
+                    val status = tryDecrypt(inputUri, tempUri, passwordValue, vaultPasswords)
 
                     when (status) {
                         DecryptStatus.SUCCESS -> {

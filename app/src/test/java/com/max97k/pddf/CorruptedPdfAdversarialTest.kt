@@ -81,7 +81,7 @@ class CorruptedPdfAdversarialTest {
         vaultUseCase = PasswordVaultUseCase(repository)
         decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepo, decryptUseCase, vaultUseCase, testDispatcher)
-        batchProcessUseCase = BatchProcessUseCase(pdfRepo, decryptUseCase, testDispatcher)
+        batchProcessUseCase = BatchProcessUseCase(pdfRepo, decryptUseCase, repository, testDispatcher)
 
         viewModel = createTestMainViewModel(
             application = application,

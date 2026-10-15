@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.di
+package com.max97k.pddf.di
 
 import com.max97k.pddf.data.PasswordRepository
 import com.max97k.pddf.domain.repository.PdfRepository
@@ -29,9 +29,9 @@ class UseCaseModule {
     @Provides
     @Singleton
     fun providePasswordVaultUseCase(
-        repository: PasswordRepository
+        passwordRepository: PasswordRepository
     ): PasswordVaultUseCase {
-        return PasswordVaultUseCase(repository)
+        return PasswordVaultUseCase(passwordRepository)
     }
 
     @Provides
@@ -50,8 +50,9 @@ class UseCaseModule {
     fun provideBatchProcessUseCase(
         pdfRepository: PdfRepository,
         decryptPdfUseCase: DecryptPdfUseCase,
+        passwordRepository: PasswordRepository,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): BatchProcessUseCase {
-        return BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher)
+        return BatchProcessUseCase(pdfRepository, decryptPdfUseCase, passwordRepository, ioDispatcher)
     }
 }

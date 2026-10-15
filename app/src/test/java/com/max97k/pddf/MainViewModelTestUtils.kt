@@ -30,7 +30,7 @@ fun createTestMainViewModel(
     decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(pdfRepository, ioDispatcher),
     passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
     autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
-    batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher),
+    batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, repository, ioDispatcher),
     appUpdateRepository: com.max97k.pddf.domain.repository.AppUpdateRepository = FakeAppUpdateRepository(),
     checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository)
 ): MainViewModel {

@@ -81,7 +81,7 @@ class PdfViewerSaveAdversarialTest {
         val pdfRepository = PdfRepositoryImpl(application, testDispatcher)
         decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptUseCase, vaultUseCase, testDispatcher)
-        batchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptUseCase, testDispatcher)
+        batchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptUseCase, repository, testDispatcher)
 
         viewModel = createTestMainViewModel(
             application = application,

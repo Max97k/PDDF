@@ -93,7 +93,7 @@ class RealWorldScenarioE2ETest {
         vaultUseCase = PasswordVaultUseCase(repository)
         decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptUseCase, vaultUseCase, testDispatcher)
-        batchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptUseCase, testDispatcher)
+        batchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptUseCase, repository, testDispatcher)
         viewModel = createTestMainViewModel(
             application = application,
             repository = repository,
