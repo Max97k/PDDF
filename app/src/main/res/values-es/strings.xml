@@ -146,4 +146,8 @@
     <string name="status_update_downloaded">Actualización descargada. Reinicia para aplicar.</string>
     <string name="btn_restart_update">Reiniciar</string>
     <string name="status_update_failed">No se pudo comprobar la actualización</string>
+
+    <string name="btn_rotate">Rotate</string>
+    <string name="btn_rotate_cw">Rotate All Pages 90° CW</string>
+    <string name="btn_rotate_ccw">Rotate All Pages 90° CCW</string>
 </resources>

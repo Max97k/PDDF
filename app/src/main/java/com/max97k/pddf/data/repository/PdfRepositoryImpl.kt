@@ -405,6 +405,7 @@ open class PdfRepositoryImpl @Inject constructor(
     }
 
 
+
     override suspend fun rotatePages(
         sourceUri: String,
         destUri: String,
@@ -436,8 +437,11 @@ open class PdfRepositoryImpl @Inject constructor(
                         tempFile.outputStream().buffered().use { outputStream ->
                             doc.save(outputStream)
                         }
+                        // Need atomicReplace, let's see why it's failing
                         if (atomicReplace(tempFile, destUri)) {
                             success = true
+                        } else {
+                            println("atomicReplace failed")
                         }
                     } finally {
                         if (tempFile.exists()) {
@@ -445,13 +449,14 @@ open class PdfRepositoryImpl @Inject constructor(
                         }
                     }
                 }
-            }
+            } ?: println("openSafeInputStream returned null for $sourceUri")
             success
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
+
 
     override fun openSafeOutputStream(uriString: String): OutputStream? {
         val uri = parseUri(uriString)

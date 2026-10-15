@@ -15,7 +15,8 @@ fun PdfViewerDialog(
     title: String = "",
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onRotateAll: ((Int) -> Unit)? = null
 ) {
     BackHandler(onBack = onDismiss)
     Box(
@@ -30,7 +31,7 @@ fun PdfViewerDialog(
             onClose = onDismiss,
             onShare = onShare,
             onSaveAs = onSaveAs,
-            onRotateAll = null
+            onRotateAll = onRotateAll
         )
     }
 }

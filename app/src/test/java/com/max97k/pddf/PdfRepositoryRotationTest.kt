@@ -47,8 +47,8 @@ class PdfRepositoryRotationTest {
         }
 
         val success = repository.rotatePages(
-            sourceUri = srcFile.toURI().toString(),
-            destUri = dstFile.toURI().toString(),
+            sourceUri = "file://" + srcFile.absolutePath,
+            destUri = "file://" + dstFile.absolutePath,
             pageIndices = listOf(0),
             rotationDegrees = 90
         )
@@ -78,8 +78,8 @@ class PdfRepositoryRotationTest {
         }
 
         val success = repository.rotatePages(
-            sourceUri = srcFile.toURI().toString(),
-            destUri = dstFile.toURI().toString(),
+            sourceUri = "file://" + srcFile.absolutePath,
+            destUri = "file://" + dstFile.absolutePath,
             pageIndices = null,
             rotationDegrees = -90
         )
