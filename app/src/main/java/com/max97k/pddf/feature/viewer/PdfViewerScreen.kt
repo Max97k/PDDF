@@ -56,6 +56,25 @@ import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
 import com.max97k.pddf.R
 
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import com.max97k.pddf.domain.repository.PdfRepository
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.List
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface PdfViewerEntryPoint {
+    fun pdfRepository(): PdfRepository
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PdfViewerScreen(
@@ -108,6 +127,49 @@ fun PdfViewerScreen(
         WindowInsets(0, 0, 0, 0)
     }
 
+    val repository = remember(context) {
+        EntryPointAccessors.fromApplication(context.applicationContext, PdfViewerEntryPoint::class.java).pdfRepository()
+    }
+    var outline by remember { mutableStateOf<List<com.max97k.pddf.feature.viewer.OutlineItem>>(emptyList()) }
+
+    LaunchedEffect(uri) {
+        outline = repository.getOutline(uri.toString())
+    }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                com.max97k.pddf.feature.viewer.PdfOutlineDrawer(
+                    outline = outline,
+                    onPageClicked = { pageIndex ->
+                        coroutineScope.launch { drawerState.close() }
+                        if (fragmentActivity != null) {
+                            val fragmentManager = fragmentActivity.supportFragmentManager
+                            val fragment = fragmentManager.fragments.firstOrNull { it is InkPdfViewerFragment } as? InkPdfViewerFragment
+                            if (fragment != null) {
+                                try {
+                                    val method = fragment.javaClass.getMethod("getPdfView")
+                                    method.isAccessible = true
+                                    val pdfView = method.invoke(fragment)
+                                    if (pdfView != null) {
+                                        val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.java)
+                                        scrollToPageMethod.isAccessible = true
+                                        scrollToPageMethod.invoke(pdfView, pageIndex)
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("PdfViewerScreen", "Failed to scroll to page", e)
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    ) {
     Scaffold(
         modifier = modifier,
         contentWindowInsets = contentInsets,
@@ -136,6 +198,12 @@ fun PdfViewerScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Bookmarks"
+                            )
+                        }
                         // Search toggle — open search on first tap, close on second tap.
                         IconButton(onClick = {
                             isSearchActive = !isSearchActive
@@ -308,6 +376,7 @@ fun PdfViewerScreen(
                 }
             }
         }
+    }
     }
 }
 

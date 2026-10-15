@@ -31,6 +31,11 @@ interface PdfRepository {
         passwordValue: String = ""
     ): PdfMetadata?
 
+    suspend fun getOutline(
+        sourceUri: String,
+        passwordValue: String = ""
+    ): List<com.max97k.pddf.feature.viewer.OutlineItem>
+
     suspend fun copy(
         sourceUri: String,
         destUri: String

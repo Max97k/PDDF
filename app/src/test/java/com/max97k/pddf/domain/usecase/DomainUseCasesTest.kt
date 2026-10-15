@@ -177,6 +177,8 @@ class DomainUseCasesTest {
         override fun openSafeInputStream(uriString: String): InputStream? = null
 
         override fun openSafeOutputStream(uriString: String): OutputStream? = null
+
+        override suspend fun getOutline(sourceUri: String, passwordValue: String): List<com.max97k.pddf.feature.viewer.OutlineItem> = emptyList()
     }
 
     @Test
