@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.di
+package com.max97k.pddf.di
 
 import com.max97k.pddf.data.PasswordRepository
 import com.max97k.pddf.domain.repository.PdfRepository
@@ -63,5 +63,14 @@ class UseCaseModule {
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): ReversePdfPagesUseCase {
         return ReversePdfPagesUseCase(pdfRepository, ioDispatcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStampPageNumbersUseCase(
+        pdfRepository: PdfRepository,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): com.max97k.pddf.domain.usecase.StampPageNumbersUseCase {
+        return com.max97k.pddf.domain.usecase.StampPageNumbersUseCase(pdfRepository, ioDispatcher)
     }
 }

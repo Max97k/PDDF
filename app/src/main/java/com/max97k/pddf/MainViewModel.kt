@@ -69,7 +69,8 @@ class MainViewModel @Inject constructor(
     private val batchProcessUseCase: BatchProcessUseCase,
     private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
     private val pdfRepository: com.max97k.pddf.domain.repository.PdfRepository,
-    private val reversePdfPagesUseCase: ReversePdfPagesUseCase
+    private val reversePdfPagesUseCase: ReversePdfPagesUseCase,
+    private val stampPageNumbersUseCase: com.max97k.pddf.domain.usecase.StampPageNumbersUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -107,7 +108,8 @@ class MainViewModel @Inject constructor(
             themeMode = theme,
             savedPasswords = passwords,
             screenshotProtectionEnabled = screenshotProtection,
-            appUpdateStatus = updateStatus
+            appUpdateStatus = updateStatus,
+            showStampDialog = showStampDialog.value
         )
     }.stateIn(
         scope = viewModelScope,
@@ -133,6 +135,7 @@ class MainViewModel @Inject constructor(
     val showSavePasswordDialog = MutableStateFlow(false)
     val showPasswordListDialog = MutableStateFlow(false)
     val requestOpenDocumentPicker = MutableStateFlow(false)
+    val showStampDialog = MutableStateFlow(false)
 
     val isAutoUnlocking = MutableStateFlow(false)
     val showAutoUnlockPasswordPrompt = MutableStateFlow(false)
@@ -271,6 +274,41 @@ class MainViewModel @Inject constructor(
             is MainUiAction.SetPreviewPdfUri -> {
                 previewPdfUri.value = action.uri
                 _uiState.update { it.copy(previewPdfUri = action.uri) }
+            }
+            is MainUiAction.SetStampDialogVisible -> {
+                showStampDialog.value = action.visible
+                _uiState.update { it.copy(showStampDialog = action.visible) }
+            }
+            is MainUiAction.RequestStampSaveAsPicker -> {
+                emitEffect(UiEffect.LaunchCreateStampedDocument("stamped_document.pdf", action.config))
+            }
+            is MainUiAction.StampPages -> {
+                val sourceUri = uiState.value.activePreviewUri ?: uiState.value.selectedUris.firstOrNull()
+                if (sourceUri != null) {
+                    viewModelScope.launch {
+                        isProcessing.value = true
+                        _uiState.update { it.copy(isProcessing = true, statusMessage = "⏳ Stamping page numbers...") }
+
+                        val success = stampPageNumbersUseCase.stamp(
+                            sourceUri = sourceUri.toString(),
+                            destUri = action.destUri.toString(),
+                            format = action.config.format,
+                            position = action.config.position,
+                            fontSize = action.config.fontSize,
+                            margin = action.config.margin,
+                            passwordValue = uiState.value.password
+                        )
+
+                        isProcessing.value = false
+                        if (success) {
+                            _uiState.update { it.copy(isProcessing = false, statusMessage = "✅ Successfully stamped document.") }
+                            emitEffect(UiEffect.ShowToast("Document stamped successfully"))
+                        } else {
+                            _uiState.update { it.copy(isProcessing = false, statusMessage = "❌ Failed to stamp document") }
+                            emitEffect(UiEffect.ShowToast("Failed to stamp document"))
+                        }
+                    }
+                }
             }
             is MainUiAction.SetTheme -> setTheme(action.mode)
             is MainUiAction.UpdateConflictSettings -> updateConflictSettings(action.mode, action.remember)

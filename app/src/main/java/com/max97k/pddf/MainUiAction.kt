@@ -31,6 +31,10 @@ sealed interface MainUiAction {
     data object CancelBatch : MainUiAction
     data class ReversePages(val uri: Uri) : MainUiAction
 
+    // Page Stamping
+    data class RequestStampSaveAsPicker(val config: com.max97k.pddf.domain.model.StampConfig) : MainUiAction
+    data class StampPages(val destUri: Uri, val config: com.max97k.pddf.domain.model.StampConfig) : MainUiAction
+
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
     data class HandleExternalIntent(
@@ -58,6 +62,7 @@ sealed interface MainUiAction {
     data class SetWhatsNewDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPreviewPdfUri(val uri: Uri?) : MainUiAction
     data class RotatePreview(val degrees: Int) : MainUiAction
+    data class SetStampDialogVisible(val visible: Boolean) : MainUiAction
 
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction

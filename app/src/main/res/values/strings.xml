@@ -189,4 +189,5 @@
     <string name="msg_export_failed">Failed to export image</string>
 
     <string name="btn_reverse_pages">Reverse Pages</string>
+    <string name="btn_stamp_pages">Stamp Page Numbers</string>
 </resources>

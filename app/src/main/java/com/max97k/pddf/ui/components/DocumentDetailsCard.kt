@@ -42,7 +42,8 @@ fun DocumentDetailsCard(
     decryptionDurationMs: Long? = null,
     onPreview: (() -> Unit)? = null,
     onFlattenForms: (() -> Unit)? = null,
-    onReversePages: (() -> Unit)? = null
+    onReversePages: (() -> Unit)? = null,
+    onStamp: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var exportMenuExpanded by remember { mutableStateOf(false) }
@@ -71,6 +72,11 @@ fun DocumentDetailsCard(
                     if (onReversePages != null) {
                         TextButton(onClick = onReversePages) {
                             Text("🔄 " + stringResource(R.string.btn_reverse_pages))
+                        }
+                    }
+                    if (onStamp != null) {
+                        TextButton(onClick = onStamp) {
+                            Text("📝 " + stringResource(R.string.btn_stamp_pages))
                         }
                     }
                     if (onPreview != null) {
