@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +37,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import android.widget.Toast
+import com.max97k.pddf.util.ClipboardUtils
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -53,6 +58,7 @@ fun SavedPasswordListDialog(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     AlertDialog(
         modifier = modifier
@@ -138,6 +144,16 @@ fun SavedPasswordListDialog(
                                         modifier = Modifier.weight(1f),
                                         style = MaterialTheme.typography.bodyLarge
                                     )
+                                    IconButton(onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        ClipboardUtils.copyPasswordToClipboard(context, "Password", savedPass.passwordValue)
+                                        Toast.makeText(context, context.getString(R.string.msg_password_copied), Toast.LENGTH_SHORT).show()
+                                    }) {
+                                        Icon(
+                                            Icons.Default.ContentCopy,
+                                            contentDescription = stringResource(R.string.content_desc_copy_password)
+                                        )
+                                    }
                                     IconButton(onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onDeletePassword(savedPass)

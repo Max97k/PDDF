@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="password_strength_weak">Weak</string>
+    <string name="password_strength_medium">Medium</string>
+    <string name="password_strength_strong">Strong</string>
+    <string name="password_strength_none">No password</string>
+    <string name="password_strength_tip_weak">Password is easily guessable or too short.</string>
+    <string name="password_strength_tip_medium">Could be stronger. Try adding symbols or numbers.</string>
+    <string name="password_strength_tip_strong">Excellent password.</string>
+    <string name="password_strength_tip_none"></string>
+</resources>

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
+import androidx.compose.foundation.layout.Column
 
 @Composable
 fun SavePasswordDialog(
@@ -44,12 +45,15 @@ fun SavePasswordDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_save_password)) },
         text = {
-            OutlinedTextField(
-                value = passwordName,
-                onValueChange = { passwordName = it },
-                label = { Text(stringResource(R.string.label_password_name_hint)) },
-                singleLine = true
-            )
+            Column {
+                OutlinedTextField(
+                    value = passwordName,
+                    onValueChange = { passwordName = it },
+                    label = { Text(stringResource(R.string.label_password_name_hint)) },
+                    singleLine = true
+                )
+                PasswordStrengthIndicator(password = currentPassword)
+            }
         },
         confirmButton = {
             TextButton(onClick = {
