@@ -762,6 +762,16 @@ fun PDFDecryptorScreen(
                                         }
                                     }
                                 )
+
+                                if (uiState.batchState.failedFiles.isNotEmpty() && !uiState.batchState.isProcessing) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("View Details & Retry")
+                                    }
+                                }
                             }
                         } else {
                             Card(
@@ -1013,6 +1023,16 @@ fun PDFDecryptorScreen(
                                     }
                                 }
                             )
+
+                            if (uiState.batchState.failedFiles.isNotEmpty() && !uiState.batchState.isProcessing) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("View Details & Retry")
+                                }
+                            }
                         }
                         }
                     }
@@ -1108,6 +1128,16 @@ fun PDFDecryptorScreen(
             progress = uiState.batchState.progress,
             total = uiState.batchState.total,
             onCancel = { onAction(MainUiAction.CancelBatch) }
+        )
+    }
+
+    if (uiState.showBatchFailureDialog) {
+        BatchFailureDetailsDialog(
+            failedFiles = uiState.batchState.failedFiles,
+            onRetry = { selectedUris, alternativePassword ->
+                onAction(MainUiAction.RetryFailedBatchItems(selectedUris, alternativePassword))
+            },
+            onDismiss = { onAction(MainUiAction.SetBatchFailureDialogVisible(false)) }
         )
     }
 

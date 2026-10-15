@@ -92,6 +92,8 @@ class MainViewModel @Inject constructor(
     // UDF State & Effect Streams
     // ---------------------------------------------------------------------------------------------
     private val _uiState = MutableStateFlow(MainUiState())
+    private var lastOutputDirectoryUri: Uri? = null
+    private var lastBatchWasInPlace: Boolean = false
     val uiState: StateFlow<MainUiState> = kotlinx.coroutines.flow.combine(
         _uiState,
         themeMode,
@@ -255,6 +257,13 @@ class MainViewModel @Inject constructor(
             is MainUiAction.SetWhatsNewDialogVisible -> {
                 _uiState.update { it.copy(showWhatsNewDialog = action.visible) }
             }
+            is MainUiAction.SetBatchFailureDialogVisible -> {
+                _uiState.update { it.copy(showBatchFailureDialog = action.visible) }
+            }
+            is MainUiAction.RetryFailedBatchItems -> {
+                _uiState.update { it.copy(showBatchFailureDialog = false) }
+                handleRetryFailedBatchItems(action)
+            }
             is MainUiAction.SetPreviewPdfUri -> {
                 previewPdfUri.value = action.uri
                 _uiState.update { it.copy(previewPdfUri = action.uri) }
@@ -379,6 +388,90 @@ class MainViewModel @Inject constructor(
 
             if (pdfUris.isNotEmpty()) {
                 checkSelectedPdfs(context, pdfPairs)
+            }
+        }
+    }
+
+    private fun handleRetryFailedBatchItems(action: MainUiAction.RetryFailedBatchItems) {
+        val context = getApplication<Application>()
+        batchJob?.cancel()
+        batchJob = viewModelScope.launch {
+            val previousFailedFiles = batchState.value.failedFiles
+            val unselectedFailures = previousFailedFiles.filter { Uri.parse(it.uri) !in action.selectedUris }
+
+            val initBatch = BatchState(isProcessing = true, progress = 0, total = action.selectedUris.size)
+            batchState.value = initBatch
+            _uiState.update {
+                it.copy(
+                    isProcessing = true,
+                    statusMessage = "Processing...",
+                    batchState = initBatch,
+                    showBatchFailureDialog = false
+                )
+            }
+
+            ensurePdfBoxInitialized()
+
+            val result = if (!lastBatchWasInPlace) {
+                val outputDir = lastOutputDirectoryUri
+                if (outputDir == null) {
+                    val errMsg = "Error: Original output directory unknown."
+                    statusMessage.value = errMsg
+                    isProcessing.value = false
+                    batchState.value = BatchState(failedFiles = previousFailedFiles)
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            statusMessage = errMsg,
+                            batchState = BatchState(failedFiles = previousFailedFiles)
+                        )
+                    }
+                    return@launch
+                }
+                batchProcessUseCase.processToDirectory(
+                    inputUriStrings = action.selectedUris.map { it.toString() },
+                    outputDirectoryUriString = outputDir.toString(),
+                    passwordValue = action.alternativePassword,
+                    conflictMode = _uiState.value.conflictMode,
+                    onProgress = { current, _ ->
+                        val updatedBatch = batchState.value.copy(progress = current)
+                        batchState.value = updatedBatch
+                        _uiState.update { it.copy(batchState = updatedBatch) }
+                    }
+                )
+            } else {
+                batchProcessUseCase.processInPlace(
+                    inputUriStrings = action.selectedUris.map { it.toString() },
+                    passwordValue = action.alternativePassword,
+                    onProgress = { current, _ ->
+                        val updatedBatch = batchState.value.copy(progress = current)
+                        batchState.value = updatedBatch
+                        _uiState.update { it.copy(batchState = updatedBatch) }
+                    }
+                )
+            }
+
+            val summaryList = mutableListOf<String>()
+            if (result.successCount > 0) summaryList.add(context.getString(R.string.summary_decrypted_saved, result.successCount))
+            if (result.notEncryptedCount > 0) summaryList.add(context.getString(R.string.summary_not_encrypted, result.notEncryptedCount))
+            if (result.wrongPasswordCount > 0) summaryList.add(context.getString(R.string.summary_wrong_password, result.wrongPasswordCount))
+            if (result.unsupportedCount > 0) summaryList.add(context.getString(R.string.summary_unsupported, result.unsupportedCount))
+            if (result.errorCount > 0) summaryList.add(context.getString(R.string.summary_error, result.errorCount))
+            if (result.cancelledCount > 0) summaryList.add("Cancelled: ${result.cancelledCount} files")
+
+            val finalMsg = summaryList.joinToString("\n")
+            statusMessage.value = finalMsg
+            val finalLastUri = result.lastDecryptedUri?.let { Uri.parse(it) }
+
+            val remainingFailures = unselectedFailures + result.failedFiles
+            batchState.value = BatchState(failedFiles = remainingFailures.toImmutableList())
+            _uiState.update {
+                it.copy(
+                    isProcessing = false,
+                    statusMessage = finalMsg,
+                    lastDecryptedUri = finalLastUri ?: it.lastDecryptedUri,
+                    batchState = BatchState(failedFiles = remainingFailures.toImmutableList())
+                )
             }
         }
     }
@@ -649,6 +742,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun decryptPdfsInPlace(context: Context, inputUris: List<Uri>, passwordValue: String) {
+        lastBatchWasInPlace = true
         batchJob = viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
@@ -658,7 +752,8 @@ class MainViewModel @Inject constructor(
                 it.copy(
                     isProcessing = true,
                     statusMessage = "Processing...",
-                    batchState = initBatch
+                    batchState = initBatch,
+                    showBatchFailureDialog = false
                 )
             }
 
@@ -689,14 +784,15 @@ class MainViewModel @Inject constructor(
                 lastDecryptedUri.value = finalLastUri
             }
             isProcessing.value = false
-            batchState.value = BatchState()
+            val remainingFailures = result.failedFiles
+            batchState.value = BatchState(failedFiles = remainingFailures.toImmutableList())
 
             _uiState.update {
                 it.copy(
                     statusMessage = finalMsg,
                     lastDecryptedUri = finalLastUri ?: it.lastDecryptedUri,
                     isProcessing = false,
-                    batchState = BatchState()
+                    batchState = BatchState(failedFiles = remainingFailures.toImmutableList())
                 )
             }
         }
@@ -751,6 +847,8 @@ class MainViewModel @Inject constructor(
         passwordValue: String,
         conflictMode: ConflictMode
     ) {
+        lastOutputDirectoryUri = outputDirectoryUri
+        lastBatchWasInPlace = false
         batchJob = viewModelScope.launch {
             isProcessing.value = true
             statusMessage.value = "Processing..."
@@ -760,7 +858,8 @@ class MainViewModel @Inject constructor(
                 it.copy(
                     isProcessing = true,
                     statusMessage = "Processing...",
-                    batchState = initBatch
+                    batchState = initBatch,
+                    showBatchFailureDialog = false
                 )
             }
 
@@ -782,12 +881,12 @@ class MainViewModel @Inject constructor(
                 val errOutputDir = context.getString(R.string.msg_error_output_dir)
                 statusMessage.value = errOutputDir
                 isProcessing.value = false
-                batchState.value = BatchState()
+                batchState.value = BatchState(failedFiles = result.failedFiles.toImmutableList())
                 _uiState.update {
                     it.copy(
                         statusMessage = errOutputDir,
                         isProcessing = false,
-                        batchState = BatchState()
+                        batchState = BatchState(failedFiles = result.failedFiles.toImmutableList())
                     )
                 }
                 return@launch
@@ -808,14 +907,15 @@ class MainViewModel @Inject constructor(
                 lastDecryptedUri.value = finalLastUri
             }
             isProcessing.value = false
-            batchState.value = BatchState()
+            val remainingFailures = result.failedFiles
+            batchState.value = BatchState(failedFiles = remainingFailures.toImmutableList())
 
             _uiState.update {
                 it.copy(
                     statusMessage = finalMsg,
                     lastDecryptedUri = finalLastUri ?: it.lastDecryptedUri,
                     isProcessing = false,
-                    batchState = BatchState()
+                    batchState = BatchState(failedFiles = remainingFailures.toImmutableList())
                 )
             }
         }

@@ -28,6 +28,7 @@ sealed interface MainUiAction {
     data class DecryptAndPreview(val uri: Uri, val passwordValue: String) : MainUiAction
     data object RequestSaveAsPicker : MainUiAction
     data object CancelBatch : MainUiAction
+    data class RetryFailedBatchItems(val selectedUris: List<Uri>, val alternativePassword: String) : MainUiAction
 
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
@@ -54,6 +55,7 @@ sealed interface MainUiAction {
     data class SetSavePasswordDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPasswordListDialogVisible(val visible: Boolean) : MainUiAction
     data class SetWhatsNewDialogVisible(val visible: Boolean) : MainUiAction
+    data class SetBatchFailureDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPreviewPdfUri(val uri: Uri?) : MainUiAction
 
     // Settings

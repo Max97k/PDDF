@@ -14,7 +14,8 @@ import kotlinx.collections.immutable.persistentListOf
 data class BatchState(
     val isProcessing: Boolean = false,
     val progress: Int = 0,
-    val total: Int = 0
+    val total: Int = 0,
+    val failedFiles: ImmutableList<com.max97k.pddf.domain.model.FailedFileRecord> = persistentListOf()
 ) {
     val progressFraction: Float
         get() = if (total > 0) progress.toFloat() / total else 0f
@@ -55,6 +56,7 @@ data class MainUiState(
     val showSavePasswordDialog: Boolean = false,
     val showPasswordListDialog: Boolean = false,
     val showWhatsNewDialog: Boolean = false,
+    val showBatchFailureDialog: Boolean = false,
 
     // 7. User Preferences & Settings
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
