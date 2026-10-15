@@ -146,4 +146,11 @@
     <string name="status_update_downloaded">Mise à jour téléchargée. Redémarrez pour appliquer.</string>
     <string name="btn_restart_update">Redémarrer</string>
     <string name="status_update_failed">Échec de la recherche de mise à jour</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
+
 </resources>

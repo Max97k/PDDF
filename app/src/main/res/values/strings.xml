@@ -146,4 +146,11 @@
     <string name="status_update_downloaded">Update downloaded. Restart to apply.</string>
     <string name="btn_restart_update">Restart</string>
     <string name="status_update_failed">Unable to check for updates</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
+
 </resources>

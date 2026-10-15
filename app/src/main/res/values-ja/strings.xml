@@ -144,4 +144,11 @@
     <string name="status_update_downloaded">更新がダウンロードされました。再起動して適用してください。</string>
     <string name="btn_restart_update">再起動</string>
     <string name="status_update_failed">更新の確認に失敗しました</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
+
 </resources>

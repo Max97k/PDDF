@@ -18,6 +18,10 @@ import kotlinx.coroutines.withContext
  * is called — required for FLAG_SECURE to be set before the first frame is rendered
  * and before onPause() captures a Recents thumbnail.
  */
+enum class ReadingMode {
+    LIGHT, DARK, SEPIA, E_INK
+}
+
 class SecurityPreferences(
     context: Context,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -28,6 +32,7 @@ class SecurityPreferences(
     companion object {
         const val PREFS_NAME = "security_prefs"
         const val KEY_SCREENSHOT_PROTECTION = "screenshot_protection"
+        const val KEY_READING_MODE = "reading_mode"
 
         /**
          * Synchronous read for use in Activity.onCreate() before setContent{}.
@@ -47,5 +52,22 @@ class SecurityPreferences(
     suspend fun saveScreenshotProtection(enabled: Boolean) = withContext(ioDispatcher) {
         prefs.edit().putBoolean(KEY_SCREENSHOT_PROTECTION, enabled).apply()
         _screenshotProtection.value = enabled
+    }
+
+    private val _readingMode = MutableStateFlow(
+        run {
+            val name = prefs.getString(KEY_READING_MODE, ReadingMode.LIGHT.name)
+            try {
+                ReadingMode.valueOf(name ?: ReadingMode.LIGHT.name)
+            } catch (e: IllegalArgumentException) {
+                ReadingMode.LIGHT
+            }
+        }
+    )
+    val readingMode: StateFlow<ReadingMode> = _readingMode.asStateFlow()
+
+    suspend fun saveReadingMode(mode: ReadingMode) = withContext(ioDispatcher) {
+        prefs.edit().putString(KEY_READING_MODE, mode.name).apply()
+        _readingMode.value = mode
     }
 }

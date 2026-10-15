@@ -146,4 +146,11 @@
     <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
     <string name="btn_restart_update">Neu starten</string>
     <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
+
 </resources>

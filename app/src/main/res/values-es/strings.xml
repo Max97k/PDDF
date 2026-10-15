@@ -146,4 +146,11 @@
     <string name="status_update_downloaded">Actualización descargada. Reinicia para aplicar.</string>
     <string name="btn_restart_update">Reiniciar</string>
     <string name="status_update_failed">No se pudo comprobar la actualización</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
+
 </resources>
