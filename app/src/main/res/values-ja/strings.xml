@@ -92,6 +92,7 @@
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>
     <string name="theme_amoled">AMOLED 純黒</string>
+    <string name="theme_oled_black">OLED 純黒</string>
     <string name="title_processing_batch">一括処理中</string>
     <string name="label_batch_progress">%1$d / %2$d 完了</string>
     <string name="label_search">検索</string>
