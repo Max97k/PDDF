@@ -65,7 +65,8 @@ class MainViewModel @Inject constructor(
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
-    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
+    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
+    private val exportPdfPageAsImageUseCase: com.max97k.pddf.domain.usecase.ExportPdfPageAsImageUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -227,6 +228,7 @@ class MainViewModel @Inject constructor(
             is MainUiAction.DecryptAndPreview -> decryptAndPreview(getApplication<Application>(), action.uri, action.passwordValue)
             is MainUiAction.RequestSaveAsPicker -> handleSaveAsRequest()
             is MainUiAction.CancelBatch -> cancelBatch()
+            is MainUiAction.ExportImage -> exportImage(action.sourceUri, action.pageIndex, action.destUri, action.format, action.quality)
             is MainUiAction.StartAutoUnlock -> startAutoUnlockFlow(getApplication<Application>(), action.uri)
             is MainUiAction.HandleExternalIntent -> handleExternalPdfIntent(getApplication<Application>(), action.uri, action.onViewerReady)
             is MainUiAction.UnlockWithManualPassword -> unlockWithManualPassword(getApplication<Application>(), uiState.value.autoUnlockTargetUri ?: return, action.enteredPassword, action.rememberPassword, action.onViewerReady)
@@ -878,6 +880,30 @@ class MainViewModel @Inject constructor(
 
     fun cancelBatch() {
         batchJob?.cancel()
+    }
+
+    private fun exportImage(
+        sourceUri: Uri,
+        pageIndex: Int,
+        destUri: Uri,
+        format: android.graphics.Bitmap.CompressFormat,
+        quality: Int
+    ) {
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val success = exportPdfPageAsImageUseCase(
+                sourceUri = sourceUri.toString(),
+                pageIndex = pageIndex,
+                outputUri = destUri.toString(),
+                format = format,
+                quality = quality
+            )
+            if (success) {
+                emitEffect(UiEffect.ShowToast(app.getString(R.string.msg_export_success)))
+            } else {
+                emitEffect(UiEffect.ShowToast(app.getString(R.string.msg_export_failed)))
+            }
+        }
     }
 
     fun savePassword(name: String, passwordValue: String) {

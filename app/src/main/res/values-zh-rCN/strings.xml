@@ -144,4 +144,13 @@
     <string name="status_update_downloaded">更新已下载完成，请重新启动以应用。</string>
     <string name="btn_restart_update">重新启动</string>
     <string name="status_update_failed">无法检查更新</string>
+
+    <!-- Export Image -->
+    <string name="btn_export_image">Export Image</string>
+    <string name="dialog_title_export_image">Export Page as Image</string>
+    <string name="label_page_number">Page Number</string>
+    <string name="format_png">PNG</string>
+    <string name="format_jpeg">JPEG</string>
+    <string name="msg_export_success">Image exported successfully</string>
+    <string name="msg_export_failed">Failed to export image</string>
 </resources>

@@ -219,6 +219,84 @@ open class PdfRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun exportPageAsImage(
+        sourceUri: String,
+        pageIndex: Int,
+        outputUri: String,
+        format: android.graphics.Bitmap.CompressFormat,
+        quality: Int
+    ): Boolean = withContext(ioDispatcher) {
+        var pfd: android.os.ParcelFileDescriptor? = null
+        var tempFile: java.io.File? = null
+        var renderer: android.graphics.pdf.PdfRenderer? = null
+        try {
+            val uri = parseUri(sourceUri)
+            try {
+                if (uri.scheme == "file" && uri.path != null) {
+                    pfd = android.os.ParcelFileDescriptor.open(
+                        java.io.File(uri.path!!),
+                        android.os.ParcelFileDescriptor.MODE_READ_ONLY
+                    )
+                } else {
+                    pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                }
+            } catch (e: Exception) {
+                // Fallback to temp file if openFileDescriptor fails
+                val src = openSafeInputStream(sourceUri) ?: return@withContext false
+                tempFile = java.io.File.createTempFile("export_tmp", ".pdf", context.cacheDir)
+                src.use { input ->
+                    tempFile.outputStream().buffered().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                pfd = android.os.ParcelFileDescriptor.open(tempFile, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+            }
+
+            if (pfd == null) return@withContext false
+
+            renderer = android.graphics.pdf.PdfRenderer(pfd)
+            val pageCount = renderer.pageCount
+            if (pageIndex < 0 || pageIndex >= pageCount) {
+                return@withContext false
+            }
+
+            val success = synchronized(renderer) {
+                val page = renderer.openPage(pageIndex)
+                try {
+                    val density = context.resources.displayMetrics.density
+                    val width = (page.width * density * 1.5f).toInt().coerceAtLeast(1)
+                    val height = (page.height * density * 1.5f).toInt().coerceAtLeast(1)
+
+                    val bmp = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+                    val canvas = android.graphics.Canvas(bmp)
+                    canvas.drawColor(android.graphics.Color.WHITE)
+                    page.render(bmp, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+                    openSafeOutputStream(outputUri)?.use { out ->
+                        bmp.compress(format, quality, out)
+                        true
+                    } ?: false
+                } finally {
+                    page.close()
+                }
+            }
+            return@withContext success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return@withContext false
+        } finally {
+            try {
+                renderer?.close()
+            } catch (_: Exception) {}
+            try {
+                pfd?.close()
+            } catch (_: Exception) {}
+            if (tempFile?.exists() == true) {
+                com.max97k.pddf.util.FileUtils.secureDelete(tempFile)
+            }
+        }
+    }
+
     override suspend fun extractMetadata(
         sourceUri: String,
         passwordValue: String

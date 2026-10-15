@@ -1062,6 +1062,11 @@ fun PDFDecryptorScreen(
                             putExtra(Intent.EXTRA_TITLE, fileName)
                         }
                         savePreviewDocumentLauncher.launch(intent)
+                    },
+                    onExportImage = { pageIndex, destUri, format, quality ->
+                        uiState.previewPdfUri?.let { sourceUri ->
+                            onAction(MainUiAction.ExportImage(sourceUri, pageIndex, destUri, format, quality))
+                        }
                     }
                 )
             }

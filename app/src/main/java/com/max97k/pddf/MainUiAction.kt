@@ -29,6 +29,15 @@ sealed interface MainUiAction {
     data object RequestSaveAsPicker : MainUiAction
     data object CancelBatch : MainUiAction
 
+    // Export Image
+    data class ExportImage(
+        val sourceUri: Uri,
+        val pageIndex: Int,
+        val destUri: Uri,
+        val format: android.graphics.Bitmap.CompressFormat,
+        val quality: Int
+    ) : MainUiAction
+
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
     data class HandleExternalIntent(
