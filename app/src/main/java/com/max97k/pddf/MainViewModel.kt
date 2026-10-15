@@ -65,7 +65,8 @@ class MainViewModel @Inject constructor(
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
-    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
+    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
+    private val extractAttachmentsUseCase: com.max97k.pddf.domain.usecase.ExtractAttachmentsUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -269,6 +270,22 @@ class MainViewModel @Inject constructor(
             is MainUiAction.OpenUrl -> emitEffect(UiEffect.OpenUrl(action.url))
             is MainUiAction.AppBackgrounded -> onAppBackgrounded()
             is MainUiAction.AppForegrounded -> onAppForegrounded()
+            is MainUiAction.RequestSaveAttachment -> {
+                // UI layer handles launcher via SideEffect
+            }
+            is MainUiAction.SaveAttachmentToUri -> {
+                selectedUris.value.firstOrNull()?.let { sourceUri ->
+                    saveAttachment(getApplication<Application>(), sourceUri.toString(), action.attachmentName, action.destUri.toString(), password.value)
+                }
+            }
+            is MainUiAction.RequestSaveAllAttachments -> {
+                // UI layer handles launcher via SideEffect
+            }
+            is MainUiAction.SaveAllAttachmentsToDirectory -> {
+                selectedUris.value.firstOrNull()?.let { sourceUri ->
+                    saveAllAttachments(getApplication<Application>(), sourceUri.toString(), action.directoryUri.toString(), password.value)
+                }
+            }
             is MainUiAction.CheckForUpdates -> {
                 viewModelScope.launch {
                     checkAppUpdateUseCase.checkForUpdate()
@@ -878,6 +895,48 @@ class MainViewModel @Inject constructor(
 
     fun cancelBatch() {
         batchJob?.cancel()
+    }
+
+    fun saveAttachment(context: Context, sourceUriString: String, attachmentName: String, destUriString: String, passwordValue: String) {
+        viewModelScope.launch(ioDispatcher) {
+            isProcessing.value = true
+            _uiState.update { it.copy(isProcessing = true) }
+            val success = extractAttachmentsUseCase.saveAttachment(sourceUriString, attachmentName, destUriString, passwordValue)
+            if (success) {
+                emitEffect(UiEffect.ShowToast(context.getString(R.string.summary_decrypted_saved, 1)))
+            } else {
+                emitEffect(UiEffect.ShowToast(context.getString(R.string.summary_error, 1)))
+            }
+            isProcessing.value = false
+            _uiState.update { it.copy(isProcessing = false) }
+        }
+    }
+
+    fun saveAllAttachments(context: Context, sourceUriString: String, directoryUriString: String, passwordValue: String) {
+        viewModelScope.launch(ioDispatcher) {
+            isProcessing.value = true
+            _uiState.update { it.copy(isProcessing = true) }
+            val attachments = extractAttachmentsUseCase.getAttachments(sourceUriString, passwordValue)
+            var successCount = 0
+            for (attachment in attachments) {
+                val destUri = com.max97k.pddf.util.FileUtils.findChildUriInTree(context, Uri.parse(directoryUriString), attachment.name)?.toString()
+                    ?: (decryptPdfUseCase as com.max97k.pddf.domain.repository.PdfRepository).createDocumentInDirectory(directoryUriString, attachment.name, attachment.mimeType)
+                if (destUri != null) {
+                    if (extractAttachmentsUseCase.saveAttachment(sourceUriString, attachment.name, destUri, passwordValue)) {
+                        successCount++
+                    }
+                }
+            }
+            if (successCount == attachments.size && successCount > 0) {
+                emitEffect(UiEffect.ShowToast(context.getString(R.string.summary_decrypted_saved, successCount)))
+            } else if (successCount > 0) {
+                emitEffect(UiEffect.ShowToast("Saved $successCount / ${attachments.size} attachments"))
+            } else {
+                emitEffect(UiEffect.ShowToast(context.getString(R.string.summary_error, 1)))
+            }
+            isProcessing.value = false
+            _uiState.update { it.copy(isProcessing = false) }
+        }
     }
 
     fun savePassword(name: String, passwordValue: String) {

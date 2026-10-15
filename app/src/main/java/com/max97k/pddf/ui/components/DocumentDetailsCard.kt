@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui.components
+package com.max97k.pddf.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,9 +37,12 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-    onPreview: (() -> Unit)? = null
+    onPreview: (() -> Unit)? = null,
+    onSaveAttachment: ((String) -> Unit)? = null,
+    onSaveAllAttachments: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var attachmentsExpanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
     Card(
         modifier = modifier
@@ -118,6 +123,76 @@ fun DocumentDetailsCard(
                     text = stringResource(R.string.label_doc_permissions, permText),
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                if (metadata.attachments.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
+                            attachmentsExpanded = !attachmentsExpanded
+                        },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Attachments (${metadata.attachments.size})",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (onSaveAllAttachments != null) {
+                                TextButton(onClick = { onSaveAllAttachments() }) {
+                                    Text("Save All")
+                                }
+                            }
+                            Icon(
+                                imageVector = if (attachmentsExpanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (attachmentsExpanded) {
+                                    stringResource(R.string.content_desc_collapse)
+                                } else {
+                                    stringResource(R.string.content_desc_expand)
+                                }
+                            )
+                        }
+                    }
+
+                    if (attachmentsExpanded) {
+                        metadata.attachments.forEach { attachment ->
+                            val attSizeText = if (attachment.sizeBytes > 1024 * 1024) {
+                                String.format(Locale.US, "%.2f MB", attachment.sizeBytes / (1024.0 * 1024.0))
+                            } else if (attachment.sizeBytes > 1024) {
+                                String.format(Locale.US, "%.2f KB", attachment.sizeBytes / 1024.0)
+                            } else {
+                                "${attachment.sizeBytes} B"
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = attachment.name,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "$attSizeText, ${attachment.mimeType}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                if (onSaveAttachment != null) {
+                                    IconButton(onClick = { onSaveAttachment(attachment.name) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Download,
+                                            contentDescription = "Save ${attachment.name}"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

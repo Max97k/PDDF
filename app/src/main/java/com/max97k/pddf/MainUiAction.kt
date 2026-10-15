@@ -29,6 +29,12 @@ sealed interface MainUiAction {
     data object RequestSaveAsPicker : MainUiAction
     data object CancelBatch : MainUiAction
 
+    // Attachments
+    data class RequestSaveAttachment(val attachmentName: String) : MainUiAction
+    data class SaveAttachmentToUri(val destUri: Uri, val attachmentName: String) : MainUiAction
+    data object RequestSaveAllAttachments : MainUiAction
+    data class SaveAllAttachmentsToDirectory(val directoryUri: Uri) : MainUiAction
+
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
     data class HandleExternalIntent(
