@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.di
+package com.max97k.pddf.di
 
 import com.max97k.pddf.data.PasswordRepository
 import com.max97k.pddf.domain.repository.PdfRepository
@@ -6,6 +6,7 @@ import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
+import com.max97k.pddf.domain.usecase.ExportMetadataReportUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,5 +54,13 @@ class UseCaseModule {
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): BatchProcessUseCase {
         return BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExportMetadataReportUseCase(
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): ExportMetadataReportUseCase {
+        return ExportMetadataReportUseCase(ioDispatcher)
     }
 }

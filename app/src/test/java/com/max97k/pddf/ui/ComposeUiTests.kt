@@ -125,6 +125,7 @@ class ComposeUiTests {
             author = "Financial Corp",
             pageCount = 12,
             fileSizeMb = 1.25,
+            pdfVersion = "1.5",
             encryptionMethod = "AES-128",
             canPrint = true,
             canCopy = false

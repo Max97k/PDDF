@@ -16,6 +16,7 @@ import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
+import com.max97k.pddf.domain.usecase.ExportMetadataReportUseCase
 import com.max97k.pddf.util.FileUtils
 import com.max97k.pddf.util.MemoryUtils
 import com.max97k.pddf.util.Result
@@ -65,7 +66,8 @@ class MainViewModel @Inject constructor(
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
-    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
+    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
+    private val exportMetadataReportUseCase: ExportMetadataReportUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -226,6 +228,9 @@ class MainViewModel @Inject constructor(
             is MainUiAction.DecryptToUri -> decryptPdfToUri(getApplication<Application>(), uiState.value.selectedUris.firstOrNull() ?: return, action.destUri, uiState.value.password)
             is MainUiAction.DecryptAndPreview -> decryptAndPreview(getApplication<Application>(), action.uri, action.passwordValue)
             is MainUiAction.RequestSaveAsPicker -> handleSaveAsRequest()
+            is MainUiAction.RequestExportCsv -> handleExportRequest("csv")
+            is MainUiAction.RequestExportJson -> handleExportRequest("json")
+            is MainUiAction.ExportReportToUri -> exportReportToUri(getApplication<Application>(), action.uri, action.format)
             is MainUiAction.CancelBatch -> cancelBatch()
             is MainUiAction.StartAutoUnlock -> startAutoUnlockFlow(getApplication<Application>(), action.uri)
             is MainUiAction.HandleExternalIntent -> handleExternalPdfIntent(getApplication<Application>(), action.uri, action.onViewerReady)
@@ -288,6 +293,75 @@ class MainViewModel @Inject constructor(
         }
     }
 
+
+    private fun handleExportRequest(format: String) {
+        val fileName = "metadata_report_${System.currentTimeMillis()}.$format"
+        _uiState.update { it.copy(exportFormat = format) }
+        emitEffect(UiEffect.LaunchCreateExportDocument(fileName, format))
+    }
+
+    private fun exportReportToUri(context: Context, uri: Uri, format: String) {
+        val state = uiState.value
+        val uris = state.selectedUris
+        val names = state.selectedFileNames
+
+        if (uris.isEmpty()) return
+
+        viewModelScope.launch {
+            isProcessing.value = true
+            statusMessage.value = "Processing..."
+
+            try {
+                val metadataList = mutableListOf<Pair<String, PdfMetadata>>()
+                for (i in uris.indices) {
+                    val fileUri = uris[i]
+                    val fileName = names.getOrNull(i) ?: "unknown.pdf"
+
+                    val meta = decryptPdfUseCase.extractMetadata(fileUri.toString(), state.password)
+                    if (meta != null) {
+                        metadataList.add(Pair(fileName, meta))
+                    } else {
+                        // Fallback metadata if extraction fails
+                        metadataList.add(Pair(fileName, PdfMetadata(
+                            title = "Unknown",
+                            author = "Unknown",
+                            pageCount = 0,
+                            fileSizeMb = 0.0,
+                            pdfVersion = "Unknown",
+                            encryptionMethod = "Unknown",
+                            canPrint = false,
+                            canCopy = false
+                        )))
+                    }
+                }
+
+                val outputStream = withContext(ioDispatcher) {
+                    context.contentResolver.openOutputStream(uri)
+                }
+
+                if (outputStream != null) {
+                    val success = if (format == "csv") {
+                        exportMetadataReportUseCase.exportToCsv(metadataList, outputStream)
+                    } else {
+                        exportMetadataReportUseCase.exportToJson(metadataList, outputStream)
+                    }
+
+                    if (success) {
+                        statusMessage.value = context.getString(R.string.summary_decrypted_saved, metadataList.size)
+                    } else {
+                        statusMessage.value = context.getString(R.string.summary_error, 1)
+                    }
+                } else {
+                    statusMessage.value = context.getString(R.string.summary_error, 1)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                statusMessage.value = context.getString(R.string.summary_error, 1)
+            } finally {
+                isProcessing.value = false
+            }
+        }
+    }
     private fun handleSaveAsRequest() {
         val state = uiState.value
         if (state.isBatch) {

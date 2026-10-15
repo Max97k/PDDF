@@ -61,6 +61,7 @@ class PDFDecryptorScreenshotTest {
       author = "Financial Services Corp",
       pageCount = 6,
       fileSizeMb = 2.45,
+      pdfVersion = "1.7",
       encryptionMethod = "AES 256-bit",
       canPrint = true,
       canCopy = false
@@ -110,6 +111,7 @@ class PDFDecryptorScreenshotTest {
       author = "Accounting Dept",
       pageCount = 12,
       fileSizeMb = 1.82,
+      pdfVersion = "1.6",
       encryptionMethod = "Standard Password Protection",
       canPrint = true,
       canCopy = true
