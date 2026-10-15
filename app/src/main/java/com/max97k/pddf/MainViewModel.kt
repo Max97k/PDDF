@@ -64,7 +64,8 @@ class MainViewModel @Inject constructor(
     private val decryptPdfUseCase: DecryptPdfUseCase,
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
-    private val batchProcessUseCase: BatchProcessUseCase
+    private val batchProcessUseCase: BatchProcessUseCase,
+    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -95,12 +96,14 @@ class MainViewModel @Inject constructor(
         _uiState,
         themeMode,
         savedPasswords,
-        securityPreferences.screenshotProtection
-    ) { baseState, theme, passwords, screenshotProtection ->
+        securityPreferences.screenshotProtection,
+        checkAppUpdateUseCase.updateStatus
+    ) { baseState, theme, passwords, screenshotProtection, updateStatus ->
         baseState.copy(
             themeMode = theme,
             savedPasswords = passwords,
-            screenshotProtectionEnabled = screenshotProtection
+            screenshotProtectionEnabled = screenshotProtection,
+            appUpdateStatus = updateStatus
         )
     }.stateIn(
         scope = viewModelScope,
@@ -266,6 +269,22 @@ class MainViewModel @Inject constructor(
             is MainUiAction.OpenUrl -> emitEffect(UiEffect.OpenUrl(action.url))
             is MainUiAction.AppBackgrounded -> onAppBackgrounded()
             is MainUiAction.AppForegrounded -> onAppForegrounded()
+            is MainUiAction.CheckForUpdates -> {
+                viewModelScope.launch {
+                    checkAppUpdateUseCase.checkForUpdate()
+                }
+            }
+            is MainUiAction.StartFlexibleUpdate -> {
+                checkAppUpdateUseCase.startFlexibleUpdate(action.launcher)
+            }
+            is MainUiAction.CompleteAppUpdate -> {
+                viewModelScope.launch {
+                    checkAppUpdateUseCase.completeUpdate()
+                }
+            }
+            is MainUiAction.ResetAppUpdateStatus -> {
+                checkAppUpdateUseCase.resetStatus()
+            }
         }
     }
 

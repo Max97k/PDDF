@@ -137,4 +137,13 @@
     <string name="language_de">Deutsch</string>
     <string name="language_fr">Français</string>
     <string name="symbol_checkmark">✓</string>
+    <string name="btn_check_update">Auf Updates prüfen</string>
+    <string name="status_checking_update">Suche nach Updates…</string>
+    <string name="status_app_up_to_date">App ist auf dem neuesten Stand (%1$s)</string>
+    <string name="status_update_available">Update verfügbar (%1$s)</string>
+    <string name="btn_update_now">Aktualisieren</string>
+    <string name="status_update_downloading">Update wird heruntergeladen (%1$d%%)</string>
+    <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
+    <string name="btn_restart_update">Neu starten</string>
+    <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
 </resources>

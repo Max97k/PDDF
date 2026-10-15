@@ -135,4 +135,13 @@
     <string name="language_de">Deutsch</string>
     <string name="language_fr">Français</string>
     <string name="symbol_checkmark">✓</string>
+    <string name="btn_check_update">更新を確認</string>
+    <string name="status_checking_update">更新を確認中…</string>
+    <string name="status_app_up_to_date">最新バージョンです (%1$s)</string>
+    <string name="status_update_available">新しいバージョンが利用可能です (%1$s)</string>
+    <string name="btn_update_now">更新</string>
+    <string name="status_update_downloading">更新をダウンロード中 (%1$d%%)</string>
+    <string name="status_update_downloaded">更新がダウンロードされました。再起動して適用してください。</string>
+    <string name="btn_restart_update">再起動</string>
+    <string name="status_update_failed">更新の確認に失敗しました</string>
 </resources>

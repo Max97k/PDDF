@@ -300,4 +300,29 @@ class DomainUseCasesTest {
         assertEquals(0, result.errorCount)
         assertEquals("content://pdf/2", result.lastDecryptedUri)
     }
+
+    @Test
+    fun testCheckAppUpdateUseCase_operations() = runTest(testDispatcher) {
+        val fakeAppUpdateRepo = com.max97k.pddf.FakeAppUpdateRepository()
+        val useCase = CheckAppUpdateUseCase(fakeAppUpdateRepo)
+
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Idle, useCase.updateStatus.value)
+
+        useCase.checkForUpdate()
+        assertTrue(fakeAppUpdateRepo.checkForUpdateCalled)
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.UpToDate, useCase.updateStatus.value)
+
+        val launched = useCase.startFlexibleUpdate("dummy_launcher")
+        assertTrue(fakeAppUpdateRepo.startFlexibleUpdateCalled)
+        assertTrue(launched)
+
+        useCase.completeUpdate()
+        assertTrue(fakeAppUpdateRepo.completeUpdateCalled)
+
+        fakeAppUpdateRepo.setStatus(com.max97k.pddf.domain.model.AppUpdateStatus.Failed())
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Failed(), useCase.updateStatus.value)
+
+        useCase.resetStatus()
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Idle, useCase.updateStatus.value)
+    }
 }

@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.net.Uri
 import com.max97k.pddf.data.PasswordEntity
@@ -71,4 +71,10 @@ sealed interface MainUiAction {
     // App Lifecycle
     data object AppBackgrounded : MainUiAction
     data object AppForegrounded : MainUiAction
+
+    // In-App Updates
+    data object CheckForUpdates : MainUiAction
+    data class StartFlexibleUpdate(val launcher: Any) : MainUiAction
+    data object CompleteAppUpdate : MainUiAction
+    data object ResetAppUpdateStatus : MainUiAction
 }

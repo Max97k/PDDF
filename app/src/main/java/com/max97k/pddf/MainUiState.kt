@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.net.Uri
 import androidx.compose.runtime.Immutable
@@ -63,7 +63,10 @@ data class MainUiState(
     val screenshotProtectionEnabled: Boolean = false,
 
     // 8. Password Vault Data
-    val savedPasswords: ImmutableList<PasswordEntity> = persistentListOf()
+    val savedPasswords: ImmutableList<PasswordEntity> = persistentListOf(),
+
+    // 9. Google Play In-App Updates
+    val appUpdateStatus: com.max97k.pddf.domain.model.AppUpdateStatus = com.max97k.pddf.domain.model.AppUpdateStatus.Idle
 ) {
     // Computed Properties for Clean Leaf Composable Consumption
     val hasSelectedFiles: Boolean

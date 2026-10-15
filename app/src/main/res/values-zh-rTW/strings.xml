@@ -135,4 +135,13 @@
     <string name="language_de">Deutsch</string>
     <string name="language_fr">Français</string>
     <string name="symbol_checkmark">✓</string>
+    <string name="btn_check_update">檢查更新</string>
+    <string name="status_checking_update">正在檢查更新…</string>
+    <string name="status_app_up_to_date">目前已是最新版本 (%1$s)</string>
+    <string name="status_update_available">發現新版本 (%1$s)</string>
+    <string name="btn_update_now">立即更新</string>
+    <string name="status_update_downloading">正在下載更新 (%1$d%%)</string>
+    <string name="status_update_downloaded">更新已下載完成，請重新啟動以套用。</string>
+    <string name="btn_restart_update">重新啟動</string>
+    <string name="status_update_failed">無法檢查更新</string>
 </resources>

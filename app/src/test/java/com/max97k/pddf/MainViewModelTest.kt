@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.app.Application
 import android.net.Uri
@@ -410,5 +410,53 @@ class MainViewModelTest {
         assertEquals("", viewModel.uiState.value.password)
         assertTrue(viewModel.selectedUris.value.isEmpty())
         assertTrue(viewModel.uiState.value.selectedUris.isEmpty())
+    }
+
+    @Test
+    fun testAppUpdateActions_checkForUpdates_updatesState() = runTest(testDispatcher) {
+        val fakeRepo = FakeAppUpdateRepository()
+        val customVm = createTestMainViewModel(
+            application = application,
+            repository = repository,
+            appUpdateRepository = fakeRepo,
+            ioDispatcher = testDispatcher
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { customVm.uiState.collect() }
+
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Idle, customVm.uiState.value.appUpdateStatus)
+
+        customVm.onAction(MainUiAction.CheckForUpdates)
+        advanceUntilIdle()
+
+        assertTrue(fakeRepo.checkForUpdateCalled)
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.UpToDate, customVm.uiState.value.appUpdateStatus)
+    }
+
+    @Test
+    fun testAppUpdateActions_startFlexibleUpdate_and_complete() = runTest(testDispatcher) {
+        val fakeRepo = FakeAppUpdateRepository()
+        val customVm = createTestMainViewModel(
+            application = application,
+            repository = repository,
+            appUpdateRepository = fakeRepo,
+            ioDispatcher = testDispatcher
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { customVm.uiState.collect() }
+
+        customVm.onAction(MainUiAction.StartFlexibleUpdate("testLauncher"))
+        advanceUntilIdle()
+        assertTrue(fakeRepo.startFlexibleUpdateCalled)
+
+        customVm.onAction(MainUiAction.CompleteAppUpdate)
+        advanceUntilIdle()
+        assertTrue(fakeRepo.completeUpdateCalled)
+
+        fakeRepo.setStatus(com.max97k.pddf.domain.model.AppUpdateStatus.Failed())
+        advanceUntilIdle()
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Failed(), customVm.uiState.value.appUpdateStatus)
+
+        customVm.onAction(MainUiAction.ResetAppUpdateStatus)
+        advanceUntilIdle()
+        assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Idle, customVm.uiState.value.appUpdateStatus)
     }
 }

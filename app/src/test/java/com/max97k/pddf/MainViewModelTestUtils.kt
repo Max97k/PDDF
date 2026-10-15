@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.app.Application
 import androidx.room.Room
@@ -30,7 +30,9 @@ fun createTestMainViewModel(
     decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(pdfRepository, ioDispatcher),
     passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
     autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
-    batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher)
+    batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher),
+    appUpdateRepository: com.max97k.pddf.domain.repository.AppUpdateRepository = FakeAppUpdateRepository(),
+    checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository)
 ): MainViewModel {
     return MainViewModel(
         application = application,
@@ -41,6 +43,41 @@ fun createTestMainViewModel(
         decryptPdfUseCase = decryptPdfUseCase,
         passwordVaultUseCase = passwordVaultUseCase,
         autoUnlockUseCase = autoUnlockUseCase,
-        batchProcessUseCase = batchProcessUseCase
+        batchProcessUseCase = batchProcessUseCase,
+        checkAppUpdateUseCase = checkAppUpdateUseCase
     )
+}
+
+class FakeAppUpdateRepository(
+    initialStatus: com.max97k.pddf.domain.model.AppUpdateStatus = com.max97k.pddf.domain.model.AppUpdateStatus.Idle
+) : com.max97k.pddf.domain.repository.AppUpdateRepository {
+    private val _status = kotlinx.coroutines.flow.MutableStateFlow(initialStatus)
+    override val updateStatus: kotlinx.coroutines.flow.StateFlow<com.max97k.pddf.domain.model.AppUpdateStatus> = _status
+
+    var checkForUpdateCalled = false
+    var completeUpdateCalled = false
+    var startFlexibleUpdateCalled = false
+
+    override suspend fun checkForUpdate() {
+        checkForUpdateCalled = true
+        _status.value = com.max97k.pddf.domain.model.AppUpdateStatus.UpToDate
+    }
+
+    override suspend fun completeUpdate() {
+        completeUpdateCalled = true
+        _status.value = com.max97k.pddf.domain.model.AppUpdateStatus.Idle
+    }
+
+    override fun resetStatus() {
+        _status.value = com.max97k.pddf.domain.model.AppUpdateStatus.Idle
+    }
+
+    override fun startFlexibleUpdate(launcher: Any): Boolean {
+        startFlexibleUpdateCalled = true
+        return true
+    }
+
+    fun setStatus(status: com.max97k.pddf.domain.model.AppUpdateStatus) {
+        _status.value = status
+    }
 }

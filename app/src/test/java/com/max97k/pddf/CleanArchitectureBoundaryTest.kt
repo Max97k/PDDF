@@ -1,9 +1,12 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
+import com.max97k.pddf.domain.model.AppUpdateStatus
 import com.max97k.pddf.domain.model.PdfUiState
+import com.max97k.pddf.domain.repository.AppUpdateRepository
 import com.max97k.pddf.domain.repository.PdfRepository
 import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
+import com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
 import org.junit.Assert.*
@@ -24,6 +27,16 @@ class CleanArchitectureBoundaryTest {
         BatchProcessUseCase::class.java,
         DecryptPdfUseCase::class.java,
         PasswordVaultUseCase::class.java,
+        CheckAppUpdateUseCase::class.java,
+        AppUpdateStatus::class.java,
+        AppUpdateStatus.Idle::class.java,
+        AppUpdateStatus.Checking::class.java,
+        AppUpdateStatus.Available::class.java,
+        AppUpdateStatus.Downloading::class.java,
+        AppUpdateStatus.Downloaded::class.java,
+        AppUpdateStatus.Failed::class.java,
+        AppUpdateStatus.UpToDate::class.java,
+        AppUpdateRepository::class.java,
         PdfUiState::class.java,
         PdfUiState.Idle::class.java,
         PdfUiState.Selected::class.java,
@@ -124,7 +137,8 @@ class CleanArchitectureBoundaryTest {
             AutoUnlockUseCase::class.java,
             BatchProcessUseCase::class.java,
             DecryptPdfUseCase::class.java,
-            PasswordVaultUseCase::class.java
+            PasswordVaultUseCase::class.java,
+            CheckAppUpdateUseCase::class.java
         )
 
         for (useCase in useCases) {
@@ -159,7 +173,9 @@ class CleanArchitectureBoundaryTest {
             BatchProcessUseCase::class.java,
             DecryptPdfUseCase::class.java,
             PasswordVaultUseCase::class.java,
-            PdfRepository::class.java
+            CheckAppUpdateUseCase::class.java,
+            PdfRepository::class.java,
+            AppUpdateRepository::class.java
         )
         val forbiddenAndroidTypes = listOf(
             "android.content.Context",

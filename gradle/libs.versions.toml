@@ -38,6 +38,7 @@ kotlinxCollectionsImmutable = "0.4.0"
 kotlinxSerialization = "1.7.3"
 biometric = "1.1.0"
 datastore = "1.2.1"
+googleAppUpdate = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -92,6 +93,7 @@ kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotli
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+google-app-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "googleAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

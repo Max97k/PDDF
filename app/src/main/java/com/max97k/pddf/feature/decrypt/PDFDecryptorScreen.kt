@@ -371,6 +371,24 @@ fun PDFDecryptorScreen(
         }
     )
 
+    val updateLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = { _ -> }
+    )
+
+    LaunchedEffect(uiState.appUpdateStatus) {
+        if (uiState.appUpdateStatus is com.max97k.pddf.domain.model.AppUpdateStatus.Downloaded) {
+            val result = snackbarHostState.showSnackbar(
+                message = context.resources.getString(R.string.status_update_downloaded),
+                actionLabel = context.resources.getString(R.string.btn_restart_update),
+                duration = androidx.compose.material3.SnackbarDuration.Indefinite
+            )
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                onAction(MainUiAction.CompleteAppUpdate)
+            }
+        }
+    }
+
     var isDragging by remember { mutableStateOf(false) }
 
     val dragAndDropTarget = remember {
@@ -1109,7 +1127,18 @@ fun PDFDecryptorScreen(
     if (showAboutDialog) {
         AboutDialog(
             versionName = versionName,
-            onDismiss = { showAboutDialog = false }
+            appUpdateStatus = uiState.appUpdateStatus,
+            onCheckForUpdates = { onAction(MainUiAction.CheckForUpdates) },
+            onStartUpdate = { onAction(MainUiAction.StartFlexibleUpdate(updateLauncher)) },
+            onCompleteUpdate = { onAction(MainUiAction.CompleteAppUpdate) },
+            onDismiss = {
+                showAboutDialog = false
+                if (uiState.appUpdateStatus is com.max97k.pddf.domain.model.AppUpdateStatus.Failed ||
+                    uiState.appUpdateStatus is com.max97k.pddf.domain.model.AppUpdateStatus.UpToDate
+                ) {
+                    onAction(MainUiAction.ResetAppUpdateStatus)
+                }
+            }
         )
     }
 }

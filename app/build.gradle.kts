@@ -196,6 +196,7 @@ dependencies {
   implementation(libs.androidx.pdf.viewer.fragment)
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.work.runtime.ktx)
+  implementation(libs.google.app.update)
   testImplementation(libs.androidx.work.testing)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
