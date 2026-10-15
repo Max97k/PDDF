@@ -285,6 +285,28 @@ class MainViewModel @Inject constructor(
             is MainUiAction.ResetAppUpdateStatus -> {
                 checkAppUpdateUseCase.resetStatus()
             }
+            is MainUiAction.RotatePreview -> {
+                val currentUri = uiState.value.previewPdfUri ?: return
+                viewModelScope.launch(ioDispatcher) {
+                    isProcessing.value = true
+                    _uiState.update { it.copy(isProcessing = true) }
+                    try {
+                        val success = decryptPdfUseCase.rotatePages(currentUri.toString(), currentUri.toString(), null, action.degrees)
+                        if (success) {
+                            withContext(Dispatchers.Main) {
+                                _uiState.update { it.copy(previewPdfUri = null) }
+                                previewPdfUri.value = null
+                                kotlinx.coroutines.delay(50)
+                                _uiState.update { it.copy(previewPdfUri = currentUri) }
+                                previewPdfUri.value = currentUri
+                            }
+                        }
+                    } finally {
+                        isProcessing.value = false
+                        _uiState.update { it.copy(isProcessing = false) }
+                    }
+                }
+            }
         }
     }
 

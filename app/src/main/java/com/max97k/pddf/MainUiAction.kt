@@ -55,6 +55,7 @@ sealed interface MainUiAction {
     data class SetPasswordListDialogVisible(val visible: Boolean) : MainUiAction
     data class SetWhatsNewDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPreviewPdfUri(val uri: Uri?) : MainUiAction
+    data class RotatePreview(val degrees: Int) : MainUiAction
 
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction

@@ -52,4 +52,13 @@ open class DecryptPdfUseCase(
     open fun openSafeOutputStream(uriString: String): OutputStream? {
         return pdfRepository.openSafeOutputStream(uriString)
     }
+
+    open suspend fun rotatePages(
+        sourceUriString: String,
+        destUriString: String,
+        pageIndices: List<Int>?,
+        rotationDegrees: Int
+    ): Boolean = withContext(ioDispatcher) {
+        pdfRepository.rotatePages(sourceUriString, destUriString, pageIndices, rotationDegrees)
+    }
 }

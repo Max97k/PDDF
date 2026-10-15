@@ -21,7 +21,8 @@ fun PdfViewerDialog(
         title = title,
         onDismiss = onDismiss,
         onShare = onShare,
-        onSaveAs = onSaveAs
+        onSaveAs = onSaveAs,
+        onRotateAll = null
     )
 }
 
@@ -40,6 +41,7 @@ fun PdfViewerScreen(
         title = title,
         onClose = onClose,
         onShare = onShare,
-        onSaveAs = onSaveAs
+        onSaveAs = onSaveAs,
+        onRotateAll = null
     )
 }

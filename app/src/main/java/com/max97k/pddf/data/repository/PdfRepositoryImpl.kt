@@ -404,6 +404,55 @@ open class PdfRepositoryImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun rotatePages(
+        sourceUri: String,
+        destUri: String,
+        pageIndices: List<Int>?,
+        rotationDegrees: Int
+    ): Boolean = withContext(ioDispatcher) {
+        try {
+            var success = false
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                val document = PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                )
+                document.use { doc ->
+                    val pagesToRotate = pageIndices ?: (0 until doc.numberOfPages).toList()
+                    for (index in pagesToRotate) {
+                        if (index in 0 until doc.numberOfPages) {
+                            val page = doc.getPage(index)
+                            val currentRotation = page.rotation
+                            val newRotation = (currentRotation + rotationDegrees) % 360
+                            page.rotation = if (newRotation < 0) newRotation + 360 else newRotation
+                        }
+                    }
+
+                    val tempFile = File.createTempFile("rotate_tmp_", ".pdf", context.cacheDir).apply {
+                        deleteOnExit()
+                    }
+                    try {
+                        tempFile.outputStream().buffered().use { outputStream ->
+                            doc.save(outputStream)
+                        }
+                        if (atomicReplace(tempFile, destUri)) {
+                            success = true
+                        }
+                    } finally {
+                        if (tempFile.exists()) {
+                            FileUtils.secureDelete(tempFile)
+                        }
+                    }
+                }
+            }
+            success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     override fun openSafeOutputStream(uriString: String): OutputStream? {
         val uri = parseUri(uriString)
         return try {

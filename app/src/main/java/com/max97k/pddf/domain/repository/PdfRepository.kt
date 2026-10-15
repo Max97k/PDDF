@@ -66,4 +66,11 @@ interface PdfRepository {
     fun openSafeInputStream(uriString: String): InputStream?
 
     fun openSafeOutputStream(uriString: String): OutputStream?
+
+    suspend fun rotatePages(
+        sourceUri: String,
+        destUri: String,
+        pageIndices: List<Int>?,
+        rotationDegrees: Int
+    ): Boolean
 }

@@ -29,7 +29,8 @@ fun PdfViewerDialog(
             title = title,
             onClose = onDismiss,
             onShare = onShare,
-            onSaveAs = onSaveAs
+            onSaveAs = onSaveAs,
+            onRotateAll = null
         )
     }
 }
