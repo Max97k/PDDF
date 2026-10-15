@@ -11,6 +11,31 @@ import java.security.SecureRandom
 
 object FileUtils {
 
+    fun getFileSize(context: Context, uri: Uri): Long {
+        if (uri.scheme == "content") {
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                        if (sizeIndex != -1) {
+                            return cursor.getLong(sizeIndex)
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+            }
+        }
+
+        if (uri.scheme == "file" && uri.path != null) {
+            val file = File(uri.path!!)
+            if (file.exists()) {
+                return file.length()
+            }
+        }
+
+        return -1L
+    }
+
     fun getFileName(context: Context, uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {

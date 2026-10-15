@@ -397,11 +397,12 @@ class MainViewModel @Inject constructor(
                 }
                 try {
                     val stream = decryptPdfUseCase.openSafeInputStream(uri.toString())
+                    val fileSizeBytes = com.max97k.pddf.util.FileUtils.getFileSize(getApplication(), uri)
                     if (stream != null) {
                         stream.use { inputStream ->
                             val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
                                 inputStream.buffered(),
-                                com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                                com.max97k.pddf.util.MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                             )
                             doc.use {
                                 if (!it.isEncrypted) unencryptedNames.add(fileName)
