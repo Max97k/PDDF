@@ -124,6 +124,21 @@ class DomainUseCasesTest {
         var metadataResult: PdfMetadata? = null,
         var copyResult: Boolean = true
     ) : PdfRepository {
+        var mockInputStream: java.io.InputStream? = null
+        var mockOutputStream: java.io.OutputStream? = null
+
+        fun configureMockInputStream(inputStream: java.io.InputStream) {
+            mockInputStream = inputStream
+        }
+
+        fun configureMockOutputStream(outputStream: java.io.OutputStream) {
+            mockOutputStream = outputStream
+        }
+
+        override fun openSafeInputStream(uriString: String): java.io.InputStream? = mockInputStream
+
+        override fun openSafeOutputStream(uriString: String): java.io.OutputStream? = mockOutputStream
+
         var lastDecryptedInput: String? = null
         var lastDecryptedOutput: String? = null
         var lastDecryptedPasswordValue: String? = null
@@ -213,10 +228,7 @@ class DomainUseCasesTest {
             displayName: String
         ): Boolean = true
 
-        override fun openSafeInputStream(uriString: String): InputStream? = null
 
-
-        override fun openSafeOutputStream(uriString: String): OutputStream? = null
 
         override suspend fun packageToZip(
             fileUris: List<String>,
