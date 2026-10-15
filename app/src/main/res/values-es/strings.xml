@@ -146,4 +146,7 @@
     <string name="status_update_downloaded">Actualización descargada. Reinicia para aplicar.</string>
     <string name="btn_restart_update">Reiniciar</string>
     <string name="status_update_failed">No se pudo comprobar la actualización</string>
+    <string name="settings_pdf_night_mode">PDF Night Mode</string>
+    <string name="btn_enable_night_mode">Enable Night Mode</string>
+    <string name="btn_disable_night_mode">Disable Night Mode</string>
 </resources>

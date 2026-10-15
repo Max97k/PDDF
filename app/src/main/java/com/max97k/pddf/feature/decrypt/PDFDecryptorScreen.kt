@@ -154,6 +154,7 @@ fun PDFDecryptorScreen(
     windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val pdfNightModeEnabled by viewModel.pdfNightModeEnabled.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -182,7 +183,9 @@ fun PDFDecryptorScreen(
 
     PDFDecryptorScreen(
         uiState = uiState,
+        pdfNightModeEnabled = pdfNightModeEnabled,
         onAction = viewModel::onAction,
+        onNightModeToggled = { viewModel.savePdfNightMode(it) },
         modifier = modifier,
         snackbarHostState = snackbarHostState,
         windowWidthSizeClass = windowWidthSizeClass
@@ -193,7 +196,9 @@ fun PDFDecryptorScreen(
 @Composable
 fun PDFDecryptorScreen(
     uiState: MainUiState,
+    pdfNightModeEnabled: Boolean,
     onAction: (MainUiAction) -> Unit,
+    onNightModeToggled: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
@@ -1029,10 +1034,12 @@ fun PDFDecryptorScreen(
         SettingsBottomSheet(
             currentTheme = uiState.themeMode,
             screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
+            pdfNightModeEnabled = pdfNightModeEnabled,
             onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
             onScreenshotProtectionToggled = { enabled ->
                 onAction(MainUiAction.SetScreenshotProtection(enabled))
             },
+            onPdfNightModeToggled = onNightModeToggled,
             onDismiss = { showSettingsSheet = false }
         )
     }    },
@@ -1062,7 +1069,9 @@ fun PDFDecryptorScreen(
                             putExtra(Intent.EXTRA_TITLE, fileName)
                         }
                         savePreviewDocumentLauncher.launch(intent)
-                    }
+                    },
+                    isNightModeEnabled = pdfNightModeEnabled,
+                    onNightModeToggled = onNightModeToggled
                 )
             }
         }
@@ -1164,7 +1173,9 @@ fun PDFDecryptorScreenPreview() {
     com.max97k.pddf.ui.theme.MyApplicationTheme {
         PDFDecryptorScreen(
             uiState = com.max97k.pddf.MainUiState(),
-            onAction = {}
+            pdfNightModeEnabled = false,
+            onAction = {},
+            onNightModeToggled = {}
         )
     }
 }

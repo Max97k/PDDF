@@ -75,6 +75,13 @@ class MainViewModel @Inject constructor(
             initialValue = ThemeMode.SYSTEM
         )
 
+    val pdfNightModeEnabled: StateFlow<Boolean> = themePreferences.pdfNightModeEnabled
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     val savedPasswords: StateFlow<ImmutableList<PasswordEntity>> = passwordVaultUseCase.allPasswords
         .map { result ->
             when (result) {
@@ -305,6 +312,12 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             themePreferences.saveThemeMode(mode)
             _uiState.update { it.copy(themeMode = mode) }
+        }
+    }
+
+    fun savePdfNightMode(enabled: Boolean) {
+        viewModelScope.launch {
+            themePreferences.savePdfNightMode(enabled)
         }
     }
 

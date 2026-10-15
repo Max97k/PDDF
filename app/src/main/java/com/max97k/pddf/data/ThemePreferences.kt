@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.max97k.pddf.di.IoDispatcher
@@ -27,6 +28,7 @@ class ThemePreferences(
 ) {
     companion object {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
+        private val PDF_NIGHT_MODE_KEY = booleanPreferencesKey("pdf_night_mode")
     }
 
     val themeMode: Flow<ThemeMode> = dataStore.data
@@ -39,6 +41,19 @@ class ThemePreferences(
             }
         }
         .flowOn(ioDispatcher)
+
+
+    val pdfNightModeEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[PDF_NIGHT_MODE_KEY] ?: false
+        }
+        .flowOn(ioDispatcher)
+
+    suspend fun savePdfNightMode(enabled: Boolean) = withContext(ioDispatcher) {
+        dataStore.edit { preferences ->
+            preferences[PDF_NIGHT_MODE_KEY] = enabled
+        }
+    }
 
     suspend fun saveThemeMode(mode: ThemeMode) = withContext(ioDispatcher) {
         dataStore.edit { preferences ->

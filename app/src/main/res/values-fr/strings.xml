@@ -146,4 +146,7 @@
     <string name="status_update_downloaded">Mise à jour téléchargée. Redémarrez pour appliquer.</string>
     <string name="btn_restart_update">Redémarrer</string>
     <string name="status_update_failed">Échec de la recherche de mise à jour</string>
+    <string name="settings_pdf_night_mode">PDF Night Mode</string>
+    <string name="btn_enable_night_mode">Enable Night Mode</string>
+    <string name="btn_disable_night_mode">Disable Night Mode</string>
 </resources>
