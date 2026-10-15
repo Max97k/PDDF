@@ -52,6 +52,7 @@ class FlattenPdfAnnotationsUseCaseTest {
             override suspend fun findDocumentInDirectory(directoryUriString: String, displayName: String) = TODO()
             override suspend fun deleteDocumentInDirectory(directoryUriString: String, displayName: String) = TODO()
             override suspend fun addWatermark(sourceUri: String, destUri: String, text: String, opacity: Float, fontSize: Float) = TODO()
+            override suspend fun packageToZip(fileUris: List<String>, outputZipUri: String, onProgress: (Int, Int) -> Unit): Boolean = TODO()
 
             override fun openSafeInputStream(uriString: String): InputStream? {
                 return FileInputStream(File(uriString))
