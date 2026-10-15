@@ -17,6 +17,7 @@ import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
 import com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase
+import com.max97k.pddf.domain.usecase.ExportPlainTextUseCase
 import com.max97k.pddf.util.FileUtils
 import com.max97k.pddf.util.MemoryUtils
 import com.max97k.pddf.util.Result
@@ -65,6 +66,7 @@ class MainViewModel @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val decryptPdfUseCase: DecryptPdfUseCase,
     private val passwordVaultUseCase: PasswordVaultUseCase,
+    private val exportPlainTextUseCase: ExportPlainTextUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
     private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,

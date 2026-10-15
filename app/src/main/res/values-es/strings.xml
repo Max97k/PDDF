@@ -190,4 +190,5 @@
 
     <string name="btn_reverse_pages">Invertir páginas</string>
     <string name="btn_stamp_pages">Estampar números de página</string>
+    <string name="btn_export_text">Exportar texto</string>
 </resources>

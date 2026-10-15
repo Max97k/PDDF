@@ -188,4 +188,5 @@
 
     <string name="btn_reverse_pages">ページを反転</string>
     <string name="btn_stamp_pages">ページ番号を追加</string>
+    <string name="btn_export_text">テキストをエクスポート</string>
 </resources>

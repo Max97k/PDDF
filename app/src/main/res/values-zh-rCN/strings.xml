@@ -188,4 +188,5 @@
 
     <string name="btn_reverse_pages">反转页面</string>
     <string name="btn_stamp_pages">添加页码</string>
+    <string name="btn_export_text">导出文本</string>
 </resources>

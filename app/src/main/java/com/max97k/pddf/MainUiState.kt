@@ -39,6 +39,7 @@ data class MainUiState(
     val isProcessing: Boolean = false,
     val statusMessage: String? = null,
     val lastDecryptedUri: Uri? = null,
+    val lastExportSuccess: Boolean? = null,
     val previewPdfUri: Uri? = null,
     val lastDecryptionDurationMs: Long? = null,
 
