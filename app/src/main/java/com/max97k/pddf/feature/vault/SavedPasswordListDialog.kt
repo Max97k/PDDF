@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.vault
+package com.max97k.pddf.feature.vault
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -39,6 +39,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
 import com.max97k.pddf.data.PasswordEntity
 
@@ -59,7 +60,10 @@ fun SavedPasswordListDialog(
             .padding(24.dp)
             .wrapContentWidth()
             .wrapContentHeight(),
-        properties = DialogProperties(usePlatformDefaultWidth = false),
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            securePolicy = SecureFlagPolicy.SecureOn
+        ),
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_saved_passwords)) },
         text = {

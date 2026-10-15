@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.decrypt
+package com.max97k.pddf.feature.decrypt
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
 
 @Composable
@@ -70,7 +71,11 @@ fun AutoUnlockPasswordDialog(
             .wrapContentWidth()
             .wrapContentHeight(),
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnClickOutside = false,
+            securePolicy = SecureFlagPolicy.SecureOn
+        ),
         title = { Text(stringResource(R.string.title_unlock_pdf)) },
         text = {
             Column(

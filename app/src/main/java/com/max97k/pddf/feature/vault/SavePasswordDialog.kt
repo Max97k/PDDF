@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.vault
+package com.max97k.pddf.feature.vault
 
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
 
 @Composable
@@ -36,7 +36,10 @@ fun SavePasswordDialog(
             .padding(24.dp)
             .wrapContentWidth()
             .wrapContentHeight(),
-        properties = DialogProperties(usePlatformDefaultWidth = false),
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            securePolicy = SecureFlagPolicy.SecureOn
+        ),
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_save_password)) },
         text = {
