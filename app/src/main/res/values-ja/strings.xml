@@ -165,4 +165,8 @@
     <string name="label_invalid_signature">無効または信頼できない署名</string>
     <string name="label_unsigned">署名なしドキュメント</string>
     <string name="label_validity">状態: %1$s</string>
+
+    <string name="btn_rotate">回転</string>
+    <string name="btn_rotate_cw">すべてのページを右に 90° 回転</string>
+    <string name="btn_rotate_ccw">すべてのページを左に 90° 回転</string>
 </resources>

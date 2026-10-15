@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -28,6 +28,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -65,7 +68,8 @@ fun PdfViewerScreen(
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
-    onAddWatermark: ((String) -> Unit)? = null
+    onAddWatermark: ((String) -> Unit)? = null,
+    onRotateAll: ((Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -93,6 +97,10 @@ fun PdfViewerScreen(
             }
         )
     }
+
+    // Tracks whether the rotation dropdown menu is visible.
+    var showRotationMenu by rememberSaveable { mutableStateOf(false) }
+
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -179,6 +187,37 @@ fun PdfViewerScreen(
                                 contentDescription = stringResource(R.string.btn_print)
                             )
                         }
+
+                        if (onRotateAll != null) {
+                            Box {
+                                IconButton(onClick = { showRotationMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = stringResource(R.string.btn_rotate)
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showRotationMenu,
+                                    onDismissRequest = { showRotationMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.btn_rotate_cw)) },
+                                        onClick = {
+                                            showRotationMenu = false
+                                            onRotateAll.invoke(90)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.btn_rotate_ccw)) },
+                                        onClick = {
+                                            showRotationMenu = false
+                                            onRotateAll.invoke(-90)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         if (onSaveAs != null) {
                             IconButton(onClick = onSaveAs) {
                                 Icon(

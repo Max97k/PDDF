@@ -167,4 +167,8 @@
     <string name="label_invalid_signature">Firma inválida o no confiable</string>
     <string name="label_unsigned">Documento no firmado</string>
     <string name="label_validity">Estado: %1$s</string>
+
+    <string name="btn_rotate">Girar</string>
+    <string name="btn_rotate_cw">Girar todas las páginas 90° en sentido horario</string>
+    <string name="btn_rotate_ccw">Girar todas las páginas 90° en sentido antihorario</string>
 </resources>

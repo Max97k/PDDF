@@ -165,4 +165,8 @@
     <string name="label_invalid_signature">无效或不受信任的签名</string>
     <string name="label_unsigned">未签名文档</string>
     <string name="label_validity">状态：%1$s</string>
+
+    <string name="btn_rotate">旋转</string>
+    <string name="btn_rotate_cw">顺时针旋转 90°</string>
+    <string name="btn_rotate_ccw">逆时针旋转 90°</string>
 </resources>

@@ -1080,6 +1080,7 @@ fun PDFDecryptorScreen(
                     modifier = Modifier.fillMaxSize(),
                     title = uiState.selectedFileNames.firstOrNull() ?: "",
                     onClose = { onAction(MainUiAction.SetPreviewPdfUri(null)) },
+                    onRotateAll = { degrees -> onAction(MainUiAction.RotatePreview(degrees)) },
                     onShare = {
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "application/pdf"

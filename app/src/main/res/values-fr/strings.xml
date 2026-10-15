@@ -167,4 +167,8 @@
     <string name="label_invalid_signature">Signature invalide ou non approuvée</string>
     <string name="label_unsigned">Document non signé</string>
     <string name="label_validity">État : %1$s</string>
+
+    <string name="btn_rotate">Pivoter</string>
+    <string name="btn_rotate_cw">Pivoter toutes les pages de 90° vers la droite</string>
+    <string name="btn_rotate_ccw">Pivoter toutes les pages de 90° vers la gauche</string>
 </resources>

@@ -185,12 +185,20 @@ class DomainUseCasesTest {
 
         override fun openSafeInputStream(uriString: String): InputStream? = null
 
+
         override fun openSafeOutputStream(uriString: String): OutputStream? = null
 
         override suspend fun packageToZip(
             fileUris: List<String>,
             outputZipUri: String,
             onProgress: (Int, Int) -> Unit
+        ): Boolean = true
+
+        override suspend fun rotatePages(
+            sourceUri: String,
+            destUri: String,
+            pageIndices: List<Int>?,
+            rotationDegrees: Int
         ): Boolean = true
 
     }

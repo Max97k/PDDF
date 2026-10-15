@@ -167,4 +167,8 @@
     <string name="label_invalid_signature">Ungültige/Nicht vertrauenswürdige Signatur</string>
     <string name="label_unsigned">Unsigniertes Dokument</string>
     <string name="label_validity">Status: %1$s</string>
+
+    <string name="btn_rotate">Drehen</string>
+    <string name="btn_rotate_cw">Alle Seiten um 90° im UZS drehen</string>
+    <string name="btn_rotate_ccw">Alle Seiten um 90° gegen den UZS drehen</string>
 </resources>

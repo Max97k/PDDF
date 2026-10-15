@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui
+package com.max97k.pddf.ui
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
@@ -14,7 +14,8 @@ fun PdfViewerDialog(
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
-    onAddWatermark: ((String) -> Unit)? = null
+    onAddWatermark: ((String) -> Unit)? = null,
+    onRotateAll: ((Int) -> Unit)? = null
 ) {
     FeaturePdfViewerDialog(
         uri = uri,
@@ -23,7 +24,8 @@ fun PdfViewerDialog(
         onDismiss = onDismiss,
         onShare = onShare,
         onSaveAs = onSaveAs,
-        onAddWatermark = onAddWatermark
+        onAddWatermark = onAddWatermark,
+        onRotateAll = onRotateAll
     )
 }
 
@@ -35,7 +37,8 @@ fun PdfViewerScreen(
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
-    onAddWatermark: ((String) -> Unit)? = null
+    onAddWatermark: ((String) -> Unit)? = null,
+    onRotateAll: ((Int) -> Unit)? = null
 ) {
     FeaturePdfViewerScreen(
         uri = uri,
@@ -44,6 +47,7 @@ fun PdfViewerScreen(
         onClose = onClose,
         onShare = onShare,
         onSaveAs = onSaveAs,
-        onAddWatermark = onAddWatermark
+        onAddWatermark = onAddWatermark,
+        onRotateAll = onRotateAll
     )
 }

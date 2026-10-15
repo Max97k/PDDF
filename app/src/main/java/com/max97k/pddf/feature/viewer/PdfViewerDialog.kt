@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -16,7 +16,8 @@ fun PdfViewerDialog(
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
-    onAddWatermark: ((String) -> Unit)? = null
+    onAddWatermark: ((String) -> Unit)? = null,
+    onRotateAll: ((Int) -> Unit)? = null
 ) {
     BackHandler(onBack = onDismiss)
     Box(
@@ -31,7 +32,8 @@ fun PdfViewerDialog(
             onClose = onDismiss,
             onShare = onShare,
             onSaveAs = onSaveAs,
-            onAddWatermark = onAddWatermark
+            onAddWatermark = onAddWatermark,
+            onRotateAll = onRotateAll
         )
     }
 }
