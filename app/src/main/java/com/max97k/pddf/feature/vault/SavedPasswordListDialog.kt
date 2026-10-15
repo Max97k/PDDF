@@ -144,10 +144,11 @@ fun SavedPasswordListDialog(
                                         modifier = Modifier.weight(1f),
                                         style = MaterialTheme.typography.bodyLarge
                                     )
+                                    val copyMsg = stringResource(R.string.msg_password_copied)
                                     IconButton(onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         ClipboardUtils.copyPasswordToClipboard(context, "Password", savedPass.passwordValue)
-                                        Toast.makeText(context, context.getString(R.string.msg_password_copied), Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, copyMsg, Toast.LENGTH_SHORT).show()
                                     }) {
                                         Icon(
                                             Icons.Default.ContentCopy,

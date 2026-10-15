@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="msg_password_copied">Password copied to clipboard. It will be cleared in 30 seconds.</string>
-    <string name="content_desc_copy_password">Copy password</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="msg_password_copied" tools:ignore="MissingTranslation">Password copied to clipboard. It will be cleared in 30 seconds.</string>
+    <string name="content_desc_copy_password" tools:ignore="MissingTranslation">Copy password</string>
 </resources>
