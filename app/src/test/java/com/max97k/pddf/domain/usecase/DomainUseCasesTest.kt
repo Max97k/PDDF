@@ -99,6 +99,14 @@ class DomainUseCasesTest {
             }
             return com.max97k.pddf.util.Result.Success(Unit)
         }
+
+        override suspend fun exportEncryptedVault(outputStream: java.io.OutputStream): com.max97k.pddf.util.Result<Unit> {
+            return com.max97k.pddf.util.Result.Success(Unit)
+        }
+
+        override suspend fun importEncryptedVault(inputStream: java.io.InputStream): com.max97k.pddf.util.Result<Int> {
+            return com.max97k.pddf.util.Result.Success(1)
+        }
     }
 
     class FakePdfRepository(

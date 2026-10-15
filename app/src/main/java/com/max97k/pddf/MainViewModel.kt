@@ -244,6 +244,52 @@ class MainViewModel @Inject constructor(
                 showSavePasswordDialog.value = true
                 _uiState.update { it.copy(showSavePasswordDialog = true) }
             }
+            is MainUiAction.ExportVault -> {
+                viewModelScope.launch {
+                    val result = withContext(ioDispatcher) {
+                        try {
+                            val context = getApplication<android.app.Application>().applicationContext
+                            val stream = context.contentResolver.openOutputStream(action.uri, "wt")
+                            if (stream != null) {
+                                passwordVaultUseCase.exportEncryptedVault(stream)
+                            } else {
+                                com.max97k.pddf.util.Result.Error(IllegalStateException("Could not open output stream"))
+                            }
+                        } catch (e: Exception) {
+                            com.max97k.pddf.util.Result.Error(e)
+                        }
+                    }
+                    val context = getApplication<android.app.Application>().applicationContext
+                    when (result) {
+                        is com.max97k.pddf.util.Result.Success -> emitEffect(UiEffect.ShowSnackbar(context.getString(R.string.msg_vault_exported)))
+                        is com.max97k.pddf.util.Result.Error -> emitEffect(UiEffect.ShowSnackbar(context.getString(R.string.msg_vault_export_failed)))
+                        else -> {}
+                    }
+                }
+            }
+            is MainUiAction.ImportVault -> {
+                viewModelScope.launch {
+                    val result = withContext(ioDispatcher) {
+                        try {
+                            val context = getApplication<android.app.Application>().applicationContext
+                            val stream = context.contentResolver.openInputStream(action.uri)
+                            if (stream != null) {
+                                passwordVaultUseCase.importEncryptedVault(stream)
+                            } else {
+                                com.max97k.pddf.util.Result.Error(IllegalStateException("Could not open input stream"))
+                            }
+                        } catch (e: Exception) {
+                            com.max97k.pddf.util.Result.Error(e)
+                        }
+                    }
+                    val context = getApplication<android.app.Application>().applicationContext
+                    when (result) {
+                        is com.max97k.pddf.util.Result.Success -> emitEffect(UiEffect.ShowSnackbar(context.getString(R.string.msg_vault_imported, result.data)))
+                        is com.max97k.pddf.util.Result.Error -> emitEffect(UiEffect.ShowSnackbar(context.getString(R.string.msg_vault_import_failed)))
+                        else -> {}
+                    }
+                }
+            }
             is MainUiAction.SetSavePasswordDialogVisible -> {
                 showSavePasswordDialog.value = action.visible
                 _uiState.update { it.copy(showSavePasswordDialog = action.visible) }

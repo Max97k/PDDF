@@ -99,6 +99,13 @@
     <string name="msg_no_matching_passwords">No matching passwords</string>
     <string name="content_desc_delete_named">Delete %1$s</string>
 
+    <string name="content_desc_export_vault">Export Vault</string>
+    <string name="content_desc_import_vault">Import Vault</string>
+    <string name="msg_vault_exported">Vault exported successfully</string>
+    <string name="msg_vault_imported">Vault imported successfully: %1$d passwords</string>
+    <string name="msg_vault_export_failed">Export failed</string>
+    <string name="msg_vault_import_failed">Import failed. Invalid or corrupted file.</string>
+
     <plurals name="selected_files_count">
         <item quantity="one">%1$d file selected</item>
         <item quantity="other">%1$d files selected</item>

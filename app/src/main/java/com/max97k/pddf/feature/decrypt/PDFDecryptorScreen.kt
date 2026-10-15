@@ -376,6 +376,30 @@ fun PDFDecryptorScreen(
         onResult = { _ -> }
     )
 
+    val exportVaultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                if (destUri != null) {
+                    onAction(MainUiAction.ExportVault(destUri))
+                }
+            }
+        }
+    )
+
+    val importVaultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                if (destUri != null) {
+                    onAction(MainUiAction.ImportVault(destUri))
+                }
+            }
+        }
+    )
+
     LaunchedEffect(uiState.appUpdateStatus) {
         if (uiState.appUpdateStatus is com.max97k.pddf.domain.model.AppUpdateStatus.Downloaded) {
             val result = snackbarHostState.showSnackbar(
@@ -1086,6 +1110,22 @@ fun PDFDecryptorScreen(
             onDismiss = { onAction(MainUiAction.SetPasswordListDialogVisible(false)) },
             onSelectPassword = { selectedPass ->
                 onAction(MainUiAction.SelectSavedPassword(selectedPass))
+            },
+            onExportClick = {
+                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_TITLE, "vault.json")
+                }
+                exportVaultLauncher.launch(intent)
+            },
+            onImportClick = {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"
+                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "application/octet-stream"))
+                }
+                importVaultLauncher.launch(intent)
             },
             onDeletePassword = { savedPass ->
                 onAction(MainUiAction.DeletePassword(savedPass))

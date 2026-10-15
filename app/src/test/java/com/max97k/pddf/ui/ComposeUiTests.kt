@@ -209,7 +209,7 @@ class ComposeUiTests {
                 savedPasswords = passwords,
                 onDismiss = { dismissed = true },
                 onSelectPassword = { selected = it },
-                onDeletePassword = { deleted = it }
+                onDeletePassword = { deleted = it }, onExportClick = {}, onImportClick = {}
             )
         }
 

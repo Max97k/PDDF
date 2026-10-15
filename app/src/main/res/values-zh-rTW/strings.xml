@@ -99,6 +99,13 @@
     <string name="msg_no_matching_passwords">無相符的密碼</string>
     <string name="content_desc_delete_named">刪除 %1$s</string>
 
+    <string name="content_desc_export_vault">匯出密碼庫</string>
+    <string name="content_desc_import_vault">匯入密碼庫</string>
+    <string name="msg_vault_exported">密碼庫匯出成功</string>
+    <string name="msg_vault_imported">成功匯入 %1$d 組密碼</string>
+    <string name="msg_vault_export_failed">匯出失敗</string>
+    <string name="msg_vault_import_failed">匯入失敗。檔案無效或已損毀。</string>
+
     <plurals name="selected_files_count">
         <item quantity="other">已選擇 %1$d 個檔案</item>
     </plurals>

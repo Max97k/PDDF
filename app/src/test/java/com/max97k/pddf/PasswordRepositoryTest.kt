@@ -91,4 +91,49 @@ class PasswordRepositoryTest {
         assertEquals("Confidential", decryptedList[0].name)
         assertEquals("pass999", decryptedList[0].passwordValue)
     }
+
+    @Test
+    fun exportEncryptedVault_success() = runTest {
+        val pass = PasswordEntity(id = 1, name = "ExportTest", passwordValue = "export123")
+        repository.insert(pass)
+
+        val outputStream = java.io.ByteArrayOutputStream()
+        val result = repository.exportEncryptedVault(outputStream)
+
+        assertTrue(result is com.max97k.pddf.util.Result.Success)
+        assertTrue(outputStream.toByteArray().isNotEmpty())
+    }
+
+    @Test
+    fun importEncryptedVault_success() = runTest {
+        val pass = PasswordEntity(id = 1, name = "ImportTest", passwordValue = "import123")
+        repository.insert(pass)
+
+        val outputStream = java.io.ByteArrayOutputStream()
+        repository.exportEncryptedVault(outputStream)
+
+        repository.deleteById(1) // Ensure it's deleted
+
+        val inputStream = java.io.ByteArrayInputStream(outputStream.toByteArray())
+        val result = repository.importEncryptedVault(inputStream)
+
+        assertTrue(result is com.max97k.pddf.util.Result.Success)
+        assertEquals(1, (result as com.max97k.pddf.util.Result.Success).data)
+
+        val passwords = repository.allPasswords.first()
+        assertTrue(passwords is com.max97k.pddf.util.Result.Success)
+        val data = (passwords as com.max97k.pddf.util.Result.Success).data
+        assertEquals(1, data.size)
+        assertEquals("ImportTest", data[0].name)
+        assertEquals("import123", data[0].passwordValue)
+    }
+
+    @Test
+    fun importEncryptedVault_failure() = runTest {
+        val randomBytes = "ENC_invalid data".toByteArray(kotlin.text.Charsets.UTF_8)
+        val inputStream = java.io.ByteArrayInputStream(randomBytes)
+        val result = repository.importEncryptedVault(inputStream)
+
+        assertTrue(result is com.max97k.pddf.util.Result.Error)
+    }
 }

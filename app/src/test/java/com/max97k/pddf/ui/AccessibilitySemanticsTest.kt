@@ -85,7 +85,7 @@ class AccessibilitySemanticsTest {
                 ),
                 onDismiss = {},
                 onSelectPassword = {},
-                onDeletePassword = {}
+                onDeletePassword = {}, onExportClick = {}, onImportClick = {}
             )
         }
 
@@ -107,7 +107,7 @@ class AccessibilitySemanticsTest {
                 savedPasswords = passwords,
                 onDismiss = {},
                 onSelectPassword = {},
-                onDeletePassword = {}
+                onDeletePassword = {}, onExportClick = {}, onImportClick = {}
             )
         }
 

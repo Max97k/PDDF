@@ -49,6 +49,8 @@ sealed interface MainUiAction {
     data class SelectSavedPassword(val passwordValue: String) : MainUiAction
     data object RequestOpenPasswordList : MainUiAction
     data object RequestOpenSavePassword : MainUiAction
+    data class ExportVault(val uri: android.net.Uri) : MainUiAction
+    data class ImportVault(val uri: android.net.Uri) : MainUiAction
 
     // Dialog & Preview Visibility
     data class SetSavePasswordDialogVisible(val visible: Boolean) : MainUiAction
