@@ -10,9 +10,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.max97k.pddf.BuildConfig
 import com.max97k.pddf.util.CryptoManager
 
-@Database(entities = [PasswordEntity::class], version = 3, exportSchema = false)
+@Database(entities = [PasswordEntity::class, BookmarkEntity::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun passwordDao(): PasswordDao
+    abstract fun bookmarkDao(): BookmarkDao
 
     companion object {
         private const val TAG = "AppDatabase"
@@ -63,6 +64,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                try {
+                    db.execSQL("CREATE TABLE IF NOT EXISTS \`bookmarks\` (\`id\` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \`fileUriHash\` TEXT NOT NULL, \`pageIndex\` INTEGER NOT NULL, \`note\` TEXT, \`timestamp\` INTEGER NOT NULL)")
+                } catch (e: Exception) {
+                    if (BuildConfig.DEBUG) {
+                        Log.w(TAG, "Migration 3->4 failed", e)
+                    }
+                }
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -73,7 +86,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pdf-decryptor-db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigrationOnDowngrade(true)
                     .build()
                 INSTANCE = instance

@@ -1,10 +1,12 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.pdf.PdfDocument
 import androidx.pdf.viewer.fragment.PdfViewerFragment
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 
 /**
  * A thin subclass of [PdfViewerFragment] that bridges the immersive-mode callback
@@ -89,8 +91,44 @@ class InkPdfViewerFragment : PdfViewerFragment() {
             try {
                 isTextSearchActive = active
             } catch (e: Throwable) {
-                Log.e(TAG, "Failed to set text search active: $active", e)
+                Log.e(TAG, "Failed to set text search active: \$active", e)
             }
+        }
+    }
+
+    fun getFirstVisiblePage(): Int? {
+        try {
+            val pdfViewField: Field = PdfViewerFragment::class.java.getDeclaredField("pdfView")
+            pdfViewField.isAccessible = true
+            val pdfView = pdfViewField.get(this)
+
+            if (pdfView != null) {
+                val pdfViewClass = pdfView.javaClass
+                try {
+                     val getFirstVisiblePageMethod = pdfViewClass.getMethod("getFirstVisiblePage")
+                     return getFirstVisiblePageMethod.invoke(pdfView) as? Int
+                } catch (e: Exception) {
+                     Log.e(TAG, "getFirstVisiblePage method not found via reflection", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get first visible page", e)
+        }
+        return 0
+    }
+
+    fun scrollToPage(pageIndex: Int) {
+         try {
+            val pdfViewField: Field = PdfViewerFragment::class.java.getDeclaredField("pdfView")
+            pdfViewField.isAccessible = true
+            val pdfView = pdfViewField.get(this)
+
+            if (pdfView != null) {
+                val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.java)
+                scrollToPageMethod.invoke(pdfView, pageIndex)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to scroll to page", e)
         }
     }
 }

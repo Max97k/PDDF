@@ -42,6 +42,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,7 +70,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.max97k.pddf.R
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +82,8 @@ fun PdfViewerScreen(
     title: String = "",
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    viewModel: PdfViewerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -81,6 +100,34 @@ fun PdfViewerScreen(
 
     // Tracks whether the native PDF search bar is currently active.
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(uri) {
+        viewModel.loadBookmarks(uri)
+    }
+
+    val bookmarks by viewModel.bookmarks.collectAsState()
+
+    var showBookmarksSheet by rememberSaveable { mutableStateOf(false) }
+    var showAddBookmarkDialog by rememberSaveable { mutableStateOf(false) }
+
+    val containerId = rememberSaveable { View.generateViewId() }
+    val fragmentTag = remember(containerId) { "pdf_viewer_$containerId" }
+
+    var currentPageIndex by remember { mutableStateOf<Int?>(null) }
+
+    // Periodic update of current page
+    LaunchedEffect(fragmentActivity, topBarVisible, showBookmarksSheet, showAddBookmarkDialog) {
+        if (fragmentActivity != null) {
+           while(true) {
+               val frag = fragmentActivity.supportFragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
+               if (frag != null && frag.isDocumentLoaded) {
+                   val page = frag.getFirstVisiblePage()
+                   if (page != null) currentPageIndex = page
+               }
+               delay(1000)
+           }
+        }
+    }
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -107,6 +154,8 @@ fun PdfViewerScreen(
     } else {
         WindowInsets(0, 0, 0, 0)
     }
+
+    val isCurrentPageBookmarked = bookmarks.any { it.pageIndex == currentPageIndex }
 
     Scaffold(
         modifier = modifier,
@@ -136,8 +185,27 @@ fun PdfViewerScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = {
+                            if (isCurrentPageBookmarked) {
+                                currentPageIndex?.let { viewModel.deleteBookmark(it) }
+                            } else {
+                                showAddBookmarkDialog = true
+                            }
+                        }) {
+                            Icon(
+                                imageVector = if (isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark"
+                            )
+                        }
+                        IconButton(onClick = { showBookmarksSheet = true }) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.filled.List,
+                                contentDescription = "View Bookmarks"
+                            )
+                        }
                         // Search toggle — open search on first tap, close on second tap.
                         IconButton(onClick = {
+                            showBookmarksSheet = false
                             isSearchActive = !isSearchActive
                             if (isSearchActive) {
                                 topBarVisible = true
@@ -197,8 +265,6 @@ fun PdfViewerScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            val containerId = rememberSaveable { View.generateViewId() }
-            val fragmentTag = remember(containerId) { "pdf_viewer_$containerId" }
 
             if (fragmentActivity != null) {
                 val fragmentManager = fragmentActivity.supportFragmentManager
@@ -305,6 +371,81 @@ fun PdfViewerScreen(
                         text = stringResource(R.string.error_pdf_preview),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+        if (showAddBookmarkDialog && currentPageIndex != null) {
+            var note by remember { mutableStateOf("") }
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showAddBookmarkDialog = false },
+                title = { Text("Add Bookmark") },
+                text = {
+                    Column {
+                        Text("Page ${currentPageIndex!! + 1}")
+                        OutlinedTextField(
+                            value = note,
+                            onValueChange = { note = it },
+                            label = { Text("Note (Optional)") },
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.addBookmark(currentPageIndex!!, note.ifEmpty { null })
+                        showAddBookmarkDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showAddBookmarkDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showBookmarksSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showBookmarksSheet = false },
+                sheetState = rememberModalBottomSheetState()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text("Bookmarks", style = MaterialTheme.typography.titleLarge)
+                    if (bookmarks.isEmpty()) {
+                        Text("No bookmarks yet.", modifier = Modifier.padding(top = 16.dp))
+                    } else {
+                        LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
+                            items(bookmarks) { bookmark ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            fragmentActivity?.let {
+                                                val frag = it.supportFragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
+                                                frag?.scrollToPage(bookmark.pageIndex)
+                                                showBookmarksSheet = false
+                                            }
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Page ${bookmark.pageIndex + 1}", fontWeight = FontWeight.Bold)
+                                        if (!bookmark.note.isNullOrEmpty()) {
+                                            Text(bookmark.note, style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                    }
+                                    IconButton(onClick = { viewModel.deleteBookmark(bookmark.pageIndex) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete Bookmark")
+                                    }
+                                }
+                                Divider()
+                            }
+                        }
+                    }
                 }
             }
         }

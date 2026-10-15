@@ -3,6 +3,7 @@ package com.max97k.pddf.di
 import android.content.Context
 import androidx.room.Room
 import com.max97k.pddf.data.AppDatabase
+import com.max97k.pddf.data.BookmarkDao
 import com.max97k.pddf.data.PasswordDao
 import com.max97k.pddf.data.PasswordRepository
 import com.max97k.pddf.util.CryptoManager
@@ -23,19 +24,19 @@ class DatabaseModule {
     fun provideAppDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "pdf-decryptor-db"
-        )
-        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
-        .build()
+        return AppDatabase.getDatabase(context)
     }
 
     @Provides
     @Singleton
     fun providePasswordDao(database: AppDatabase): PasswordDao {
         return database.passwordDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBookmarkDao(database: AppDatabase): BookmarkDao {
+        return database.bookmarkDao()
     }
 
     @Provides
