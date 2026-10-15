@@ -53,6 +53,7 @@
     <string name="btn_exit_search_pdf">検索を閉じる</string>
     <string name="btn_overwrite">元のファイルを上書き</string>
     <string name="btn_save_as">別名で保存</string>
+    <string name="btn_save_as_zip">Save as ZIP Archive</string>
     <string name="btn_decrypt_and_preview">復号化してプレビュー</string>
     <string name="version_info">バージョン %1$s</string>
     <string name="github_link">GitHubソース</string>

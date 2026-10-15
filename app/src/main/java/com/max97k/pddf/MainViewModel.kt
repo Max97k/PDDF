@@ -26,6 +26,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -224,6 +225,7 @@ class MainViewModel @Inject constructor(
             }
             is MainUiAction.DecryptInPlace -> decryptPdfsInPlace(getApplication<Application>(), uiState.value.selectedUris, uiState.value.password)
             is MainUiAction.DecryptToDirectory -> decryptPdfsToDirectory(getApplication<Application>(), uiState.value.selectedUris, action.outputDirectoryUri, uiState.value.password, uiState.value.conflictMode)
+            is MainUiAction.DecryptToZip -> decryptPdfsToZip(getApplication<Application>(), uiState.value.selectedUris, action.destUri, uiState.value.password)
             is MainUiAction.DecryptToUri -> decryptPdfToUri(getApplication<Application>(), uiState.value.selectedUris.firstOrNull() ?: return, action.destUri, uiState.value.password)
             is MainUiAction.DecryptAndPreview -> decryptAndPreview(getApplication<Application>(), action.uri, action.passwordValue)
             is MainUiAction.RequestSaveAsPicker -> handleSaveAsRequest()
@@ -720,6 +722,87 @@ class MainViewModel @Inject constructor(
 
     fun decryptAndOverwrite(context: Context, inputUris: List<Uri>, passwordValue: String) {
         decryptPdfsInPlace(context, inputUris, passwordValue)
+    }
+
+
+    fun decryptPdfsToZip(
+        context: Context,
+        inputUris: List<Uri>,
+        destZipUri: Uri,
+        passwordValue: String
+    ) {
+        batchJob = viewModelScope.launch {
+            isProcessing.value = true
+            statusMessage.value = "Processing..."
+            val initBatch = BatchState(isProcessing = true, progress = 0, total = inputUris.size)
+            batchState.value = initBatch
+            _uiState.update {
+                it.copy(
+                    isProcessing = true,
+                    statusMessage = "Processing...",
+                    batchState = initBatch
+                )
+            }
+
+            ensurePdfBoxInitialized()
+
+            // Decrypt to temp directory first
+            var successCount = 0
+            var errorCount = 0
+            val tempUris = mutableListOf<String>()
+
+            for ((index, inputUri) in inputUris.withIndex()) {
+                ensureActive()
+                val tempUri = pdfRepository.createTempFile("decrypted_${System.currentTimeMillis()}_$index", ".pdf")
+                val status = decryptPdfUseCase.decrypt(
+                    inputUriString = inputUri.toString(),
+                    outputUriString = tempUri,
+                    passwordValue = passwordValue
+                )
+
+                if (status == com.max97k.pddf.DecryptStatus.SUCCESS) {
+                    tempUris.add(tempUri)
+                    successCount++
+                } else {
+                    pdfRepository.deleteFile(tempUri)
+                    errorCount++
+                }
+
+                // Update progress for decryption phase
+                val updatedBatch = batchState.value.copy(progress = index + 1)
+                batchState.value = updatedBatch
+                _uiState.update { it.copy(batchState = updatedBatch) }
+            }
+
+            // Package to ZIP
+            val zipSuccess = if (tempUris.isNotEmpty()) {
+                pdfRepository.packageToZip(tempUris, destZipUri.toString()) { current, _ ->
+                    // optional: progress update for zipping
+                }
+            } else false
+
+            // Cleanup temp files
+            tempUris.forEach { pdfRepository.deleteFile(it) }
+
+            val finalMsg = if (zipSuccess) {
+                context.getString(R.string.summary_decrypted_saved, successCount)
+            } else if (tempUris.isEmpty()) {
+                context.getString(R.string.msg_wrong_password_try_again)
+            } else {
+                "Failed to create ZIP archive"
+            }
+
+            isProcessing.value = false
+            batchState.value = BatchState()
+
+            _uiState.update {
+                it.copy(
+                    statusMessage = finalMsg,
+                    isProcessing = false,
+                    batchState = BatchState()
+                )
+            }
+        }
     }
 
     fun decryptPdfToUri(context: Context, inputUri: Uri, destUri: Uri, passwordValue: String) {

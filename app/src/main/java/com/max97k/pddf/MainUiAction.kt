@@ -24,6 +24,7 @@ sealed interface MainUiAction {
     // Decryption actions
     data object DecryptInPlace : MainUiAction
     data class DecryptToDirectory(val outputDirectoryUri: Uri) : MainUiAction
+    data class DecryptToZip(val destUri: Uri) : MainUiAction
     data class DecryptToUri(val destUri: Uri) : MainUiAction
     data class DecryptAndPreview(val uri: Uri, val passwordValue: String) : MainUiAction
     data object RequestSaveAsPicker : MainUiAction

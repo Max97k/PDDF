@@ -53,6 +53,7 @@
     <string name="btn_exit_search_pdf">Suche schließen</string>
     <string name="btn_overwrite">Original überschreiben</string>
     <string name="btn_save_as">Als neue Datei speichern</string>
+    <string name="btn_save_as_zip">Save as ZIP Archive</string>
     <string name="btn_decrypt_and_preview">Entschlüsseln und ansehen</string>
     <string name="version_info">Version %1$s</string>
     <string name="github_link">GitHub-Quelle</string>

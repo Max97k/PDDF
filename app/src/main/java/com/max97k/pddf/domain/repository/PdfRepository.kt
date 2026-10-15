@@ -73,5 +73,7 @@ interface PdfRepository {
 
     fun openSafeInputStream(uriString: String): InputStream?
 
+    suspend fun packageToZip(fileUris: List<String>, outputZipUri: String, onProgress: (Int, Int) -> Unit): Boolean
+
     fun openSafeOutputStream(uriString: String): OutputStream?
 }
