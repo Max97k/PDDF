@@ -342,6 +342,17 @@ fun PDFDecryptorScreen(
         }
     )
 
+
+    val createZipDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                onAction(MainUiAction.DecryptToZip(uri))
+            }
+        }
+    }
+
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { result ->
@@ -734,6 +745,29 @@ fun PDFDecryptorScreen(
                                     ) {
                                         Text(stringResource(R.string.btn_save_as), textAlign = TextAlign.Center)
                                     }
+
+                                    if (uiState.isBatch) {
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Button(
+                                            onClick = {
+                                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                                    type = "application/zip"
+                                                    putExtra(Intent.EXTRA_TITLE, "decrypted_batch.zip")
+                                                }
+                                                createZipDocumentLauncher.launch(intent)
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(56.dp),
+                                            enabled = uiState.password.isNotEmpty(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                        ) {
+                                            Text(stringResource(R.string.btn_save_as_zip), textAlign = TextAlign.Center)
+                                        }
+                                    }
+
                                 }
                             }
 

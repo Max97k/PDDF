@@ -16,12 +16,15 @@ import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -414,6 +417,42 @@ open class PdfRepositoryImpl @Inject constructor(
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    override suspend fun packageToZip(
+        fileUris: List<String>,
+        outputZipUri: String,
+        onProgress: (Int, Int) -> Unit
+    ): Boolean = withContext(ioDispatcher) {
+        try {
+            val total = fileUris.size
+            val outStream = openSafeOutputStream(outputZipUri) ?: return@withContext false
+            ZipOutputStream(outStream).use { zos ->
+                val buffer = ByteArray(8192)
+                fileUris.forEachIndexed { index, uriString ->
+                    ensureActive()
+                    val inStream = openSafeInputStream(uriString)
+                    if (inStream != null) {
+                        inStream.use { fis ->
+                            val fileName = getFileName(uriString)
+                            val zipEntry = ZipEntry(fileName)
+                            zos.putNextEntry(zipEntry)
+                            var length: Int
+                            while (fis.read(buffer).also { length = it } > 0) {
+                                zos.write(buffer, 0, length)
+                            }
+                            zos.closeEntry()
+                        }
+                    }
+                    onProgress(index + 1, total)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            e.printStackTrace()
+            false
         }
     }
 }
