@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.core.app.ApplicationProvider
 import com.max97k.pddf.data.ThemeMode
+import com.max97k.pddf.data.DensityMode
 import com.max97k.pddf.data.ThemePreferences
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -39,6 +40,17 @@ class ThemePreferencesTest {
         )
         val application = ApplicationProvider.getApplicationContext<Application>()
         themePreferences = ThemePreferences(application, testDataStore)
+    }
+
+    @Test
+    fun testSaveAndReadDensityMode() = runTest {
+        themePreferences.saveDensityMode(DensityMode.COMPACT)
+        val mode = themePreferences.densityMode.first()
+        assertEquals(DensityMode.COMPACT, mode)
+
+        themePreferences.saveDensityMode(DensityMode.COMFORTABLE)
+        val comfortableMode = themePreferences.densityMode.first()
+        assertEquals(DensityMode.COMFORTABLE, comfortableMode)
     }
 
     @Test

@@ -18,6 +18,10 @@ enum class ThemeMode {
     SYSTEM, LIGHT, DARK, AMOLED
 }
 
+enum class DensityMode {
+    COMPACT, STANDARD, COMFORTABLE
+}
+
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_prefs")
 
 class ThemePreferences(
@@ -27,6 +31,7 @@ class ThemePreferences(
 ) {
     companion object {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
+        private val DENSITY_MODE_KEY = stringPreferencesKey("density_mode")
     }
 
     val themeMode: Flow<ThemeMode> = dataStore.data
@@ -40,9 +45,26 @@ class ThemePreferences(
         }
         .flowOn(ioDispatcher)
 
+    val densityMode: Flow<DensityMode> = dataStore.data
+        .map { preferences ->
+            val name = preferences[DENSITY_MODE_KEY] ?: DensityMode.STANDARD.name
+            try {
+                DensityMode.valueOf(name)
+            } catch (e: IllegalArgumentException) {
+                DensityMode.STANDARD
+            }
+        }
+        .flowOn(ioDispatcher)
+
     suspend fun saveThemeMode(mode: ThemeMode) = withContext(ioDispatcher) {
         dataStore.edit { preferences ->
             preferences[THEME_MODE_KEY] = mode.name
+        }
+    }
+
+    suspend fun saveDensityMode(mode: DensityMode) = withContext(ioDispatcher) {
+        dataStore.edit { preferences ->
+            preferences[DENSITY_MODE_KEY] = mode.name
         }
     }
 }

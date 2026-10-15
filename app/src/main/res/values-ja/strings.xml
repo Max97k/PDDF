@@ -144,4 +144,8 @@
     <string name="status_update_downloaded">更新がダウンロードされました。再起動して適用してください。</string>
     <string name="btn_restart_update">再起動</string>
     <string name="status_update_failed">更新の確認に失敗しました</string>
+    <string name="settings_section_density">Display Density</string>
+    <string name="density_compact">Compact</string>
+    <string name="density_standard">Standard</string>
+    <string name="density_comfortable">Comfortable</string>
 </resources>

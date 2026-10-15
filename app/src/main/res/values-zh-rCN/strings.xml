@@ -144,4 +144,8 @@
     <string name="status_update_downloaded">更新已下载完成，请重新启动以应用。</string>
     <string name="btn_restart_update">重新启动</string>
     <string name="status_update_failed">无法检查更新</string>
+    <string name="settings_section_density">Display Density</string>
+    <string name="density_compact">Compact</string>
+    <string name="density_standard">Standard</string>
+    <string name="density_comfortable">Comfortable</string>
 </resources>

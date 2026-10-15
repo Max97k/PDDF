@@ -146,4 +146,8 @@
     <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
     <string name="btn_restart_update">Neu starten</string>
     <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
+    <string name="settings_section_density">Display Density</string>
+    <string name="density_compact">Compact</string>
+    <string name="density_standard">Standard</string>
+    <string name="density_comfortable">Comfortable</string>
 </resources>

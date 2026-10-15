@@ -1028,8 +1028,10 @@ fun PDFDecryptorScreen(
     if (showSettingsSheet) {
         SettingsBottomSheet(
             currentTheme = uiState.themeMode,
+            currentDensity = uiState.densityMode,
             screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
             onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
+            onDensitySelected = { mode -> onAction(MainUiAction.SetDensityMode(mode)) },
             onScreenshotProtectionToggled = { enabled ->
                 onAction(MainUiAction.SetScreenshotProtection(enabled))
             },
@@ -1083,6 +1085,7 @@ fun PDFDecryptorScreen(
     if (uiState.showPasswordListDialog) {
         SavedPasswordListDialog(
             savedPasswords = uiState.savedPasswords,
+            densityMode = uiState.densityMode,
             onDismiss = { onAction(MainUiAction.SetPasswordListDialogVisible(false)) },
             onSelectPassword = { selectedPass ->
                 onAction(MainUiAction.SelectSavedPassword(selectedPass))

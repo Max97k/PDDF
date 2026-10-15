@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.max97k.pddf.data.PasswordEntity
 import com.max97k.pddf.data.ThemeMode
+import com.max97k.pddf.data.DensityMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -58,6 +59,7 @@ data class MainUiState(
 
     // 7. User Preferences & Settings
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val densityMode: DensityMode = DensityMode.STANDARD,
     val conflictMode: ConflictMode = ConflictMode.SAVE_AS_COPY,
     val rememberConflictChoice: Boolean = false,
     val screenshotProtectionEnabled: Boolean = false,

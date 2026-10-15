@@ -9,6 +9,7 @@ import com.max97k.pddf.data.PasswordEntity
 import com.max97k.pddf.data.PasswordRepository
 import com.max97k.pddf.data.SecurityPreferences
 import com.max97k.pddf.data.ThemeMode
+import com.max97k.pddf.data.DensityMode
 import com.max97k.pddf.data.ThemePreferences
 import com.max97k.pddf.di.IoDispatcher
 import com.max97k.pddf.domain.model.PdfUiState
@@ -75,6 +76,13 @@ class MainViewModel @Inject constructor(
             initialValue = ThemeMode.SYSTEM
         )
 
+    val densityMode: StateFlow<DensityMode> = themePreferences.densityMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = DensityMode.STANDARD
+        )
+
     val savedPasswords: StateFlow<ImmutableList<PasswordEntity>> = passwordVaultUseCase.allPasswords
         .map { result ->
             when (result) {
@@ -95,12 +103,22 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> = kotlinx.coroutines.flow.combine(
         _uiState,
         themeMode,
+        densityMode,
         savedPasswords,
         securityPreferences.screenshotProtection,
         checkAppUpdateUseCase.updateStatus
-    ) { baseState, theme, passwords, screenshotProtection, updateStatus ->
+    ) { params ->
+        val baseState = params[0] as MainUiState
+        val theme = params[1] as ThemeMode
+        val density = params[2] as DensityMode
+        @Suppress("UNCHECKED_CAST")
+        val passwords = params[3] as ImmutableList<PasswordEntity>
+        val screenshotProtection = params[4] as Boolean
+        val updateStatus = params[5] as com.max97k.pddf.domain.model.AppUpdateStatus
+
         baseState.copy(
             themeMode = theme,
+            densityMode = density,
             savedPasswords = passwords,
             screenshotProtectionEnabled = screenshotProtection,
             appUpdateStatus = updateStatus
@@ -260,6 +278,7 @@ class MainViewModel @Inject constructor(
                 _uiState.update { it.copy(previewPdfUri = action.uri) }
             }
             is MainUiAction.SetTheme -> setTheme(action.mode)
+            is MainUiAction.SetDensityMode -> setDensityMode(action.mode)
             is MainUiAction.UpdateConflictSettings -> updateConflictSettings(action.mode, action.remember)
             is MainUiAction.SetScreenshotProtection -> setScreenshotProtection(action.enabled)
             is MainUiAction.CopyUriStream -> copyUriStream(getApplication<Application>(), action.sourceUri, action.destUri)
@@ -305,6 +324,13 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             themePreferences.saveThemeMode(mode)
             _uiState.update { it.copy(themeMode = mode) }
+        }
+    }
+
+    fun setDensityMode(mode: DensityMode) {
+        viewModelScope.launch {
+            themePreferences.saveDensityMode(mode)
+            _uiState.update { it.copy(densityMode = mode) }
         }
     }
 

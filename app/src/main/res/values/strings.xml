@@ -146,4 +146,8 @@
     <string name="status_update_downloaded">Update downloaded. Restart to apply.</string>
     <string name="btn_restart_update">Restart</string>
     <string name="status_update_failed">Unable to check for updates</string>
+    <string name="settings_section_density">Display Density</string>
+    <string name="density_compact">Compact</string>
+    <string name="density_standard">Standard</string>
+    <string name="density_comfortable">Comfortable</string>
 </resources>

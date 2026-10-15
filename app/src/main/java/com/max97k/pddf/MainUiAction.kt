@@ -3,6 +3,7 @@ package com.max97k.pddf
 import android.net.Uri
 import com.max97k.pddf.data.PasswordEntity
 import com.max97k.pddf.data.ThemeMode
+import com.max97k.pddf.data.DensityMode
 
 /**
  * Sealed interface representing all user intents flowing upwards from UI to ViewModel.
@@ -58,6 +59,7 @@ sealed interface MainUiAction {
 
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction
+    data class SetDensityMode(val mode: DensityMode) : MainUiAction
     data class UpdateConflictSettings(val mode: ConflictMode, val remember: Boolean) : MainUiAction
     data class SetScreenshotProtection(val enabled: Boolean) : MainUiAction
 
