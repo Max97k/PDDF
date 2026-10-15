@@ -2,9 +2,14 @@ package com.max97k.pddf
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Icon
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -73,6 +78,7 @@ class MainActivity : FragmentActivity() {
         }
 
         enableEdgeToEdge()
+        setupDynamicShortcuts()
         handleIntent(intent)
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
@@ -153,6 +159,40 @@ class MainActivity : FragmentActivity() {
         handleIntent(intent)
     }
 
+    private fun setupDynamicShortcuts() {
+        val shortcutManager = getSystemService(ShortcutManager::class.java)
+        if (shortcutManager != null) {
+            val selectPdfShortcut = ShortcutInfo.Builder(this, "shortcut_select_pdf")
+                .setShortLabel(getString(R.string.shortcut_select_pdf_short))
+                .setLongLabel(getString(R.string.shortcut_select_pdf_long))
+                .setIcon(Icon.createWithResource(this, R.drawable.ic_shortcut_select_pdf))
+                .setIntent(Intent(this, MainActivity::class.java).apply {
+                    action = "com.max97k.pddf.ACTION_SELECT_PDF"
+                })
+                .build()
+
+            val savedPasswordsShortcut = ShortcutInfo.Builder(this, "shortcut_saved_passwords")
+                .setShortLabel(getString(R.string.shortcut_saved_passwords_short))
+                .setLongLabel(getString(R.string.shortcut_saved_passwords_long))
+                .setIcon(Icon.createWithResource(this, R.drawable.ic_shortcut_saved_passwords))
+                .setIntent(Intent(this, MainActivity::class.java).apply {
+                    action = "com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS"
+                })
+                .build()
+
+            val batchProcessShortcut = ShortcutInfo.Builder(this, "shortcut_batch_process")
+                .setShortLabel(getString(R.string.title_processing_batch))
+                .setLongLabel(getString(R.string.title_processing_batch))
+                .setIcon(Icon.createWithResource(this, R.drawable.ic_shortcut_select_pdf)) // Use existing icon for batch
+                .setIntent(Intent(this, MainActivity::class.java).apply {
+                    action = "com.max97k.pddf.ACTION_BATCH_PROCESS"
+                })
+                .build()
+
+            shortcutManager.dynamicShortcuts = listOf(selectPdfShortcut, savedPasswordsShortcut, batchProcessShortcut)
+        }
+    }
+
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
         val action = intent.action
@@ -160,7 +200,7 @@ class MainActivity : FragmentActivity() {
         if (action == "com.max97k.pddf.ACTION_SHOW_SAVED_PASSWORDS") {
             viewModel.onAction(MainUiAction.SetPasswordListDialogVisible(true))
             return
-        } else if (action == "com.max97k.pddf.ACTION_SELECT_PDF") {
+        } else if (action == "com.max97k.pddf.ACTION_SELECT_PDF" || action == "com.max97k.pddf.ACTION_BATCH_PROCESS") {
             viewModel.onAction(MainUiAction.RequestFilePicker)
             pickPdfLauncher.launch(arrayOf("application/pdf"))
             return
@@ -171,11 +211,37 @@ class MainActivity : FragmentActivity() {
         if (Intent.ACTION_VIEW == action) {
             intent.data?.let { uris.add(it) }
         } else if (Intent.ACTION_SEND == action) {
-            val uri = intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            uri?.let { uris.add(it) }
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Parcelable::class.java) as? Uri
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri
+            }
+            if (uri != null) {
+                uris.add(uri)
+            } else {
+                intent.clipData?.let { clipData ->
+                    if (clipData.itemCount > 0) {
+                        clipData.getItemAt(0).uri?.let { uris.add(it) }
+                    }
+                }
+            }
         } else if (Intent.ACTION_SEND_MULTIPLE == action) {
-            val streamUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            streamUris?.let { uris.addAll(it) }
+            val streamUris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Parcelable::class.java)?.mapNotNull { it as? Uri }
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)?.mapNotNull { it as? Uri }
+            }
+            if (!streamUris.isNullOrEmpty()) {
+                uris.addAll(streamUris)
+            } else {
+                intent.clipData?.let { clipData ->
+                    for (i in 0 until clipData.itemCount) {
+                        clipData.getItemAt(i).uri?.let { uris.add(it) }
+                    }
+                }
+            }
         }
 
         if (uris.isNotEmpty()) {

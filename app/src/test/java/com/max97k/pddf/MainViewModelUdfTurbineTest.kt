@@ -60,7 +60,7 @@ class MainViewModelUdfTurbineTest {
             themePrefs.saveThemeMode(com.max97k.pddf.data.ThemeMode.SYSTEM)
             advanceUntilIdle()
         }
-        viewModel = createTestMainViewModel(application, repository, ioDispatcher = testDispatcher)
+        viewModel = createTestMainViewModel(application, repository, themePreferences = themePrefs, ioDispatcher = testDispatcher)
     }
 
     @After
