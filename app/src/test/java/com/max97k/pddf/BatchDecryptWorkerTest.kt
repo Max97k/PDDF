@@ -21,7 +21,7 @@ class BatchDecryptWorkerTest {
     @Test
     fun testBatchDecryptWorker_emptyInputReturnsSuccess() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, kotlinx.coroutines.Dispatchers.IO)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, kotlinx.coroutines.Dispatchers.IO, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptPdfUseCase = com.max97k.pddf.domain.usecase.DecryptPdfUseCase(pdfRepository, kotlinx.coroutines.Dispatchers.IO)
         val batchProcessUseCase = com.max97k.pddf.domain.usecase.BatchProcessUseCase(pdfRepository, decryptPdfUseCase, kotlinx.coroutines.Dispatchers.IO)
         val worker = TestListenableWorkerBuilder<BatchDecryptWorker>(context)

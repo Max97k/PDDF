@@ -78,7 +78,7 @@ class PdfViewerSaveAdversarialTest {
             .build()
         repository = PasswordRepository(database.passwordDao(), CryptoManager())
         vaultUseCase = PasswordVaultUseCase(repository)
-        val pdfRepository = PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepository = PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptUseCase, vaultUseCase, testDispatcher)
         batchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptUseCase, testDispatcher)
@@ -187,7 +187,7 @@ class PdfViewerSaveAdversarialTest {
 
     @Test
     fun saveFromViewer_nullInputStream_returnsErrorWithoutHanging() = runTest(testDispatcher) {
-        val customDecryptUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher), testDispatcher) {
+        val customDecryptUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()), testDispatcher) {
             override fun openSafeInputStream(uriString: String): InputStream? = null
         }
         val customVm = createTestMainViewModel(
@@ -220,7 +220,7 @@ class PdfViewerSaveAdversarialTest {
 
     @Test
     fun saveFromViewer_streamInterruption_handlesGracefullyWithoutHanging() = runTest(testDispatcher) {
-        val interruptingUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher), testDispatcher) {
+        val interruptingUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()), testDispatcher) {
             override fun openSafeInputStream(uriString: String): InputStream {
                 return object : InputStream() {
                     override fun read(): Int {
@@ -262,7 +262,7 @@ class PdfViewerSaveAdversarialTest {
         val validPdf = createValidPdf("viewer_preview_valid_out_null")
         val sourceUri = Uri.fromFile(validPdf)
 
-        val nullOutUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher), testDispatcher) {
+        val nullOutUseCase = object : DecryptPdfUseCase(PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()), testDispatcher) {
             override fun openSafeOutputStream(uriString: String): OutputStream? = null
         }
         val customVm = createTestMainViewModel(

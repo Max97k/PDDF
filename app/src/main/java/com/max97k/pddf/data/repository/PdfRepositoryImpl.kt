@@ -28,7 +28,8 @@ import javax.inject.Singleton
 @Singleton
 open class PdfRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val analyzePdfFontsUseCase: com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase
 ) : PdfRepository {
 
     private fun parseUri(uriString: String): Uri {
@@ -252,6 +253,9 @@ open class PdfRepositoryImpl @Inject constructor(
                     val perm = it.currentAccessPermission
                     val canPrint = perm?.canPrint() ?: true
                     val canCopy = perm?.canExtractContent() ?: true
+
+                    val fontDiagnostics = analyzePdfFontsUseCase.analyze(it)
+
                     return@withContext PdfMetadata(
                         title = title,
                         author = author,
@@ -259,7 +263,9 @@ open class PdfRepositoryImpl @Inject constructor(
                         fileSizeMb = sizeMb,
                         encryptionMethod = encMethod,
                         canPrint = canPrint,
-                        canCopy = canCopy
+                        canCopy = canCopy,
+                        fonts = fontDiagnostics.fonts,
+                        hasMissingNonEmbeddedSystemFonts = fontDiagnostics.hasMissingNonEmbeddedSystemFonts
                     )
                 }
             }

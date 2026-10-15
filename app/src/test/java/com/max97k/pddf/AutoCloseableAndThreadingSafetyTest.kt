@@ -135,7 +135,7 @@ class AutoCloseableAndThreadingSafetyTest {
         var trackedIn: CloseTrackingInputStream? = null
         var trackedOut: CloseTrackingOutputStream? = null
 
-        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher) {
+        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()) {
             override fun openSafeInputStream(uriString: String): InputStream {
                 val path = if (uriString.startsWith("file://")) Uri.parse(uriString).path!! else uriString
                 val realStream = FileInputStream(File(path))
@@ -171,7 +171,7 @@ class AutoCloseableAndThreadingSafetyTest {
 
         var trackedIn: CloseTrackingInputStream? = null
 
-        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher) {
+        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()) {
             override fun openSafeInputStream(uriString: String): InputStream {
                 val path = if (uriString.startsWith("file://")) Uri.parse(uriString).path!! else uriString
                 val realStream = FileInputStream(File(path))
@@ -200,7 +200,7 @@ class AutoCloseableAndThreadingSafetyTest {
         var trackedIn: CloseTrackingInputStream? = null
         var trackedOut: CloseTrackingOutputStream? = null
 
-        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher) {
+        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()) {
             override fun openSafeInputStream(uriString: String): InputStream {
                 val path = if (uriString.startsWith("file://")) Uri.parse(uriString).path!! else uriString
                 val realStream = FileInputStream(File(path))
@@ -237,7 +237,7 @@ class AutoCloseableAndThreadingSafetyTest {
         var trackedIn: CloseTrackingInputStream? = null
         var trackedOut: CloseTrackingOutputStream? = null
 
-        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher) {
+        val trackingRepo = object : PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()) {
             override fun openSafeInputStream(uriString: String): InputStream {
                 val path = if (uriString.startsWith("file://")) Uri.parse(uriString).path!! else uriString
                 val realStream = FileInputStream(File(path))

@@ -77,7 +77,7 @@ class CorruptedPdfAdversarialTest {
             .allowMainThreadQueries()
             .build()
         repository = PasswordRepository(database.passwordDao(), CryptoManager())
-        val pdfRepo = PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         vaultUseCase = PasswordVaultUseCase(repository)
         decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepo, decryptUseCase, vaultUseCase, testDispatcher)
@@ -169,7 +169,7 @@ class CorruptedPdfAdversarialTest {
 
     @Test
     fun unlockWithManualPassword_unsupportedEncryption_dismissesDialogAndEmitsSnackbar() = runTest(testDispatcher) {
-        val pdfRepo = PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val unsupportedUseCase = object : DecryptPdfUseCase(pdfRepo, testDispatcher) {
             override suspend fun decrypt(inputUriString: String, outputUriString: String, passwordValue: String): DecryptStatus {
                 return DecryptStatus.UNSUPPORTED_ENCRYPTION
@@ -255,7 +255,7 @@ class CorruptedPdfAdversarialTest {
 
     @Test
     fun autoUnlock_unsupportedSecurityHandlerKeywords_returnsUnsupportedResult() = runTest(testDispatcher) {
-        val customRepo = object : PdfRepositoryImpl(application, testDispatcher) {
+        val customRepo = object : PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()) {
             override fun openSafeInputStream(uriString: String): java.io.InputStream {
                 return object : java.io.InputStream() {
                     override fun read(): Int = throw IOException("Unknown SecurityHandler CryptFilter Adobe DRM unsupported")

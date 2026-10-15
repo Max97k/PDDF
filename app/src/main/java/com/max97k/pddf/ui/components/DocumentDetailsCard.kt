@@ -118,6 +118,60 @@ fun DocumentDetailsCard(
                     text = stringResource(R.string.label_doc_permissions, permText),
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                if (metadata.fonts.isNotEmpty() || metadata.hasMissingNonEmbeddedSystemFonts) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    var fontsExpanded by remember { mutableStateOf(false) }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
+                                fontsExpanded = !fontsExpanded
+                            },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.title_font_diagnostics),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    imageVector = if (fontsExpanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (fontsExpanded) {
+                                        stringResource(R.string.content_desc_collapse)
+                                    } else {
+                                        stringResource(R.string.content_desc_expand)
+                                    }
+                                )
+                            }
+                            if (fontsExpanded) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                if (metadata.hasMissingNonEmbeddedSystemFonts) {
+                                    Text(
+                                        text = stringResource(R.string.warning_missing_fonts),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                metadata.fonts.forEach { font ->
+                                    val subsetText = if (font.isSubset) stringResource(R.string.label_subset) else ""
+                                    val embedText = if (font.isEmbedded) stringResource(R.string.label_embedded) else stringResource(R.string.label_not_embedded)
+                                    Text(
+                                        text = stringResource(R.string.label_font_item, font.name, font.subType, embedText, subsetText),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

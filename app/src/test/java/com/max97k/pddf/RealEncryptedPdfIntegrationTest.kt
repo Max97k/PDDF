@@ -118,7 +118,7 @@ class RealEncryptedPdfIntegrationTest {
         val decryptedFile = File(context.cacheDir, "output_decrypted.pdf")
         createdFiles.add(decryptedFile)
 
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         val status = decryptUseCase.decrypt(
             inputUriString = encryptedFile.absolutePath,
@@ -143,7 +143,7 @@ class RealEncryptedPdfIntegrationTest {
         val decryptedFile = File(context.cacheDir, "output_wrong.pdf")
         createdFiles.add(decryptedFile)
 
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         val status = decryptUseCase.decrypt(
             inputUriString = encryptedFile.absolutePath,
@@ -160,7 +160,7 @@ class RealEncryptedPdfIntegrationTest {
         val decryptedFile = File(context.cacheDir, "output_plain.pdf")
         createdFiles.add(decryptedFile)
 
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         val status = decryptUseCase.decrypt(
             inputUriString = plainFile.absolutePath,
@@ -174,7 +174,7 @@ class RealEncryptedPdfIntegrationTest {
     @Test
     fun testAutoUnlockUseCase_withMatchingSavedPassword_automaticallyUnlocks() = runTest(testDispatcher) {
         val encryptedFile = createRealEncryptedPdf(userPassword = testPassword)
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
 
         val fakeDao = DomainUseCasesTest.FakePasswordDao()
@@ -200,7 +200,7 @@ class RealEncryptedPdfIntegrationTest {
     @Test
     fun testMetadataExtraction_realEncryptedPdf_extractsCorrectInfo() = runTest(testDispatcher) {
         val encryptedFile = createRealEncryptedPdf(userPassword = testPassword, title = "Tax Statement 2026")
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
 
         val metadata = decryptUseCase.extractMetadata(encryptedFile.absolutePath, testPassword)

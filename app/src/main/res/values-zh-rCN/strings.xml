@@ -144,4 +144,10 @@
     <string name="status_update_downloaded">更新已下载完成，请重新启动以应用。</string>
     <string name="btn_restart_update">重新启动</string>
     <string name="status_update_failed">无法检查更新</string>
+    <string name="title_font_diagnostics">Font Diagnostics</string>
+    <string name="warning_missing_fonts">Warning: Document relies on missing non-embedded system fonts.</string>
+    <string name="label_embedded">Embedded</string>
+    <string name="label_not_embedded">Not Embedded</string>
+    <string name="label_subset"> (Subset)</string>
+    <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
 </resources>

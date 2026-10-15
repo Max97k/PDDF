@@ -246,7 +246,7 @@ class MainViewModelTest {
 
     @Test
     fun testHandleExternalPdfIntent_unsupportedEncryption_showsSnackbarAndDoesNotShowPrompt() = runTest(testDispatcher) {
-        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptPdfUseCase = com.max97k.pddf.domain.usecase.DecryptPdfUseCase(pdfRepo, testDispatcher)
         val mockAutoUnlockUseCase = object : com.max97k.pddf.domain.usecase.AutoUnlockUseCase(
             pdfRepo,
@@ -280,7 +280,7 @@ class MainViewModelTest {
 
     @Test
     fun testUnlockWithManualPassword_unsupportedEncryption_dismissesPromptAndShowsSnackbar() = runTest(testDispatcher) {
-        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptPdfUseCase = com.max97k.pddf.domain.usecase.DecryptPdfUseCase(pdfRepo, testDispatcher)
         val mockAutoUnlockUseCase = object : com.max97k.pddf.domain.usecase.AutoUnlockUseCase(
             pdfRepo,

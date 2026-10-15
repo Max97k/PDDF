@@ -103,7 +103,7 @@ class BoundaryValueAnalysisTest {
         val outputFile = File(context.cacheDir, "bva_output.pdf")
         tempFiles.add(outputFile)
 
-        val pdfRepo = PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         val status = decryptUseCase.decrypt(
             encryptedFile.absolutePath,
@@ -133,7 +133,7 @@ class BoundaryValueAnalysisTest {
         val outputFile = File(context.cacheDir, "bva_extreme_out.pdf")
         tempFiles.add(outputFile)
 
-        val pdfRepo = PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         val status = decryptUseCase.decrypt(
             encryptedFile.absolutePath,
@@ -160,7 +160,7 @@ class BoundaryValueAnalysisTest {
         val outputFile = File(context.cacheDir, "bva_unicode_out.pdf")
         tempFiles.add(outputFile)
 
-        val pdfRepo = PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         val status = decryptUseCase.decrypt(
             encryptedFile.absolutePath,
@@ -176,7 +176,7 @@ class BoundaryValueAnalysisTest {
         val outputFile = File(context.cacheDir, "bva_zero_out.pdf")
         tempFiles.add(outputFile)
 
-        val pdfRepo = PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         val status = decryptUseCase.decrypt(
             zeroByteFile.absolutePath,
@@ -192,7 +192,7 @@ class BoundaryValueAnalysisTest {
         val outputFile = File(context.cacheDir, "bva_corrupt_out.pdf")
         tempFiles.add(outputFile)
 
-        val pdfRepo = PdfRepositoryImpl(context, testDispatcher)
+        val pdfRepo = PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         val status = decryptUseCase.decrypt(
             corruptFile.absolutePath,

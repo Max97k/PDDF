@@ -146,4 +146,10 @@
     <string name="status_update_downloaded">Update downloaded. Restart to apply.</string>
     <string name="btn_restart_update">Restart</string>
     <string name="status_update_failed">Unable to check for updates</string>
+    <string name="title_font_diagnostics">Font Diagnostics</string>
+    <string name="warning_missing_fonts">Warning: Document relies on missing non-embedded system fonts.</string>
+    <string name="label_embedded">Embedded</string>
+    <string name="label_not_embedded">Not Embedded</string>
+    <string name="label_subset"> (Subset)</string>
+    <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
 </resources>
