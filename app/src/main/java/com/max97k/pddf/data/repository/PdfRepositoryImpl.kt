@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.data.repository
+package com.max97k.pddf.data.repository
 
 import android.content.Context
 import android.net.Uri
@@ -51,11 +51,26 @@ open class PdfRepositoryImpl @Inject constructor(
         val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             inputStream.use { input ->
-                val doc = PDDocument.load(
-                    input.buffered(),
-                    MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
-                )
-                doc.use {
+                var doc: PDDocument? = null
+                try {
+                    doc = PDDocument.load(
+                        input.buffered(),
+                        MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
+                    )
+                } catch (e: Exception) {
+                    if (e.message?.contains("xref", ignoreCase = true) == true) {
+                        try {
+                            openSafeInputStream(sourceUri)?.use { fallbackInput ->
+                                doc = PDDocument.load(
+                                    fallbackInput.buffered(),
+                                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
+                                )
+                            }
+                        } catch (_: Exception) {}
+                    } else throw e
+                }
+                doc?.use {
+                    sanitizePdf(it)
                     isEncrypted = it.isEncrypted
                 }
             }
@@ -105,15 +120,26 @@ open class PdfRepositoryImpl @Inject constructor(
         val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
-                val docWithoutPass = try {
-                    PDDocument.load(
+                var docWithoutPass: PDDocument? = null
+                try {
+                    docWithoutPass = PDDocument.load(
                         inputStream.buffered(),
                         MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
-                } catch (_: Exception) {
-                    null
+                } catch (e: Exception) {
+                    if (e.message?.contains("xref", ignoreCase = true) == true) {
+                        try {
+                            openSafeInputStream(sourceUri)?.use { fallbackInput ->
+                                docWithoutPass = PDDocument.load(
+                                    fallbackInput.buffered(),
+                                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
+                                )
+                            }
+                        } catch (_: Exception) {}
+                    }
                 }
                 docWithoutPass?.use {
+                    sanitizePdf(it)
                     if (!it.isEncrypted) {
                         val copySucceeded = copy(sourceUri, destUri)
                         return@withContext if (copySucceeded) {
@@ -144,6 +170,7 @@ open class PdfRepositoryImpl @Inject constructor(
                         pwd,
                         MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     ).use { document ->
+                        sanitizePdf(document)
                         if (!document.isEncrypted) {
                             return@withContext DecryptStatus.NOT_ENCRYPTED
                         }
@@ -237,16 +264,28 @@ open class PdfRepositoryImpl @Inject constructor(
         val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
-                val doc = try {
-                    PDDocument.load(
+                var doc: PDDocument? = null
+                try {
+                    doc = PDDocument.load(
                         inputStream.buffered(),
                         passwordValue,
                         MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
-                } catch (_: Exception) {
-                    null
+                } catch (e: Exception) {
+                    if (e.message?.contains("xref", ignoreCase = true) == true) {
+                        try {
+                            openSafeInputStream(sourceUri)?.use { fallbackInput ->
+                                doc = PDDocument.load(
+                                    fallbackInput.buffered(),
+                                    passwordValue,
+                                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
+                                )
+                            }
+                        } catch (_: Exception) {}
+                    }
                 }
                 doc?.use {
+                    sanitizePdf(it)
                     val info = it.documentInformation
                     val title = info?.title ?: "Unknown"
                     val author = info?.author ?: "Unknown"
@@ -390,6 +429,47 @@ open class PdfRepositoryImpl @Inject constructor(
             } else false
         } catch (_: Exception) {
             false
+        }
+    }
+
+    private fun sanitizePdf(document: PDDocument) {
+        val catalog = document.documentCatalog?.cosObject
+        if (catalog != null) {
+            catalog.removeItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("JS"))
+            catalog.removeItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("JavaScript"))
+            catalog.removeItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("Launch"))
+            catalog.removeItem(com.tom_roush.pdfbox.cos.COSName.getPDFName("EmbeddedFiles"))
+        }
+
+        for (page in document.pages) {
+            val annotations = page.annotations ?: continue
+            for (annotation in annotations) {
+                val cos = annotation.cosObject
+                cos.removeItem(com.tom_roush.pdfbox.cos.COSName.A)
+                cos.removeItem(com.tom_roush.pdfbox.cos.COSName.AA)
+            }
+        }
+
+        // Defend against decompression bombs (Zip Bombs) by actively inspecting stream objects
+        for (obj in document.document.objects) {
+            if (obj is com.tom_roush.pdfbox.cos.COSStream) {
+                val filters = obj.getFilters()
+                val isFlate = filters != null && (filters.toString().contains("FlateDecode"))
+                if (isFlate) {
+                    val rawLength = obj.length.toLong()
+                    val decodedLength = obj.getInt(com.tom_roush.pdfbox.cos.COSName.DL).toLong()
+
+                    // Cap max uncompressed stream expansion factor (e.g. factor > 100 on small streams)
+                    if (decodedLength > 0 && rawLength > 0 && (decodedLength / rawLength) > 100L) {
+                        throw java.io.IOException("Stream exceeded maximum allowed decoded expansion factor (Zip Bomb Protection)")
+                    }
+
+                    // Cap absolute uncompressed stream size to 100MB
+                    if (decodedLength > 100 * 1024 * 1024) {
+                        throw java.io.IOException("Stream exceeded maximum allowed decoded size (Zip Bomb Protection)")
+                    }
+                }
+            }
         }
     }
 
