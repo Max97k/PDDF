@@ -176,4 +176,13 @@
     <string name="hint_page_range">例: 1-3, 5, 8-10</string>
     <string name="msg_extracted_pages_preview">%1$d ページ選択中</string>
     <string name="error_invalid_page_range">無効なページ範囲です</string>
+
+    <!-- Export Image -->
+    <string name="btn_export_image">Export Image</string>
+    <string name="dialog_title_export_image">Export Page as Image</string>
+    <string name="label_page_number">Page Number</string>
+    <string name="format_png">PNG</string>
+    <string name="format_jpeg">JPEG</string>
+    <string name="msg_export_success">Image exported successfully</string>
+    <string name="msg_export_failed">Failed to export image</string>
 </resources>

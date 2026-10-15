@@ -121,6 +121,15 @@ class DomainUseCasesTest {
 
         override suspend fun checkEncryption(sourceUri: String): PdfEncryptionCheck = checkEncryptionResult
 
+        override suspend fun exportPageAsImage(
+            sourceUri: String,
+            pageIndex: Int,
+            outputUri: String,
+            format: android.graphics.Bitmap.CompressFormat,
+            quality: Int
+        ): Boolean = TODO()
+
+
         override suspend fun extractPages(sourceUri: String, destUri: String, pageRange: String): Result<Int> {
             return Result.success(1)
         }

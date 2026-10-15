@@ -26,6 +26,15 @@ interface PdfRepository {
         passwordValue: String
     ): DecryptStatus
 
+
+    suspend fun exportPageAsImage(
+        sourceUri: String,
+        pageIndex: Int,
+        outputUri: String,
+        format: android.graphics.Bitmap.CompressFormat,
+        quality: Int
+    ): Boolean
+
     suspend fun extractMetadata(
         sourceUri: String,
         passwordValue: String = ""

@@ -40,6 +40,15 @@ class FlattenPdfAnnotationsUseCaseTest {
 
         val fakeRepository = object : PdfRepository {
             override suspend fun checkEncryption(sourceUri: String) = TODO()
+
+            override suspend fun exportPageAsImage(
+                sourceUri: String,
+                pageIndex: Int,
+                outputUri: String,
+                format: android.graphics.Bitmap.CompressFormat,
+                quality: Int
+            ): Boolean = TODO()
+
             override suspend fun decrypt(sourceUri: String, destUri: String, passwordChars: CharArray) = TODO()
             override suspend fun decrypt(sourceUri: String, destUri: String, passwordValue: String) = TODO()
             override suspend fun extractMetadata(sourceUri: String, passwordValue: String) = TODO()

@@ -269,6 +269,40 @@ open class PdfRepositoryImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun exportPageAsImage(
+        sourceUri: String,
+        pageIndex: Int,
+        outputUri: String,
+        format: android.graphics.Bitmap.CompressFormat,
+        quality: Int
+    ): Boolean = withContext(ioDispatcher) {
+        try {
+            var success = false
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                val document = PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                )
+                document.use { doc ->
+                    if (pageIndex in 0 until doc.numberOfPages) {
+                        val renderer = com.tom_roush.pdfbox.rendering.PDFRenderer(doc)
+                        val bitmap = renderer.renderImageWithDPI(pageIndex, 300f, com.tom_roush.pdfbox.rendering.ImageType.RGB)
+
+                        openSafeOutputStream(outputUri)?.use { outputStream ->
+                            success = bitmap.compress(format, quality, outputStream)
+                        }
+                        bitmap.recycle()
+                    }
+                }
+            }
+            success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     override suspend fun extractMetadata(
         sourceUri: String,
         passwordValue: String
