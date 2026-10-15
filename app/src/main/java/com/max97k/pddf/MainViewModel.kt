@@ -16,6 +16,7 @@ import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
+import com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase
 import com.max97k.pddf.util.FileUtils
 import com.max97k.pddf.util.MemoryUtils
 import com.max97k.pddf.util.Result
@@ -67,7 +68,8 @@ class MainViewModel @Inject constructor(
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
     private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
-    private val pdfRepository: com.max97k.pddf.domain.repository.PdfRepository
+    private val pdfRepository: com.max97k.pddf.domain.repository.PdfRepository,
+    private val reversePdfPagesUseCase: ReversePdfPagesUseCase
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -278,6 +280,7 @@ class MainViewModel @Inject constructor(
             is MainUiAction.SharePdf -> emitEffect(UiEffect.SharePdf(action.uri))
             is MainUiAction.OpenDownloads -> emitEffect(UiEffect.OpenFileDownloads)
             is MainUiAction.OpenUrl -> emitEffect(UiEffect.OpenUrl(action.url))
+            is MainUiAction.ReversePages -> reversePages(action.uri)
             is MainUiAction.AppBackgrounded -> onAppBackgrounded()
             is MainUiAction.AppForegrounded -> onAppForegrounded()
             is MainUiAction.CheckForUpdates -> {
@@ -961,6 +964,21 @@ class MainViewModel @Inject constructor(
     ) {
         val mode = if (overwrite) ConflictMode.OVERWRITE else ConflictMode.SAVE_AS_COPY
         decryptPdfsToDirectory(context, inputUris, outputDirectoryUri, passwordValue, mode)
+    }
+
+    private fun reversePages(sourceUri: Uri) {
+        viewModelScope.launch(ioDispatcher) {
+            isProcessing.value = true
+            _uiState.update { it.copy(isProcessing = true) }
+            val result = reversePdfPagesUseCase.reversePages(sourceUri.toString())
+            result.onSuccess { reversedUriString ->
+                emitEffect(UiEffect.SharePdf(Uri.parse(reversedUriString)))
+            }.onFailure { error ->
+                emitEffect(UiEffect.ShowSnackbar(error.localizedMessage ?: "Failed to reverse pages"))
+            }
+            isProcessing.value = false
+            _uiState.update { it.copy(isProcessing = false) }
+        }
     }
 
     fun copyUriStream(context: Context, sourceUri: Uri, destUri: Uri) {

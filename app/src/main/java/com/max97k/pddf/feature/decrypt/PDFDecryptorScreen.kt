@@ -660,6 +660,9 @@ fun PDFDecryptorScreen(
                                                     decryptionDurationMs = uiState.lastDecryptionDurationMs,
                                                     onPreview = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                    } else null,
+                                                    onReversePages = if (uiState.activePreviewUri != null) {
+                                                        { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                     } else null
                                                 )
                                             }
@@ -918,6 +921,9 @@ fun PDFDecryptorScreen(
                                                 decryptionDurationMs = uiState.lastDecryptionDurationMs,
                                                 onPreview = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                } else null,
+                                                onReversePages = if (uiState.activePreviewUri != null) {
+                                                    { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                 } else null
                                             )
                                         }

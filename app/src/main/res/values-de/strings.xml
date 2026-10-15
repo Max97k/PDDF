@@ -187,4 +187,6 @@
     <string name="format_jpeg">JPEG</string>
     <string name="msg_export_success">Image exported successfully</string>
     <string name="msg_export_failed">Failed to export image</string>
+
+    <string name="btn_reverse_pages">Seiten umkehren</string>
 </resources>

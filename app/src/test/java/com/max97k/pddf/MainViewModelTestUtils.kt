@@ -45,7 +45,8 @@ fun createTestMainViewModel(
         autoUnlockUseCase = autoUnlockUseCase,
         batchProcessUseCase = batchProcessUseCase,
         checkAppUpdateUseCase = checkAppUpdateUseCase,
-        pdfRepository = pdfRepository
+        pdfRepository = pdfRepository,
+        reversePdfPagesUseCase = com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase(pdfRepository, ioDispatcher)
     )
 }
 

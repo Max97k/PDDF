@@ -29,6 +29,7 @@ sealed interface MainUiAction {
     data class DecryptAndPreview(val uri: Uri, val passwordValue: String) : MainUiAction
     data object RequestSaveAsPicker : MainUiAction
     data object CancelBatch : MainUiAction
+    data class ReversePages(val uri: Uri) : MainUiAction
 
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction

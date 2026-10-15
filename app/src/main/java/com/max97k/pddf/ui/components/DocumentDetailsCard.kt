@@ -41,7 +41,8 @@ fun DocumentDetailsCard(
     modifier: Modifier = Modifier,
     decryptionDurationMs: Long? = null,
     onPreview: (() -> Unit)? = null,
-    onFlattenForms: (() -> Unit)? = null
+    onFlattenForms: (() -> Unit)? = null,
+    onReversePages: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var exportMenuExpanded by remember { mutableStateOf(false) }
@@ -67,6 +68,11 @@ fun DocumentDetailsCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onReversePages != null) {
+                        TextButton(onClick = onReversePages) {
+                            Text("🔄 " + stringResource(R.string.btn_reverse_pages))
+                        }
+                    }
                     if (onPreview != null) {
                         TextButton(onClick = onPreview) {
                             Text("👁️ " + stringResource(R.string.btn_preview_pdf))
