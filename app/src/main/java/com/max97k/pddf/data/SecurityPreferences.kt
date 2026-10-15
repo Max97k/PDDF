@@ -28,6 +28,7 @@ class SecurityPreferences(
     companion object {
         const val PREFS_NAME = "security_prefs"
         const val KEY_SCREENSHOT_PROTECTION = "screenshot_protection"
+        const val KEY_PRESERVE_IMAGES = "preserve_images"
 
         /**
          * Synchronous read for use in Activity.onCreate() before setContent{}.
@@ -43,6 +44,16 @@ class SecurityPreferences(
         prefs.getBoolean(KEY_SCREENSHOT_PROTECTION, false)
     )
     val screenshotProtection: StateFlow<Boolean> = _screenshotProtection.asStateFlow()
+
+    private val _preserveEmbeddedImages = MutableStateFlow(
+        prefs.getBoolean(KEY_PRESERVE_IMAGES, false)
+    )
+    val preserveEmbeddedImages: StateFlow<Boolean> = _preserveEmbeddedImages.asStateFlow()
+
+    suspend fun savePreserveImages(enabled: Boolean) = withContext(ioDispatcher) {
+        prefs.edit().putBoolean(KEY_PRESERVE_IMAGES, enabled).apply()
+        _preserveEmbeddedImages.value = enabled
+    }
 
     suspend fun saveScreenshotProtection(enabled: Boolean) = withContext(ioDispatcher) {
         prefs.edit().putBoolean(KEY_SCREENSHOT_PROTECTION, enabled).apply()

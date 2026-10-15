@@ -107,7 +107,10 @@
     </plurals>
 
     <!-- 設定 -->
-    <string name="title_settings">設定</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="settings_preserve_images">Preserve Embedded Images</string>
+    <string name="settings_preserve_images_desc">Only background and text colors invert while photos stay natural.</string>
     <string name="settings_section_appearance">外觀</string>
     <string name="settings_section_privacy">隱私與安全</string>
     <string name="settings_screenshot_protection">截圖保護</string>

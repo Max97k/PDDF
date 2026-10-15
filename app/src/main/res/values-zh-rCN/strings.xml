@@ -108,6 +108,9 @@
 
     <!-- Settings -->
     <string name="title_settings">Settings</string>
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="settings_preserve_images">Preserve Embedded Images</string>
+    <string name="settings_preserve_images_desc">Only background and text colors invert while photos stay natural.</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_privacy">Privacy</string>
     <string name="settings_screenshot_protection">Screenshot Protection</string>

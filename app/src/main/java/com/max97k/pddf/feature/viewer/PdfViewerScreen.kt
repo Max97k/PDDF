@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.SettingsBrightness
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,6 +56,26 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
 import com.max97k.pddf.R
+import com.max97k.pddf.data.SecurityPreferences
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
+import androidx.compose.material3.rememberModalBottomSheetState
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +88,11 @@ fun PdfViewerScreen(
     onSaveAs: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val securityPreferences = remember { SecurityPreferences(context) }
+    val preserveImages by securityPreferences.preserveEmbeddedImages.collectAsState()
+    var showReadingModeSheet by rememberSaveable { mutableStateOf(false) }
+    val isDarkTheme = isSystemInDarkTheme()
     val view = LocalView.current
     val fragmentActivity = remember(context) { context.findFragmentActivity() }
     val insetsController = remember(fragmentActivity, view) {
@@ -167,6 +193,13 @@ fun PdfViewerScreen(
                                 contentDescription = stringResource(R.string.btn_print)
                             )
                         }
+                        IconButton(onClick = { showReadingModeSheet = true }) {
+                            Icon(
+                                imageVector = Icons.Default.SettingsBrightness,
+                                contentDescription = stringResource(R.string.title_reading_mode)
+                            )
+                        }
+
                         if (onSaveAs != null) {
                             IconButton(onClick = onSaveAs) {
                                 Icon(
@@ -191,6 +224,47 @@ fun PdfViewerScreen(
             }
         }
     ) { innerPadding ->
+        if (showReadingModeSheet) {
+            val sheetState = rememberModalBottomSheetState()
+            ModalBottomSheet(
+                onDismissRequest = { showReadingModeSheet = false },
+                sheetState = sheetState
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.title_reading_mode),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                    )
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.settings_preserve_images)) },
+                        supportingContent = { Text(stringResource(R.string.settings_preserve_images_desc)) },
+                        trailingContent = {
+                            Switch(
+                                checked = preserveImages,
+                                onCheckedChange = { checked ->
+                                    scope.launch { securityPreferences.savePreserveImages(checked) }
+                                }
+                            )
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch { securityPreferences.savePreserveImages(!preserveImages) }
+                            }
+                    )
+                }
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -219,9 +293,34 @@ fun PdfViewerScreen(
                     factory = { ctx ->
                         FragmentContainerView(ctx).apply {
                             id = containerId
+                            if (isDarkTheme && preserveImages) {
+                                val matrix = ColorMatrix(floatArrayOf(
+                                    -0.574f, 1.43f, 0.144f, 0f, 0f,
+                                    0.426f, 0.43f, 0.144f, 0f, 0f,
+                                    0.426f, 1.43f, -0.856f, 0f, 0f,
+                                    0f, 0f, 0f, 1f, 0f
+                                ))
+                                setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply {
+                                    colorFilter = ColorMatrixColorFilter(matrix)
+                                })
+                            }
                         }
                     },
-                    update = { _ ->
+                    update = { view ->
+                        if (isDarkTheme && preserveImages) {
+                            val matrix = ColorMatrix(floatArrayOf(
+                                -0.574f, 1.43f, 0.144f, 0f, 0f,
+                                0.426f, 0.43f, 0.144f, 0f, 0f,
+                                0.426f, 1.43f, -0.856f, 0f, 0f,
+                                0f, 0f, 0f, 1f, 0f
+                            ))
+                            view.setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply {
+                                colorFilter = ColorMatrixColorFilter(matrix)
+                            })
+                        } else {
+                            view.setLayerType(View.LAYER_TYPE_NONE, null)
+                        }
+
                         if (!fragmentManager.isStateSaved && !fragmentManager.isDestroyed) {
                             val existing = fragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
                             if (existing == null && !committed[0]) {
