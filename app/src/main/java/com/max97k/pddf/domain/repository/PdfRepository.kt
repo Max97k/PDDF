@@ -47,6 +47,8 @@ interface PdfRepository {
 
     suspend fun getFileName(uriString: String): String
 
+    suspend fun extractPages(sourceUri: String, destUri: String, pageRange: String): kotlin.Result<Int>
+
     suspend fun createDocumentInDirectory(
         directoryUriString: String,
         displayName: String,

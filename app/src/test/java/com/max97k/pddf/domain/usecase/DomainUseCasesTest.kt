@@ -113,6 +113,10 @@ class DomainUseCasesTest {
 
         override suspend fun checkEncryption(sourceUri: String): PdfEncryptionCheck = checkEncryptionResult
 
+        override suspend fun extractPages(sourceUri: String, destUri: String, pageRange: String): Result<Int> {
+            return Result.success(1)
+        }
+
         override suspend fun decrypt(
             sourceUri: String,
             destUri: String,

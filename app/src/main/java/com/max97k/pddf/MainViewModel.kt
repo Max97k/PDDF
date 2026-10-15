@@ -180,6 +180,14 @@ class MainViewModel @Inject constructor(
         pdfBoxInitJob?.join()
     }
 
+    suspend fun extractPages(sourceUri: String, destUri: String, pageRange: String): kotlin.Result<Int> {
+        return decryptPdfUseCase.extractPages(sourceUri, destUri, pageRange)
+    }
+
+    suspend fun createTempFile(prefix: String, suffix: String = ".pdf"): String {
+        return decryptPdfUseCase.createTempFile(prefix, suffix)
+    }
+
     fun emitEffect(effect: UiEffect) {
         viewModelScope.launch {
             _uiEffect.send(effect)
