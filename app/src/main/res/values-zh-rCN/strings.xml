@@ -118,4 +118,21 @@
     <string name="msg_screenshot_protection_off">Screenshot protection disabled</string>
     <string name="content_desc_about">关于</string>
     <string name="privacy_shield_active">隐私安全保护中</string>
+
+    <string name="btn_print">打印文档</string>
+    <string name="title_password_actions">🔒 密码与解密操作</string>
+    <string name="desc_password_actions">请在左侧选择 PDF 文件以输入密码并解密。</string>
+    <string name="title_pdf_viewer">PDF 阅读器</string>
+    <string name="content_desc_page">第 %1$d 页</string>
+    <string name="label_document">文档</string>
+    <string name="settings_section_language">语言设置</string>
+    <string name="language_system_default">跟随系统默认</string>
+    <string name="language_en">English</string>
+    <string name="language_zh_tw">繁體中文</string>
+    <string name="language_zh_cn">简体中文</string>
+    <string name="language_ja">日本語</string>
+    <string name="language_es">Español</string>
+    <string name="language_de">Deutsch</string>
+    <string name="language_fr">Français</string>
+    <string name="symbol_checkmark">✓</string>
 </resources>

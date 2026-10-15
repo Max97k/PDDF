@@ -120,7 +120,7 @@ fun PdfViewerScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = title.ifEmpty { "PDF Viewer" },
+                            text = title.ifEmpty { stringResource(R.string.title_pdf_viewer) },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,

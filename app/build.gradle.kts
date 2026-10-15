@@ -29,7 +29,10 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
-  androidResources { localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en") }
+  androidResources {
+        generateLocaleConfig = true
+        localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en")
+        localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en") }
 
   signingConfigs {
     create("release") {
@@ -161,6 +164,8 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
+
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.kotlinx.collections.immutable)
