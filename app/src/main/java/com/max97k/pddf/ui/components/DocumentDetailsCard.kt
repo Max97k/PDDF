@@ -15,6 +15,10 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,9 +39,11 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-    onPreview: (() -> Unit)? = null
+    onPreview: (() -> Unit)? = null,
+    onFlattenForms: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var exportMenuExpanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
     Card(
         modifier = modifier
@@ -63,6 +69,26 @@ fun DocumentDetailsCard(
                     if (onPreview != null) {
                         TextButton(onClick = onPreview) {
                             Text("👁️ " + stringResource(R.string.btn_preview_pdf))
+                        }
+                    }
+                    if (onFlattenForms != null) {
+                        IconButton(onClick = { exportMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Export options"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = exportMenuExpanded,
+                            onDismissRequest = { exportMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Flatten Forms") },
+                                onClick = {
+                                    exportMenuExpanded = false
+                                    onFlattenForms()
+                                }
+                            )
                         }
                     }
                     Icon(
