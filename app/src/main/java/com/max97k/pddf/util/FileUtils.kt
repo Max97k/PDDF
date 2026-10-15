@@ -100,6 +100,30 @@ object FileUtils {
     /**
      * Efficiently queries child documents in SAF tree without heavy reflection of DocumentFile.listFiles()
      */
+    /**
+     * Resolves a human-readable display name for SAF persisted URIs.
+     * Uses DocumentsContract to determine if it is a tree or file URI.
+     */
+    fun getSafDisplayName(context: Context, uri: Uri): String {
+        try {
+            val isTree = DocumentsContract.isTreeUri(uri)
+            val docId = if (isTree) DocumentsContract.getTreeDocumentId(uri) else DocumentsContract.getDocumentId(uri)
+            val buildUri = if (isTree) DocumentsContract.buildDocumentUriUsingTree(uri, docId) else uri
+
+            context.contentResolver.query(buildUri, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                    if (index != -1) {
+                        return cursor.getString(index) ?: getFileName(context, uri)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Fallback
+        }
+        return getFileName(context, uri)
+    }
+
     fun findChildUriInTree(context: Context, treeUri: Uri, targetDisplayName: String): Uri? {
         return try {
             val docId = DocumentsContract.getTreeDocumentId(treeUri)
