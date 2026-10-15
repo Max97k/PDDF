@@ -56,6 +56,11 @@ sealed interface MainUiAction {
     data class SetWhatsNewDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPreviewPdfUri(val uri: Uri?) : MainUiAction
 
+    // Re-Encryption Actions
+    data class RequestReEncrypt(val uri: Uri) : MainUiAction
+    data object DismissReEncryptDialog : MainUiAction
+    data class SubmitReEncrypt(val passwordChars: CharArray) : MainUiAction
+
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction
     data class UpdateConflictSettings(val mode: ConflictMode, val remember: Boolean) : MainUiAction

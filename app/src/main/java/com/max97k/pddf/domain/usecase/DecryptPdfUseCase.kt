@@ -31,6 +31,15 @@ open class DecryptPdfUseCase(
         pdfRepository.decrypt(inputUriString, outputUriString, passwordValue)
     }
 
+    open suspend fun reEncrypt(
+        inputUriString: String,
+        outputUriString: String,
+        newPasswordChars: CharArray,
+        keyLength: Int = 256
+    ): Result<Unit> = withContext(ioDispatcher) {
+        pdfRepository.reEncrypt(inputUriString, outputUriString, newPasswordChars, keyLength)
+    }
+
     open suspend fun extractMetadata(
         uriString: String,
         passwordValue: String = ""

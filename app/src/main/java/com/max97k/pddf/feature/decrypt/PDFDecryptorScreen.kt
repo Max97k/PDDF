@@ -136,6 +136,7 @@ import com.max97k.pddf.ui.components.DocumentDetailsCard
 import com.max97k.pddf.ui.components.EmptyStateCard
 import com.max97k.pddf.ui.components.PasswordInputSection
 import com.max97k.pddf.ui.components.PostDecryptActionSection
+import com.max97k.pddf.feature.decrypt.ReEncryptPasswordDialog
 import com.max97k.pddf.ui.components.PrivacyShieldOverlay
 import com.max97k.pddf.ui.components.SelectedFilesCard
 import com.max97k.pddf.ui.components.SettingsBottomSheet
@@ -760,6 +761,11 @@ fun PDFDecryptorScreen(
                                         uiState.activePreviewUri?.let { previewUri ->
                                             onAction(MainUiAction.SetPreviewPdfUri(previewUri))
                                         }
+                                    },
+                                    onProtectClick = {
+                                        uiState.lastDecryptedUri?.let { uri ->
+                                            onAction(MainUiAction.RequestReEncrypt(uri))
+                                        }
                                     }
                                 )
                             }
@@ -1069,6 +1075,13 @@ fun PDFDecryptorScreen(
     )
 
 
+
+    if (uiState.showReEncryptDialog) {
+        ReEncryptPasswordDialog(
+            onConfirm = { chars -> onAction(MainUiAction.SubmitReEncrypt(chars)) },
+            onDismiss = { onAction(MainUiAction.DismissReEncryptDialog) }
+        )
+    }
 
     if (uiState.showSavePasswordDialog) {
         SavePasswordDialog(

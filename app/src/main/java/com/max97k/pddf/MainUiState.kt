@@ -55,6 +55,8 @@ data class MainUiState(
     val showSavePasswordDialog: Boolean = false,
     val showPasswordListDialog: Boolean = false,
     val showWhatsNewDialog: Boolean = false,
+    val showReEncryptDialog: Boolean = false,
+    val activeReEncryptUri: Uri? = null,
 
     // 7. User Preferences & Settings
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -86,7 +88,7 @@ data class MainUiState(
 
     // True when any sensitive dialog is open (drives temporary FLAG_SECURE).
     val isDialogSecureModeActive: Boolean
-        get() = showPasswordListDialog || showSavePasswordDialog || showAutoUnlockPasswordPrompt
+        get() = showPasswordListDialog || showSavePasswordDialog || showAutoUnlockPasswordPrompt || showReEncryptDialog
 
     // Combined: FLAG_SECURE should be active when user-controlled OR a sensitive dialog is open.
     val isSecureModeActive: Boolean

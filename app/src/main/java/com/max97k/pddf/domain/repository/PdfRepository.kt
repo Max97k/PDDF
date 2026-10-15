@@ -26,6 +26,13 @@ interface PdfRepository {
         passwordValue: String
     ): DecryptStatus
 
+    suspend fun reEncrypt(
+        sourceUri: String,
+        destUri: String,
+        newPasswordChars: CharArray,
+        keyLength: Int = 256
+    ): Result<Unit>
+
     suspend fun extractMetadata(
         sourceUri: String,
         passwordValue: String = ""

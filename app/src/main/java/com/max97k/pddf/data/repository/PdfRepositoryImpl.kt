@@ -10,6 +10,9 @@ import com.max97k.pddf.PdfMetadata
 import com.max97k.pddf.di.IoDispatcher
 import com.max97k.pddf.domain.repository.PdfEncryptionCheck
 import com.max97k.pddf.domain.repository.PdfRepository
+import com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission
+import com.tom_roush.pdfbox.pdmodel.encryption.StandardProtectionPolicy
+import com.max97k.pddf.util.MemoryUtils
 import com.max97k.pddf.util.FileUtils
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
@@ -216,6 +219,51 @@ open class PdfRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    override suspend fun reEncrypt(
+        sourceUri: String,
+        destUri: String,
+        newPasswordChars: CharArray,
+        keyLength: Int
+    ): Result<Unit> = withContext(ioDispatcher) {
+        val tempFile = File.createTempFile("reencrypt_tmp_", ".pdf", context.cacheDir)
+        try {
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                ).use { document ->
+
+                    val ap = AccessPermission()
+                    // Set all permissions to true by default or user choice, here we just use defaults.
+
+                    val newPasswordString = String(newPasswordChars)
+                    val spp = StandardProtectionPolicy(newPasswordString, newPasswordString, ap)
+                    spp.encryptionKeyLength = keyLength
+
+                    document.protect(spp)
+
+                    tempFile.outputStream().buffered().use { outputStream ->
+                        document.save(outputStream)
+                    }
+                }
+            } ?: return@withContext Result.failure(Exception("Unable to open source stream: $sourceUri"))
+
+            if (atomicReplace(tempFile, destUri)) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to write to destination: $destUri"))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        } finally {
+            MemoryUtils.wipe(newPasswordChars)
+            if (tempFile.exists()) {
+                FileUtils.secureDelete(tempFile)
+            }
         }
     }
 
