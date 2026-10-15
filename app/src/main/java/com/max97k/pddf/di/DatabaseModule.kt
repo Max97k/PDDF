@@ -40,6 +40,12 @@ class DatabaseModule {
 
     @Provides
     @Singleton
+    fun provideReadingProgressDao(database: AppDatabase): com.max97k.pddf.data.local.ReadingProgressDao {
+        return database.readingProgressDao()
+    }
+
+    @Provides
+    @Singleton
     fun provideCryptoManager(
         @ApplicationContext context: Context
     ): CryptoManager {

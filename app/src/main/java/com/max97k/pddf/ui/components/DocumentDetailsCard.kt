@@ -34,6 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.max97k.pddf.PdfMetadata
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.max97k.pddf.data.AppDatabase
+import androidx.compose.ui.platform.LocalContext
+import kotlin.math.roundToInt
 import com.max97k.pddf.R
 import java.util.Locale
 
@@ -48,12 +56,30 @@ fun DocumentDetailsCard(
     onStamp: (() -> Unit)? = null,
     onExportText: (() -> Unit)? = null,
     onSaveAttachment: ((String) -> Unit)? = null,
-    onSaveAllAttachments: (() -> Unit)? = null
+    onSaveAllAttachments: (() -> Unit)? = null,
+    uriHash: Int? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var exportMenuExpanded by remember { mutableStateOf(false) }
     var attachmentsExpanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
+    val context = LocalContext.current
+    var readingProgress by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(uriHash) {
+        if (uriHash != null) {
+            withContext(Dispatchers.IO) {
+                val db = AppDatabase.getDatabase(context)
+                val progress = db.readingProgressDao().getProgress(uriHash)
+                if (progress != null && progress.totalPages > 0) {
+                    val percent = ((progress.lastViewedPage.toFloat() / (progress.totalPages - 1).coerceAtLeast(1)) * 100).roundToInt().coerceIn(0, 100)
+                    withContext(Dispatchers.Main) {
+                        readingProgress = percent
+                    }
+                }
+            }
+        }
+    }
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -125,8 +151,22 @@ fun DocumentDetailsCard(
                     )
                 }
             }
+            if (readingProgress != null && !expanded) {
+                Text(
+                    text = "Reading progress: $readingProgress%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
+                if (readingProgress != null) {
+                    Text(
+                        text = "Reading progress: $readingProgress%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.label_doc_title, metadata.title),
                     style = MaterialTheme.typography.bodySmall

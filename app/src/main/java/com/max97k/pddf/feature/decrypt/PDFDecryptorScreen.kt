@@ -738,7 +738,8 @@ fun PDFDecryptorScreen(
                                                     onSaveAllAttachments = {
                                                         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                                                         saveAllAttachmentsLauncher.launch(intent)
-                                                    }
+                                                    },
+                                                    uriHash = uiState.selectedUris.firstOrNull()?.toString()?.hashCode()
                                                 )
                                             }
                                         }
@@ -1016,7 +1017,8 @@ fun PDFDecryptorScreen(
                                                 onSaveAllAttachments = {
                                                     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                                                     saveAllAttachmentsLauncher.launch(intent)
-                                                }
+                                                },
+                                                uriHash = uiState.selectedUris.firstOrNull()?.toString()?.hashCode()
                                             )
                                         }
                                     }
