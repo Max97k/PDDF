@@ -35,7 +35,8 @@ fun createTestMainViewModel(
     exportPlainTextUseCase: ExportPlainTextUseCase = ExportPlainTextUseCase(pdfRepository, ioDispatcher),
     appUpdateRepository: com.max97k.pddf.domain.repository.AppUpdateRepository = FakeAppUpdateRepository(),
     checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository),
-    stampPageNumbersUseCase: com.max97k.pddf.domain.usecase.StampPageNumbersUseCase = com.max97k.pddf.domain.usecase.StampPageNumbersUseCase(pdfRepository, ioDispatcher)
+    stampPageNumbersUseCase: com.max97k.pddf.domain.usecase.StampPageNumbersUseCase = com.max97k.pddf.domain.usecase.StampPageNumbersUseCase(pdfRepository, ioDispatcher),
+    extractAttachmentsUseCase: com.max97k.pddf.domain.usecase.ExtractAttachmentsUseCase = com.max97k.pddf.domain.usecase.ExtractAttachmentsUseCase(pdfRepository, ioDispatcher)
 ): MainViewModel {
     return MainViewModel(
         application = application,
@@ -45,13 +46,14 @@ fun createTestMainViewModel(
         ioDispatcher = ioDispatcher,
         decryptPdfUseCase = decryptPdfUseCase,
         passwordVaultUseCase = passwordVaultUseCase,
+        exportPlainTextUseCase = exportPlainTextUseCase,
         autoUnlockUseCase = autoUnlockUseCase,
         batchProcessUseCase = batchProcessUseCase,
-        exportPlainTextUseCase = exportPlainTextUseCase,
         checkAppUpdateUseCase = checkAppUpdateUseCase,
         pdfRepository = pdfRepository,
         reversePdfPagesUseCase = com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase(pdfRepository, ioDispatcher),
-        stampPageNumbersUseCase = stampPageNumbersUseCase
+        stampPageNumbersUseCase = stampPageNumbersUseCase,
+        extractAttachmentsUseCase = extractAttachmentsUseCase
     )
 }
 

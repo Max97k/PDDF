@@ -35,6 +35,12 @@ sealed interface MainUiAction {
     data class RequestStampSaveAsPicker(val config: com.max97k.pddf.domain.model.StampConfig) : MainUiAction
     data class StampPages(val destUri: Uri, val config: com.max97k.pddf.domain.model.StampConfig) : MainUiAction
 
+    // Attachments
+    data class RequestSaveAttachment(val attachmentName: String) : MainUiAction
+    data class SaveAttachmentToUri(val destUri: Uri, val attachmentName: String) : MainUiAction
+    data object RequestSaveAllAttachments : MainUiAction
+    data class SaveAllAttachmentsToDirectory(val directoryUri: Uri) : MainUiAction
+
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
     data class HandleExternalIntent(

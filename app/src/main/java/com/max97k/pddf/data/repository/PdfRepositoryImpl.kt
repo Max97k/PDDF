@@ -414,6 +414,38 @@ open class PdfRepositoryImpl @Inject constructor(
                         e.printStackTrace()
                     }
 
+                    val attachments = mutableListOf<com.max97k.pddf.domain.usecase.PdfAttachment>()
+                    try {
+                        val names = it.documentCatalog.names
+                        val embeddedFiles = names?.embeddedFiles
+                        if (embeddedFiles != null) {
+                            val namesMap = mutableMapOf<String, Any>()
+                            fun extractNames(treeNode: com.tom_roush.pdfbox.pdmodel.common.PDNameTreeNode<*>) {
+                                if (treeNode.names != null) {
+                                    namesMap.putAll(treeNode.names)
+                                }
+                                if (treeNode.kids != null) {
+                                    for (kid in treeNode.kids) {
+                                        extractNames(kid)
+                                    }
+                                }
+                            }
+                            extractNames(embeddedFiles)
+                            for ((name, fs) in namesMap) {
+                                if (fs is com.tom_roush.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification) {
+                                    val ef = fs.embeddedFile
+                                    if (ef != null) {
+                                        val size = ef.size.toLong()
+                                        val subtype = ef.subtype ?: "application/octet-stream"
+                                        attachments.add(com.max97k.pddf.domain.usecase.PdfAttachment(fs.filename ?: name, size, subtype))
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // ignore extraction errors for metadata
+                    }
+
                     return@withContext PdfMetadata(
                         title = title,
                         author = author,
@@ -422,7 +454,8 @@ open class PdfRepositoryImpl @Inject constructor(
                         encryptionMethod = encMethod,
                         canPrint = canPrint,
                         canCopy = canCopy,
-                        signatures = signatures
+                        signatures = signatures,
+                        attachments = attachments
                     )
                 }
             }

@@ -360,7 +360,6 @@ fun PDFDecryptorScreen(
         }
     )
 
-
     val createZipDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -370,6 +369,38 @@ fun PDFDecryptorScreen(
             }
         }
     }
+
+    var pendingAttachmentName by remember { mutableStateOf<String?>(null) }
+
+    val createAttachmentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                val attName = pendingAttachmentName
+                if (destUri != null && attName != null) {
+                    onAction(MainUiAction.SaveAttachmentToUri(destUri, attName))
+                }
+                pendingAttachmentName = null
+            }
+        }
+    )
+
+    val saveAllAttachmentsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val treeUri = result.data?.data
+                if (treeUri != null) {
+                    context.contentResolver.takePersistableUriPermission(
+                        treeUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    onAction(MainUiAction.SaveAllAttachmentsToDirectory(treeUri))
+                }
+            }
+        }
+    )
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -678,7 +709,23 @@ fun PDFDecryptorScreen(
                                                     onReversePages = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                     } else null,
-                                                    onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) }
+                                                    onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) },
+                                                    onSaveAttachment = { attachmentName ->
+                                                        val attachment = metadata.attachments.find { it.name == attachmentName }
+                                                        if (attachment != null) {
+                                                            pendingAttachmentName = attachment.name
+                                                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                                                addCategory(Intent.CATEGORY_OPENABLE)
+                                                                type = attachment.mimeType
+                                                                putExtra(Intent.EXTRA_TITLE, attachment.name)
+                                                            }
+                                                            createAttachmentLauncher.launch(intent)
+                                                        }
+                                                    },
+                                                    onSaveAllAttachments = {
+                                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                                        saveAllAttachmentsLauncher.launch(intent)
+                                                    }
                                                 )
                                             }
                                         }
@@ -940,7 +987,23 @@ fun PDFDecryptorScreen(
                                                 onReversePages = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                 } else null,
-                                                onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) }
+                                                onStamp = { onAction(MainUiAction.SetStampDialogVisible(true)) },
+                                                onSaveAttachment = { attachmentName ->
+                                                    val attachment = metadata.attachments.find { it.name == attachmentName }
+                                                    if (attachment != null) {
+                                                        pendingAttachmentName = attachment.name
+                                                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                                            addCategory(Intent.CATEGORY_OPENABLE)
+                                                            type = attachment.mimeType
+                                                            putExtra(Intent.EXTRA_TITLE, attachment.name)
+                                                        }
+                                                        createAttachmentLauncher.launch(intent)
+                                                    }
+                                                },
+                                                onSaveAllAttachments = {
+                                                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                                    saveAllAttachmentsLauncher.launch(intent)
+                                                }
                                             )
                                         }
                                     }

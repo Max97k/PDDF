@@ -1,6 +1,7 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import androidx.compose.runtime.Immutable
+import com.max97k.pddf.domain.usecase.PdfAttachment
 
 @Immutable
 data class PdfMetadata(
@@ -11,7 +12,8 @@ data class PdfMetadata(
     val encryptionMethod: String,
     val canPrint: Boolean,
     val canCopy: Boolean,
-    val signatures: List<SignatureInfo> = emptyList()
+    val signatures: List<SignatureInfo> = emptyList(),
+    val attachments: List<PdfAttachment> = emptyList()
 ) {
     val isEncrypted: Boolean
         get() = encryptionMethod.isNotBlank() && encryptionMethod != "None"
