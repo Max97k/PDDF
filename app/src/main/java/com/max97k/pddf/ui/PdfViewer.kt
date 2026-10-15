@@ -13,7 +13,9 @@ fun PdfViewerDialog(
     title: String = "",
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    isNightModeEnabled: Boolean = false,
+    onNightModeToggled: ((Boolean) -> Unit)? = null
 ) {
     FeaturePdfViewerDialog(
         uri = uri,
@@ -21,7 +23,9 @@ fun PdfViewerDialog(
         title = title,
         onDismiss = onDismiss,
         onShare = onShare,
-        onSaveAs = onSaveAs
+        onSaveAs = onSaveAs,
+        isNightModeEnabled = isNightModeEnabled,
+        onNightModeToggled = onNightModeToggled
     )
 }
 

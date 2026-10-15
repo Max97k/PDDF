@@ -42,8 +42,10 @@ import com.max97k.pddf.data.ThemeMode
 fun SettingsBottomSheet(
     currentTheme: ThemeMode,
     screenshotProtectionEnabled: Boolean,
+    pdfNightModeEnabled: Boolean,
     onThemeSelected: (ThemeMode) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
+    onPdfNightModeToggled: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -106,6 +108,21 @@ fun SettingsBottomSheet(
                 )
             }
 
+
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_pdf_night_mode)) },
+                trailingContent = {
+                    Switch(
+                        checked = pdfNightModeEnabled,
+                        onCheckedChange = onPdfNightModeToggled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onPdfNightModeToggled(!pdfNightModeEnabled) }
+            )
 
             // ── Language Section ─────────────────────────────────────────
             Text(

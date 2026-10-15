@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
@@ -64,7 +68,9 @@ fun PdfViewerScreen(
     title: String = "",
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    isNightModeEnabled: Boolean = false,
+    onNightModeToggled: ((Boolean) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -167,6 +173,15 @@ fun PdfViewerScreen(
                                 contentDescription = stringResource(R.string.btn_print)
                             )
                         }
+
+                        if (onNightModeToggled != null) {
+                            IconButton(onClick = { onNightModeToggled(!isNightModeEnabled) }) {
+                                Icon(
+                                    imageVector = if (isNightModeEnabled) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = if (isNightModeEnabled) stringResource(R.string.btn_disable_night_mode) else stringResource(R.string.btn_enable_night_mode)
+                                )
+                            }
+                        }
                         if (onSaveAs != null) {
                             IconButton(onClick = onSaveAs) {
                                 Icon(
@@ -221,7 +236,22 @@ fun PdfViewerScreen(
                             id = containerId
                         }
                     },
-                    update = { _ ->
+                    update = { view ->
+                        if (isNightModeEnabled) {
+                            val colorMatrix = android.graphics.ColorMatrix(
+                                floatArrayOf(
+                                    -1.0f, 0f, 0f, 0f, 255f,
+                                    0f, -1.0f, 0f, 0f, 255f,
+                                    0f, 0f, -1.0f, 0f, 255f,
+                                    0f, 0f, 0f, 1.0f, 0f
+                                )
+                            )
+                            view.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, android.graphics.Paint().apply {
+                                colorFilter = android.graphics.ColorMatrixColorFilter(colorMatrix)
+                            })
+                        } else {
+                            view.setLayerType(android.view.View.LAYER_TYPE_NONE, null)
+                        }
                         if (!fragmentManager.isStateSaved && !fragmentManager.isDestroyed) {
                             val existing = fragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
                             if (existing == null && !committed[0]) {

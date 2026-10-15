@@ -146,4 +146,7 @@
     <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
     <string name="btn_restart_update">Neu starten</string>
     <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
+    <string name="settings_pdf_night_mode">PDF Night Mode</string>
+    <string name="btn_enable_night_mode">Enable Night Mode</string>
+    <string name="btn_disable_night_mode">Disable Night Mode</string>
 </resources>
