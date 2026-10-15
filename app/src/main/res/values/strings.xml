@@ -191,4 +191,11 @@
     <string name="btn_reverse_pages">Reverse Pages</string>
     <string name="btn_stamp_pages">Stamp Page Numbers</string>
     <string name="btn_export_text">Export Text</string>
+
+    <string name="title_reading_mode">Reading Mode</string>
+    <string name="reading_mode_light">Light</string>
+    <string name="reading_mode_dark">Dark</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Reading Mode</string>
 </resources>

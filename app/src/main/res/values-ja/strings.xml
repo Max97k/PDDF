@@ -189,4 +189,11 @@
     <string name="btn_reverse_pages">ページを反転</string>
     <string name="btn_stamp_pages">ページ番号を追加</string>
     <string name="btn_export_text">テキストをエクスポート</string>
+
+    <string name="title_reading_mode">読書モード</string>
+    <string name="reading_mode_light">ライト</string>
+    <string name="reading_mode_dark">ダーク</string>
+    <string name="reading_mode_sepia">セピア</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">読書モード</string>
 </resources>

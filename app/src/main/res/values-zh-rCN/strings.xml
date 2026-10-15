@@ -189,4 +189,11 @@
     <string name="btn_reverse_pages">反转页面</string>
     <string name="btn_stamp_pages">添加页码</string>
     <string name="btn_export_text">导出文本</string>
+
+    <string name="title_reading_mode">阅读模式</string>
+    <string name="reading_mode_light">浅色</string>
+    <string name="reading_mode_dark">深色</string>
+    <string name="reading_mode_sepia">复古棕褐色</string>
+    <string name="reading_mode_e_ink">电子墨水</string>
+    <string name="btn_reading_mode">阅读模式</string>
 </resources>

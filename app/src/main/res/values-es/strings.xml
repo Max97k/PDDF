@@ -191,4 +191,11 @@
     <string name="btn_reverse_pages">Invertir páginas</string>
     <string name="btn_stamp_pages">Estampar números de página</string>
     <string name="btn_export_text">Exportar texto</string>
+
+    <string name="title_reading_mode">Modo de lectura</string>
+    <string name="reading_mode_light">Claro</string>
+    <string name="reading_mode_dark">Oscuro</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">Tinta electrónica</string>
+    <string name="btn_reading_mode">Modo de lectura</string>
 </resources>

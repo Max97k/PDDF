@@ -191,4 +191,11 @@
     <string name="btn_reverse_pages">Seiten umkehren</string>
     <string name="btn_stamp_pages">Seitenzahlen stempeln</string>
     <string name="btn_export_text">Text exportieren</string>
+
+    <string name="title_reading_mode">Lesemodus</string>
+    <string name="reading_mode_light">Hell</string>
+    <string name="reading_mode_dark">Dunkel</string>
+    <string name="reading_mode_sepia">Sepia</string>
+    <string name="reading_mode_e_ink">E-Ink</string>
+    <string name="btn_reading_mode">Lesemodus</string>
 </resources>

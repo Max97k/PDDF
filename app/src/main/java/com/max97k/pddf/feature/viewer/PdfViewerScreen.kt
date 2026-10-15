@@ -10,6 +10,12 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Palette
+import com.max97k.pddf.ui.components.ReadingModeBottomSheet
+import androidx.compose.runtime.collectAsState
+import com.max97k.pddf.di.PreferencesEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -40,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,6 +59,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
+import com.max97k.pddf.data.ReadingMode
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
@@ -103,6 +114,15 @@ fun PdfViewerScreen(
     // Tracks whether the rotation dropdown menu is visible.
     var showRotationMenu by rememberSaveable { mutableStateOf(false) }
 
+
+    var showReadingModeSheet by rememberSaveable { mutableStateOf(false) }
+
+    val preferencesEntryPoint = remember(context) {
+        EntryPointAccessors.fromApplication(context.applicationContext, PreferencesEntryPoint::class.java)
+    }
+    val securityPreferences = preferencesEntryPoint.securityPreferences()
+    val readingMode by securityPreferences.readingMode.collectAsState()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -159,6 +179,15 @@ fun PdfViewerScreen(
                     },
                     actions = {
                         // Search toggle — open search on first tap, close on second tap.
+                        IconButton(onClick = {
+                            showReadingModeSheet = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = stringResource(R.string.btn_reading_mode)
+                            )
+                        }
+
                         IconButton(onClick = {
                             isSearchActive = !isSearchActive
                             if (isSearchActive) {
@@ -267,6 +296,18 @@ fun PdfViewerScreen(
             val containerId = rememberSaveable { View.generateViewId() }
             val fragmentTag = remember(containerId) { "pdf_viewer_$containerId" }
 
+            if (showReadingModeSheet) {
+                ReadingModeBottomSheet(
+                    currentMode = readingMode,
+                    onModeSelected = { newMode ->
+                        scope.launch {
+                            securityPreferences.saveReadingMode(newMode)
+                        }
+                    },
+                    onDismiss = { showReadingModeSheet = false }
+                )
+            }
+
             if (fragmentActivity != null) {
                 val fragmentManager = fragmentActivity.supportFragmentManager
                 // Guard against duplicate commits: AndroidView.update fires on every recomposition,
@@ -288,7 +329,54 @@ fun PdfViewerScreen(
                             id = containerId
                         }
                     },
-                    update = { _ ->
+                    update = { view ->
+                        when (readingMode) {
+                            ReadingMode.SEPIA -> {
+                                val sepiaMatrix = ColorMatrix().apply {
+                                    set(
+                                        floatArrayOf(
+                                            0.984f, 0f, 0f, 0f, 0f,
+                                            0f, 0.941f, 0f, 0f, 0f,
+                                            0f, 0f, 0.851f, 0f, 0f,
+                                            0f, 0f, 0f, 1f, 0f
+                                        )
+                                    )
+                                }
+                                val paint = Paint().apply {
+                                    colorFilter = ColorMatrixColorFilter(sepiaMatrix)
+                                }
+                                view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
+                            }
+                            ReadingMode.E_INK -> {
+                                val eInkMatrix = ColorMatrix().apply {
+                                    setSaturation(0f)
+                                }
+                                val paint = Paint().apply {
+                                    colorFilter = ColorMatrixColorFilter(eInkMatrix)
+                                }
+                                view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
+                            }
+                            ReadingMode.DARK -> {
+                                val invertMatrix = ColorMatrix().apply {
+                                    set(
+                                        floatArrayOf(
+                                            -1f, 0f, 0f, 0f, 255f,
+                                            0f, -1f, 0f, 0f, 255f,
+                                            0f, 0f, -1f, 0f, 255f,
+                                            0f, 0f, 0f, 1f, 0f
+                                        )
+                                    )
+                                }
+                                val paint = Paint().apply {
+                                    colorFilter = ColorMatrixColorFilter(invertMatrix)
+                                }
+                                view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
+                            }
+                            else -> {
+                                view.setLayerType(View.LAYER_TYPE_NONE, null)
+                            }
+                        }
+
                         if (!fragmentManager.isStateSaved && !fragmentManager.isDestroyed) {
                             val existing = fragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
                             if (existing == null && !committed[0]) {
