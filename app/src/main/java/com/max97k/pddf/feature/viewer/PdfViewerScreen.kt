@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -82,6 +83,9 @@ fun PdfViewerScreen(
     // Tracks whether the native PDF search bar is currently active.
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
 
+    // Tracks whether the page overview dialog is currently open.
+    var showPageOverview by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
             if (topBarVisible) {
@@ -136,6 +140,12 @@ fun PdfViewerScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = { showPageOverview = true }) {
+                            Icon(
+                                imageVector = Icons.Default.GridView,
+                                contentDescription = stringResource(R.string.btn_page_overview)
+                            )
+                        }
                         // Search toggle — open search on first tap, close on second tap.
                         IconButton(onClick = {
                             isSearchActive = !isSearchActive
@@ -306,6 +316,29 @@ fun PdfViewerScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            // Draw overview dialog on top of the AndroidView
+            if (showPageOverview) {
+                var currentPage by remember { mutableStateOf(0) }
+
+                LaunchedEffect(Unit) {
+                    fragmentActivity?.supportFragmentManager?.findFragmentByTag(fragmentTag)?.let { frag ->
+                        currentPage = (frag as? InkPdfViewerFragment)?.getCurrentPage() ?: 0
+                    }
+                }
+
+                PdfPageOverviewDialog(
+                    uri = uri,
+                    currentPage = currentPage,
+                    onDismiss = { showPageOverview = false },
+                    onPageSelected = { pageIndex ->
+                        showPageOverview = false
+                        fragmentActivity?.supportFragmentManager?.findFragmentByTag(fragmentTag)?.let { frag ->
+                            (frag as? InkPdfViewerFragment)?.gotoPage(pageIndex)
+                        }
+                    }
+                )
             }
         }
     }

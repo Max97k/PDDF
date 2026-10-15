@@ -93,4 +93,39 @@ class InkPdfViewerFragment : PdfViewerFragment() {
             }
         }
     }
+
+    /** Jumps to a specific page using reflection on the internal pdfView. */
+    fun gotoPage(pageIndex: Int) {
+        if (!isDocumentLoaded || !isAdded || isDetached) return
+        try {
+            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
+            pdfViewField.isAccessible = true
+            val pdfView = pdfViewField.get(this)
+            if (pdfView != null) {
+                val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.javaPrimitiveType)
+                scrollToPageMethod.invoke(pdfView, pageIndex)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to navigate to page $pageIndex", e)
+        }
+    }
+
+    /** Gets the currently visible page using reflection on the internal pdfView. */
+    fun getCurrentPage(): Int {
+        if (!isDocumentLoaded || !isAdded || isDetached) return 0
+        return try {
+            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
+            pdfViewField.isAccessible = true
+            val pdfView = pdfViewField.get(this)
+            if (pdfView != null) {
+                val getFirstVisiblePageMethod = pdfView.javaClass.getMethod("getFirstVisiblePage")
+                getFirstVisiblePageMethod.invoke(pdfView) as? Int ?: 0
+            } else {
+                0
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get current page", e)
+            0
+        }
+    }
 }

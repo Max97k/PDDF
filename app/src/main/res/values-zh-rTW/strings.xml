@@ -144,4 +144,5 @@
     <string name="status_update_downloaded">更新已下載完成，請重新啟動以套用。</string>
     <string name="btn_restart_update">重新啟動</string>
     <string name="status_update_failed">無法檢查更新</string>
+    <string name="btn_page_overview">Page Overview</string>
 </resources>
