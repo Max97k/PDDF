@@ -13,7 +13,8 @@ fun PdfViewerDialog(
     title: String = "",
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onAddWatermark: ((String) -> Unit)? = null
 ) {
     FeaturePdfViewerDialog(
         uri = uri,
@@ -21,7 +22,8 @@ fun PdfViewerDialog(
         title = title,
         onDismiss = onDismiss,
         onShare = onShare,
-        onSaveAs = onSaveAs
+        onSaveAs = onSaveAs,
+        onAddWatermark = onAddWatermark
     )
 }
 
@@ -32,7 +34,8 @@ fun PdfViewerScreen(
     title: String = "",
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onAddWatermark: ((String) -> Unit)? = null
 ) {
     FeaturePdfViewerScreen(
         uri = uri,
@@ -40,6 +43,7 @@ fun PdfViewerScreen(
         title = title,
         onClose = onClose,
         onShare = onShare,
-        onSaveAs = onSaveAs
+        onSaveAs = onSaveAs,
+        onAddWatermark = onAddWatermark
     )
 }

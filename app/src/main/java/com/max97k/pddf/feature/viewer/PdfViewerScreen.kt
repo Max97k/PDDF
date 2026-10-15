@@ -64,7 +64,8 @@ fun PdfViewerScreen(
     title: String = "",
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onAddWatermark: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -81,6 +82,17 @@ fun PdfViewerScreen(
 
     // Tracks whether the native PDF search bar is currently active.
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
+    var showWatermarkDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showWatermarkDialog) {
+        PdfWatermarkDialog(
+            onDismissRequest = { showWatermarkDialog = false },
+            onApply = { text ->
+                onAddWatermark?.invoke(text)
+                showWatermarkDialog = false
+            }
+        )
+    }
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -181,6 +193,11 @@ fun PdfViewerScreen(
                                     imageVector = Icons.Default.Share,
                                     contentDescription = stringResource(R.string.btn_share_file)
                                 )
+                            }
+                        }
+                        if (onAddWatermark != null) {
+                            androidx.compose.material3.TextButton(onClick = { showWatermarkDialog = true }) {
+                                Text("Watermark")
                             }
                         }
                     },

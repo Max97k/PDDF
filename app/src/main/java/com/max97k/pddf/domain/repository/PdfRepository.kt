@@ -41,6 +41,14 @@ interface PdfRepository {
         suffix: String = ".pdf"
     ): String
 
+    suspend fun addWatermark(
+        sourceUri: String,
+        destUri: String,
+        text: String,
+        opacity: Float = 0.3f,
+        fontSize: Float = 48f
+    ): Boolean
+
     suspend fun getShareableUri(fileUri: String): String
 
     suspend fun deleteFile(filePathOrUri: String): Boolean
