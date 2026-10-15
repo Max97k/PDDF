@@ -325,4 +325,13 @@ class DomainUseCasesTest {
         useCase.resetStatus()
         assertEquals(com.max97k.pddf.domain.model.AppUpdateStatus.Idle, useCase.updateStatus.value)
     }
+
+    @Test
+    fun testDecryptPdfUseCase_timingCapture() = runTest(testDispatcher) {
+        val fakeRepo = FakePdfRepository(decryptResult = DecryptStatus.SUCCESS)
+        val decryptPdfUseCase = DecryptPdfUseCase(fakeRepo, testDispatcher)
+        val (status, duration) = decryptPdfUseCase.decryptWithTiming("file:///valid_doc.pdf", "file:///out.pdf", "password")
+        assertEquals("Should return successful status", DecryptStatus.SUCCESS, status)
+        assertTrue("Duration should be >= 0", duration >= 0L)
+    }
 }

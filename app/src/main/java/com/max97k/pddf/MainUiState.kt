@@ -40,6 +40,7 @@ data class MainUiState(
     val statusMessage: String? = null,
     val lastDecryptedUri: Uri? = null,
     val previewPdfUri: Uri? = null,
+    val lastDecryptionDurationMs: Long? = null,
 
     // 4. Batch Processing State
     val batchState: BatchState = BatchState(),

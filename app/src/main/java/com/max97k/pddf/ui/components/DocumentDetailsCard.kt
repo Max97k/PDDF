@@ -35,6 +35,7 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
+    decryptionDurationMs: Long? = null,
     onPreview: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -118,6 +119,17 @@ fun DocumentDetailsCard(
                     text = stringResource(R.string.label_doc_permissions, permText),
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                if (decryptionDurationMs != null) {
+                    val durationSec = decryptionDurationMs / 1000.0
+                    val mbps = if (durationSec > 0) metadata.fileSizeMb / durationSec else 0.0
+                    val mbpsFormatted = String.format(Locale.US, "%.2f", mbps)
+                    Text(
+                        text = "Performance: ${decryptionDurationMs}ms ($mbpsFormatted MB/s)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
             }
         }
     }

@@ -713,7 +713,7 @@ class MainViewModel @Inject constructor(
             _uiState.update { it.copy(isProcessing = true, statusMessage = "Processing...") }
 
             ensurePdfBoxInitialized()
-            val status = decryptPdfUseCase.decrypt(inputUri.toString(), destUri.toString(), passwordValue)
+            val (status, duration) = decryptPdfUseCase.decryptWithTiming(inputUri.toString(), destUri.toString(), passwordValue)
             val msg = when (status) {
                 DecryptStatus.SUCCESS -> context.getString(R.string.summary_decrypted_saved, 1)
                 DecryptStatus.NOT_ENCRYPTED -> context.getString(R.string.summary_not_encrypted, 1)
@@ -732,7 +732,8 @@ class MainViewModel @Inject constructor(
                 it.copy(
                     isProcessing = false,
                     statusMessage = msg,
-                    lastDecryptedUri = if (status == DecryptStatus.SUCCESS) destUri else it.lastDecryptedUri
+                    lastDecryptedUri = if (status == DecryptStatus.SUCCESS) destUri else it.lastDecryptedUri,
+                    lastDecryptionDurationMs = if (status == DecryptStatus.SUCCESS) duration else null
                 )
             }
         }
@@ -930,9 +931,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): DecryptStatus {
+    internal suspend fun decryptSinglePdf(context: Context, inputUri: Uri, outputUri: Uri, passwordValue: String): Pair<DecryptStatus, Long> {
         ensurePdfBoxInitialized()
-        return decryptPdfUseCase.decrypt(inputUri.toString(), outputUri.toString(), passwordValue)
+        return decryptPdfUseCase.decryptWithTiming(inputUri.toString(), outputUri.toString(), passwordValue)
     }
 
     // ---------------------------------------------------------------------------------------------
