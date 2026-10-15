@@ -148,6 +148,7 @@ class DomainUseCasesTest {
             passwordValue: String
         ): PdfMetadata? = metadataResult
 
+        override suspend fun compressPdf(sourceUri: String, destUri: String): com.max97k.pddf.util.Result<Long> = com.max97k.pddf.util.Result.Success(100L)
         override suspend fun copy(
             sourceUri: String,
             destUri: String

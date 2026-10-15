@@ -31,6 +31,11 @@ interface PdfRepository {
         passwordValue: String = ""
     ): PdfMetadata?
 
+    suspend fun compressPdf(
+        sourceUri: String,
+        destUri: String
+    ): com.max97k.pddf.util.Result<Long>
+
     suspend fun copy(
         sourceUri: String,
         destUri: String
