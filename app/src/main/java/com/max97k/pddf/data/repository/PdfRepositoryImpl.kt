@@ -350,6 +350,7 @@ open class PdfRepositoryImpl @Inject constructor(
                     val canPrint = perm?.canPrint() ?: true
                     val canCopy = perm?.canExtractContent() ?: true
                     val pdfVersion = it.version.toString()
+                    val version = it.version
 
                     val signatures = mutableListOf<SignatureInfo>()
                     try {
@@ -462,7 +463,8 @@ open class PdfRepositoryImpl @Inject constructor(
                         signatures = signatures,
                         attachments = attachments,
                         fonts = fontDiagnostics.fonts,
-                        hasMissingNonEmbeddedSystemFonts = fontDiagnostics.hasMissingNonEmbeddedSystemFonts
+                        hasMissingNonEmbeddedSystemFonts = fontDiagnostics.hasMissingNonEmbeddedSystemFonts,
+                        version = version
                     )
                 }
             }

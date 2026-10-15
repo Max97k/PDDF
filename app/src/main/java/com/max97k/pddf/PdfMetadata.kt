@@ -24,7 +24,8 @@ data class PdfMetadata(
     val signatures: List<SignatureInfo> = emptyList(),
     val attachments: List<PdfAttachment> = emptyList(),
     val fonts: List<PdfFontInfo> = emptyList(),
-    val hasMissingNonEmbeddedSystemFonts: Boolean = false
+    val hasMissingNonEmbeddedSystemFonts: Boolean = false,
+    val version: Float = 1.4f
 ) {
     val isEncrypted: Boolean
         get() = encryptionMethod.isNotBlank() && encryptionMethod != "None"

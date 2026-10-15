@@ -213,4 +213,11 @@
     <string name="label_not_embedded">未埋め込み</string>
     <string name="label_subset">（サブセット）</string>
     <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
+
+    <string name="title_document_comparison">ドキュメント比較</string>
+    <string name="label_doc_1">文書 1</string>
+    <string name="label_doc_2">文書 2</string>
+    <string name="label_doc_version">バージョン</string>
+    <string name="label_doc_identical">一致</string>
+    <string name="label_doc_differences">相違点</string>
 </resources>

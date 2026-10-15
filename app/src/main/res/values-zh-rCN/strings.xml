@@ -213,4 +213,11 @@
     <string name="label_not_embedded">未嵌入</string>
     <string name="label_subset">（子集）</string>
     <string name="label_font_item">- %1$s：%2$s，%3$s%4$s</string>
+
+    <string name="title_document_comparison">文档比对</string>
+    <string name="label_doc_1">文档 1</string>
+    <string name="label_doc_2">文档 2</string>
+    <string name="label_doc_version">版本</string>
+    <string name="label_doc_identical">完全相同</string>
+    <string name="label_doc_differences">差异</string>
 </resources>

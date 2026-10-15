@@ -215,4 +215,11 @@
     <string name="label_not_embedded">Non intégrée</string>
     <string name="label_subset"> (Sous-ensemble)</string>
     <string name="label_font_item">- %1$s : %2$s, %3$s%4$s</string>
+
+    <string name="title_document_comparison">Comparaison de documents</string>
+    <string name="label_doc_1">Doc 1</string>
+    <string name="label_doc_2">Doc 2</string>
+    <string name="label_doc_version">Version</string>
+    <string name="label_doc_identical">Identique</string>
+    <string name="label_doc_differences">Différences</string>
 </resources>

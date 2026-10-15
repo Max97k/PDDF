@@ -215,4 +215,11 @@
     <string name="label_not_embedded">Nicht eingebettet</string>
     <string name="label_subset"> (Untersatz)</string>
     <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
+
+    <string name="title_document_comparison">Dokumentenvergleich</string>
+    <string name="label_doc_1">Dok 1</string>
+    <string name="label_doc_2">Dok 2</string>
+    <string name="label_doc_version">Version</string>
+    <string name="label_doc_identical">Identisch</string>
+    <string name="label_doc_differences">Unterschiede</string>
 </resources>
