@@ -155,7 +155,7 @@ class MainActivity : FragmentActivity() {
         FileUtils.cleanUpDecryptedCache(this)
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         viewModel.onUserInteraction()
         return super.dispatchTouchEvent(ev)
     }
