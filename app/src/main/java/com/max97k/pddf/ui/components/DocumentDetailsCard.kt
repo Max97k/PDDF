@@ -35,7 +35,8 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-    onPreview: (() -> Unit)? = null
+    onPreview: (() -> Unit)? = null,
+    onReversePages: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
@@ -60,6 +61,11 @@ fun DocumentDetailsCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onReversePages != null) {
+                        TextButton(onClick = onReversePages) {
+                            Text("🔄 " + stringResource(R.string.btn_reverse_pages))
+                        }
+                    }
                     if (onPreview != null) {
                         TextButton(onClick = onPreview) {
                             Text("👁️ " + stringResource(R.string.btn_preview_pdf))

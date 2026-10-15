@@ -620,6 +620,9 @@ fun PDFDecryptorScreen(
                                                     metadata = metadata,
                                                     onPreview = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                    } else null,
+                                                    onReversePages = if (uiState.activePreviewUri != null) {
+                                                        { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                     } else null
                                                 )
                                             }
@@ -854,6 +857,9 @@ fun PDFDecryptorScreen(
                                                 metadata = metadata,
                                                 onPreview = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
+                                                } else null,
+                                                onReversePages = if (uiState.activePreviewUri != null) {
+                                                    { onAction(MainUiAction.ReversePages(uiState.activePreviewUri!!)) }
                                                 } else null
                                             )
                                         }

@@ -44,7 +44,8 @@ fun createTestMainViewModel(
         passwordVaultUseCase = passwordVaultUseCase,
         autoUnlockUseCase = autoUnlockUseCase,
         batchProcessUseCase = batchProcessUseCase,
-        checkAppUpdateUseCase = checkAppUpdateUseCase
+        checkAppUpdateUseCase = checkAppUpdateUseCase,
+        reversePdfPagesUseCase = com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase(pdfRepository, ioDispatcher)
     )
 }
 
