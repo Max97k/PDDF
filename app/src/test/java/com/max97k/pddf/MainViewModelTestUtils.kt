@@ -32,7 +32,8 @@ fun createTestMainViewModel(
     autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
     batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher),
     appUpdateRepository: com.max97k.pddf.domain.repository.AppUpdateRepository = FakeAppUpdateRepository(),
-    checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository)
+    checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository),
+    exportPdfPageAsImageUseCase: com.max97k.pddf.domain.usecase.ExportPdfPageAsImageUseCase = com.max97k.pddf.domain.usecase.ExportPdfPageAsImageUseCase(pdfRepository)
 ): MainViewModel {
     return MainViewModel(
         application = application,
@@ -44,7 +45,8 @@ fun createTestMainViewModel(
         passwordVaultUseCase = passwordVaultUseCase,
         autoUnlockUseCase = autoUnlockUseCase,
         batchProcessUseCase = batchProcessUseCase,
-        checkAppUpdateUseCase = checkAppUpdateUseCase
+        checkAppUpdateUseCase = checkAppUpdateUseCase,
+        exportPdfPageAsImageUseCase = exportPdfPageAsImageUseCase
     )
 }
 

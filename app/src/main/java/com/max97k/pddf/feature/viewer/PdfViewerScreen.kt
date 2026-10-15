@@ -20,8 +20,13 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Image
 
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.Bitmap
+import android.content.Intent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +69,8 @@ fun PdfViewerScreen(
     title: String = "",
     onClose: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onExportImage: ((pageIndex: Int, destUri: Uri, format: Bitmap.CompressFormat, quality: Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -81,6 +87,46 @@ fun PdfViewerScreen(
 
     // Tracks whether the native PDF search bar is currently active.
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
+
+    var showExportDialog by rememberSaveable { mutableStateOf(false) }
+    var pendingExportFormat by remember { mutableStateOf(Bitmap.CompressFormat.PNG) }
+    var pendingExportPage by remember { mutableStateOf(0) }
+    var pendingExportQuality by remember { mutableStateOf(100) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                val targetUri = result.data?.data
+                if (targetUri != null) {
+                    onExportImage?.invoke(pendingExportPage, targetUri, pendingExportFormat, pendingExportQuality)
+                }
+            }
+        }
+    )
+
+    if (showExportDialog) {
+        ExportImageDialog(
+            onDismissRequest = { showExportDialog = false },
+            onExport = { pageIndex, format, quality ->
+                showExportDialog = false
+                pendingExportPage = pageIndex
+                pendingExportFormat = format
+                pendingExportQuality = quality
+
+                val mimeType = if (format == Bitmap.CompressFormat.PNG) "image/png" else "image/jpeg"
+                val ext = if (format == Bitmap.CompressFormat.PNG) ".png" else ".jpg"
+                val fileName = "page_${pageIndex + 1}$ext"
+
+                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = mimeType
+                    putExtra(Intent.EXTRA_TITLE, fileName)
+                }
+                exportLauncher.launch(intent)
+            }
+        )
+    }
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -166,6 +212,14 @@ fun PdfViewerScreen(
                                 imageVector = Icons.Default.Print,
                                 contentDescription = stringResource(R.string.btn_print)
                             )
+                        }
+                        if (onExportImage != null) {
+                            IconButton(onClick = { showExportDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = stringResource(R.string.btn_export_image)
+                                )
+                            }
                         }
                         if (onSaveAs != null) {
                             IconButton(onClick = onSaveAs) {

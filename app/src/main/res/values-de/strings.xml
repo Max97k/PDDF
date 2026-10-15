@@ -146,4 +146,13 @@
     <string name="status_update_downloaded">Update heruntergeladen. Zum Übernehmen neu starten.</string>
     <string name="btn_restart_update">Neu starten</string>
     <string name="status_update_failed">Update-Prüfung fehlgeschlagen</string>
+
+    <!-- Export Image -->
+    <string name="btn_export_image">Export Image</string>
+    <string name="dialog_title_export_image">Export Page as Image</string>
+    <string name="label_page_number">Page Number</string>
+    <string name="format_png">PNG</string>
+    <string name="format_jpeg">JPEG</string>
+    <string name="msg_export_success">Image exported successfully</string>
+    <string name="msg_export_failed">Failed to export image</string>
 </resources>
