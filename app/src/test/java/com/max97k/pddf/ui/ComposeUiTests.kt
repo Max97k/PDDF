@@ -207,6 +207,7 @@ class ComposeUiTests {
 
         composeTestRule.setContent {
             SavedPasswordListDialog(
+                densityMode = com.max97k.pddf.data.DensityMode.STANDARD,
                 savedPasswords = passwords,
                 onDismiss = { dismissed = true },
                 onSelectPassword = { selected = it },

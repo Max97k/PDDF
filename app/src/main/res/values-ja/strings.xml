@@ -196,4 +196,9 @@
     <string name="reading_mode_sepia">セピア</string>
     <string name="reading_mode_e_ink">E-Ink</string>
     <string name="btn_reading_mode">読書モード</string>
+
+    <string name="settings_section_density">表示密度</string>
+    <string name="density_compact">コンパクト</string>
+    <string name="density_standard">標準</string>
+    <string name="density_comfortable">ゆったり</string>
 </resources>

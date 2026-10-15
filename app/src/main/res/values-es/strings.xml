@@ -198,4 +198,9 @@
     <string name="reading_mode_sepia">Sepia</string>
     <string name="reading_mode_e_ink">Tinta electrónica</string>
     <string name="btn_reading_mode">Modo de lectura</string>
+
+    <string name="settings_section_density">Densidad de pantalla</string>
+    <string name="density_compact">Compacto</string>
+    <string name="density_standard">Estándar</string>
+    <string name="density_comfortable">Cómodo</string>
 </resources>

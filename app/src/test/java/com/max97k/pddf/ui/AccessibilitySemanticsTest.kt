@@ -80,6 +80,7 @@ class AccessibilitySemanticsTest {
     fun savedPasswordListDialog_emptyState_hasLiveRegionPolite() {
         composeTestRule.setContent {
             SavedPasswordListDialog(
+                densityMode = com.max97k.pddf.data.DensityMode.STANDARD,
                 savedPasswords = listOf(
                     PasswordEntity(id = 1, name = "Bank", passwordValue = "pass123")
                 ),
@@ -104,6 +105,7 @@ class AccessibilitySemanticsTest {
 
         composeTestRule.setContent {
             SavedPasswordListDialog(
+                densityMode = com.max97k.pddf.data.DensityMode.STANDARD,
                 savedPasswords = passwords,
                 onDismiss = {},
                 onSelectPassword = {},

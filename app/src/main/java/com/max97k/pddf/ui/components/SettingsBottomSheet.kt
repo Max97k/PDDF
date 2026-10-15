@@ -32,6 +32,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.max97k.pddf.R
 import com.max97k.pddf.data.ThemeMode
+import com.max97k.pddf.data.DensityMode
 
 /**
  * Settings ModalBottomSheet — consolidates all user-configurable preferences.
@@ -46,8 +47,10 @@ import com.max97k.pddf.data.ThemeMode
 @Composable
 fun SettingsBottomSheet(
     currentTheme: ThemeMode,
+    currentDensity: DensityMode,
     screenshotProtectionEnabled: Boolean,
     onThemeSelected: (ThemeMode) -> Unit,
+    onDensitySelected: (DensityMode) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
     onExportCsv: () -> Unit,
     onExportJson: () -> Unit,
@@ -114,6 +117,47 @@ fun SettingsBottomSheet(
                 )
             }
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // ── Density Section ─────────────────────────────────────────
+            Text(
+                text = stringResource(R.string.settings_section_density),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            val densityEntries = listOf(
+                DensityMode.COMPACT to stringResource(R.string.density_compact),
+                DensityMode.STANDARD  to stringResource(R.string.density_standard),
+                DensityMode.COMFORTABLE   to stringResource(R.string.density_comfortable)
+            )
+            densityEntries.forEach { (mode, label) ->
+                ListItem(
+                    headlineContent = { Text(label) },
+                    trailingContent = {
+                        if (currentDensity == mode) {
+                            Text(
+                                text = stringResource(R.string.symbol_checkmark),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClick = {
+                                onDensitySelected(mode)
+                                onDismiss()
+                            }
+                        )
+                        .semantics { role = Role.RadioButton }
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // ── Language Section ─────────────────────────────────────────
             Text(

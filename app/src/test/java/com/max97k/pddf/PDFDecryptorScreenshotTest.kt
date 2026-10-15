@@ -151,6 +151,7 @@ class PDFDecryptorScreenshotTest {
     composeTestRule.setContent {
       MyApplicationTheme(themeMode = ThemeMode.LIGHT) {
         SavedPasswordListDialog(
+                densityMode = com.max97k.pddf.data.DensityMode.STANDARD,
           savedPasswords = samplePasswords,
           onDismiss = {},
           onSelectPassword = {},

@@ -196,4 +196,9 @@
     <string name="reading_mode_sepia">復古棕褐色</string>
     <string name="reading_mode_e_ink">電子紙墨水</string>
     <string name="btn_reading_mode">閱讀模式</string>
+
+    <string name="settings_section_density">顯示密度</string>
+    <string name="density_compact">緊湊</string>
+    <string name="density_standard">標準</string>
+    <string name="density_comfortable">寬鬆</string>
 </resources>

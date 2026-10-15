@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -47,10 +48,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
 import com.max97k.pddf.data.PasswordEntity
+import com.max97k.pddf.data.DensityMode
 
 @Composable
 fun SavedPasswordListDialog(
     savedPasswords: List<PasswordEntity>,
+    densityMode: DensityMode,
     onDismiss: () -> Unit,
     onSelectPassword: (String) -> Unit,
     onDeletePassword: (PasswordEntity) -> Unit,
@@ -59,6 +62,30 @@ fun SavedPasswordListDialog(
     var searchQuery by remember { mutableStateOf("") }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
+
+    val verticalPadding = when (densityMode) {
+        DensityMode.COMPACT -> 4.dp
+        DensityMode.STANDARD -> 12.dp
+        DensityMode.COMFORTABLE -> 20.dp
+    }
+
+    val minRowHeight = when (densityMode) {
+        DensityMode.COMPACT -> 36.dp
+        DensityMode.STANDARD -> 48.dp
+        DensityMode.COMFORTABLE -> 64.dp
+    }
+
+    val textStyle = when (densityMode) {
+        DensityMode.COMPACT -> MaterialTheme.typography.bodyMedium
+        DensityMode.STANDARD -> MaterialTheme.typography.bodyLarge
+        DensityMode.COMFORTABLE -> MaterialTheme.typography.titleMedium
+    }
+
+    val iconSize = when (densityMode) {
+        DensityMode.COMPACT -> 20.dp
+        DensityMode.STANDARD -> 24.dp
+        DensityMode.COMFORTABLE -> 32.dp
+    }
 
     AlertDialog(
         modifier = modifier
@@ -115,12 +142,12 @@ fun SavedPasswordListDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .defaultMinSize(minHeight = 48.dp)
+                                        .defaultMinSize(minHeight = minRowHeight)
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onSelectPassword(savedPass.passwordValue)
                                         }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                                        .padding(vertical = verticalPadding, horizontal = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     val name = savedPass.name
@@ -142,7 +169,7 @@ fun SavedPasswordListDialog(
                                     Text(
                                         text = annotatedString,
                                         modifier = Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodyLarge
+                                        style = textStyle
                                     )
                                     val copyMsg = stringResource(R.string.msg_password_copied)
                                     IconButton(onClick = {
@@ -161,7 +188,8 @@ fun SavedPasswordListDialog(
                                     }) {
                                         Icon(
                                             Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.content_desc_delete_named, savedPass.name)
+                                            contentDescription = stringResource(R.string.content_desc_delete_named, savedPass.name),
+                                            modifier = Modifier.size(iconSize)
                                         )
                                     }
                                 }
