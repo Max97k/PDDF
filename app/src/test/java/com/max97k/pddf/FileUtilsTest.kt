@@ -90,4 +90,23 @@ class FileUtilsTest {
         // Cleanup
         nonPdf.delete()
     }
+
+    @Test
+    fun testGetSafDisplayName() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADownload")
+
+        // Under Robolectric, the provider may not resolve accurately, falling back to getFileName
+        val name = FileUtils.getSafDisplayName(context, treeUri)
+        // With basic parsing it falls back to last segment "primary:Download"
+        assertEquals("primary:Download", name)
+    }
+
+    @Test
+    fun testReleasePersistableUriPermissionSafely_invalid() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val uri = Uri.parse("content://invalid/path")
+        val result = FileUtils.releasePersistableUriPermissionSafely(context, uri)
+        assertFalse(result) // Since it's not in the persisted permissions list
+    }
 }

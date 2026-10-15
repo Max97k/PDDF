@@ -16,8 +16,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -182,6 +187,39 @@ fun SettingsBottomSheet(
                     .fillMaxWidth()
                     .clickable { onScreenshotProtectionToggled(!screenshotProtectionEnabled) }
             )
+
+            // ── Storage Permissions Section ────────────────────────────────
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Storage",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            val context = LocalContext.current
+            var showSafDialog by remember { mutableStateOf(false) }
+            val persistedCount = remember(showSafDialog) {
+                context.contentResolver.persistedUriPermissions.size
+            }
+
+            ListItem(
+                headlineContent = { Text("Granted Storage Folders") },
+                supportingContent = { Text("Total active permissions: $persistedCount") },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showSafDialog = true }
+            )
+
+            if (showSafDialog) {
+                SafPermissionsDialog(
+                    onDismiss = { showSafDialog = false }
+                )
+            }
         }
     }
 }
