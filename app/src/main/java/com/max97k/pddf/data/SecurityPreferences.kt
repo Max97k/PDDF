@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
+enum class NotificationPreference {
+    SOUND, VIBRATION, SILENT
+}
+
 /**
  * Persists security-related user preferences in a dedicated SharedPreferences file.
  *
@@ -28,6 +32,7 @@ class SecurityPreferences(
     companion object {
         const val PREFS_NAME = "security_prefs"
         const val KEY_SCREENSHOT_PROTECTION = "screenshot_protection"
+        const val KEY_BATCH_NOTIFICATION_PREF = "batch_notification_pref"
 
         /**
          * Synchronous read for use in Activity.onCreate() before setContent{}.
@@ -44,8 +49,24 @@ class SecurityPreferences(
     )
     val screenshotProtection: StateFlow<Boolean> = _screenshotProtection.asStateFlow()
 
+    private val _batchNotificationPreference = MutableStateFlow(
+        try {
+            NotificationPreference.valueOf(
+                prefs.getString(KEY_BATCH_NOTIFICATION_PREF, NotificationPreference.SOUND.name) ?: NotificationPreference.SOUND.name
+            )
+        } catch (e: Exception) {
+            NotificationPreference.SOUND
+        }
+    )
+    val batchNotificationPreference: StateFlow<NotificationPreference> = _batchNotificationPreference.asStateFlow()
+
     suspend fun saveScreenshotProtection(enabled: Boolean) = withContext(ioDispatcher) {
         prefs.edit().putBoolean(KEY_SCREENSHOT_PROTECTION, enabled).apply()
         _screenshotProtection.value = enabled
+    }
+
+    suspend fun saveBatchNotificationPreference(pref: NotificationPreference) = withContext(ioDispatcher) {
+        prefs.edit().putString(KEY_BATCH_NOTIFICATION_PREF, pref.name).apply()
+        _batchNotificationPreference.value = pref
     }
 }

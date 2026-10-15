@@ -97,13 +97,23 @@ class MainViewModel @Inject constructor(
         themeMode,
         savedPasswords,
         securityPreferences.screenshotProtection,
-        checkAppUpdateUseCase.updateStatus
-    ) { baseState, theme, passwords, screenshotProtection, updateStatus ->
+        checkAppUpdateUseCase.updateStatus,
+        securityPreferences.batchNotificationPreference
+    ) { values ->
+        val baseState = values[0] as MainUiState
+        val theme = values[1] as com.max97k.pddf.data.ThemeMode
+        @Suppress("UNCHECKED_CAST")
+        val passwords = values[2] as kotlinx.collections.immutable.ImmutableList<com.max97k.pddf.data.PasswordEntity>
+        val screenshotProtection = values[3] as Boolean
+        val updateStatus = values[4] as com.max97k.pddf.domain.model.AppUpdateStatus
+        val batchNotificationPref = values[5] as com.max97k.pddf.data.NotificationPreference
+
         baseState.copy(
             themeMode = theme,
             savedPasswords = passwords,
             screenshotProtectionEnabled = screenshotProtection,
-            appUpdateStatus = updateStatus
+            appUpdateStatus = updateStatus,
+            batchNotificationPreference = batchNotificationPref
         )
     }.stateIn(
         scope = viewModelScope,
@@ -282,6 +292,9 @@ class MainViewModel @Inject constructor(
                     checkAppUpdateUseCase.completeUpdate()
                 }
             }
+            is MainUiAction.SetBatchNotificationPreference -> {
+                setBatchNotificationPreference(action.pref)
+            }
             is MainUiAction.ResetAppUpdateStatus -> {
                 checkAppUpdateUseCase.resetStatus()
             }
@@ -313,6 +326,12 @@ class MainViewModel @Inject constructor(
             securityPreferences.saveScreenshotProtection(enabled)
             // _uiState is not updated directly — the combine() picks it up
             // via securityPreferences.screenshotProtection StateFlow automatically.
+        }
+    }
+
+    fun setBatchNotificationPreference(pref: com.max97k.pddf.data.NotificationPreference) {
+        viewModelScope.launch {
+            securityPreferences.saveBatchNotificationPreference(pref)
         }
     }
 

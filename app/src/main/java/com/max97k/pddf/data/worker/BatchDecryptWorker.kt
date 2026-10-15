@@ -2,7 +2,9 @@ package com.max97k.pddf.data.worker
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
@@ -27,7 +29,11 @@ class BatchDecryptWorker @AssistedInject constructor(
     companion object {
         const val TAG = "BatchDecryptWorker"
         const val CHANNEL_ID = "batch_decrypt_channel"
+        const val CHANNEL_COMPLETED_SOUND = "batch_decrypt_completed_sound"
+        const val CHANNEL_COMPLETED_VIBE = "batch_decrypt_completed_vibe"
+        const val CHANNEL_COMPLETED_SILENT = "batch_decrypt_completed_silent"
         const val NOTIFICATION_ID = 1001
+        const val NOTIFICATION_ID_COMPLETED = 1002
 
         const val KEY_INPUT_URIS = "input_uris"
         const val KEY_PASSWORD = "password"
@@ -121,6 +127,44 @@ class BatchDecryptWorker @AssistedInject constructor(
 
         notificationManager.cancel(NOTIFICATION_ID)
 
+        val successCount = result.successCount
+        val totalCount = uriStrings.size
+
+        if (successCount > 0 || result.notEncryptedCount > 0) {
+            val prefString = applicationContext.getSharedPreferences(com.max97k.pddf.data.SecurityPreferences.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(com.max97k.pddf.data.SecurityPreferences.KEY_BATCH_NOTIFICATION_PREF, com.max97k.pddf.data.NotificationPreference.SOUND.name)
+            val pref = try {
+                com.max97k.pddf.data.NotificationPreference.valueOf(prefString ?: com.max97k.pddf.data.NotificationPreference.SOUND.name)
+            } catch (e: Exception) {
+                com.max97k.pddf.data.NotificationPreference.SOUND
+            }
+
+            val channelId = when (pref) {
+                com.max97k.pddf.data.NotificationPreference.SOUND -> CHANNEL_COMPLETED_SOUND
+                com.max97k.pddf.data.NotificationPreference.VIBRATION -> CHANNEL_COMPLETED_VIBE
+                com.max97k.pddf.data.NotificationPreference.SILENT -> CHANNEL_COMPLETED_SILENT
+            }
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                if (result.lastDecryptedUri != null) {
+                    setDataAndType(Uri.parse(result.lastDecryptedUri), "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            }
+            val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+            val completionNotification = NotificationCompat.Builder(applicationContext, channelId)
+                .setContentTitle("Batch Decryption Complete")
+                .setContentText("Successfully decrypted $successCount / $totalCount files.")
+                .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build()
+
+            notificationManager.notify(NOTIFICATION_ID_COMPLETED, completionNotification)
+        }
+
         val outputData = workDataOf(
             KEY_SUCCESS_COUNT to result.successCount,
             KEY_FAIL_COUNT to (result.wrongPasswordCount + result.unsupportedCount + result.errorCount),
@@ -158,6 +202,35 @@ class BatchDecryptWorker @AssistedInject constructor(
         ).apply {
             description = "Shows real-time progress for PDF decryption jobs"
         }
-        notificationManager.createNotificationChannel(channel)
+
+        val channelSound = NotificationChannel(
+            CHANNEL_COMPLETED_SOUND,
+            "Batch Decryption Complete (Sound)",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notification with sound when batch decryption is complete"
+        }
+
+        val channelVibe = NotificationChannel(
+            CHANNEL_COMPLETED_VIBE,
+            "Batch Decryption Complete (Vibrate)",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notification with vibration when batch decryption is complete"
+            setSound(null, null)
+            enableVibration(true)
+        }
+
+        val channelSilent = NotificationChannel(
+            CHANNEL_COMPLETED_SILENT,
+            "Batch Decryption Complete (Silent)",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Silent notification when batch decryption is complete"
+            setSound(null, null)
+            enableVibration(false)
+        }
+
+        notificationManager.createNotificationChannels(listOf(channel, channelSound, channelVibe, channelSilent))
     }
 }

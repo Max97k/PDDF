@@ -41,8 +41,10 @@ import com.max97k.pddf.data.ThemeMode
 @Composable
 fun SettingsBottomSheet(
     currentTheme: ThemeMode,
+    currentBatchNotificationPreference: com.max97k.pddf.data.NotificationPreference,
     screenshotProtectionEnabled: Boolean,
     onThemeSelected: (ThemeMode) -> Unit,
+    onBatchNotificationSelected: (com.max97k.pddf.data.NotificationPreference) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
@@ -155,6 +157,49 @@ fun SettingsBottomSheet(
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // ── Notifications Section ──────────────────────────────────────
+            Text(
+                text = stringResource(R.string.settings_section_notifications),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.settings_notify_batch_completion),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            val notificationEntries = listOf(
+                com.max97k.pddf.data.NotificationPreference.SOUND to stringResource(R.string.settings_notify_sound),
+                com.max97k.pddf.data.NotificationPreference.VIBRATION to stringResource(R.string.settings_notify_vibration),
+                com.max97k.pddf.data.NotificationPreference.SILENT to stringResource(R.string.settings_notify_silent)
+            )
+            notificationEntries.forEach { (mode, label) ->
+                ListItem(
+                    headlineContent = { Text(label) },
+                    trailingContent = {
+                        if (currentBatchNotificationPreference == mode) {
+                            Text(
+                                text = stringResource(R.string.symbol_checkmark),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClick = {
+                                onBatchNotificationSelected(mode)
+                            }
+                        )
+                        .semantics { role = Role.RadioButton }
+                )
+            }
 
             // ── Privacy Section ────────────────────────────────────────────
             Spacer(modifier = Modifier.height(8.dp))
