@@ -12,6 +12,7 @@ import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
+import com.max97k.pddf.domain.usecase.ExportPlainTextUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
@@ -31,6 +32,7 @@ fun createTestMainViewModel(
     passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
     autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),
     batchProcessUseCase: BatchProcessUseCase = BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher),
+    exportPlainTextUseCase: ExportPlainTextUseCase = ExportPlainTextUseCase(pdfRepository, ioDispatcher),
     appUpdateRepository: com.max97k.pddf.domain.repository.AppUpdateRepository = FakeAppUpdateRepository(),
     checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase = com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase(appUpdateRepository)
 ): MainViewModel {
@@ -44,6 +46,7 @@ fun createTestMainViewModel(
         passwordVaultUseCase = passwordVaultUseCase,
         autoUnlockUseCase = autoUnlockUseCase,
         batchProcessUseCase = batchProcessUseCase,
+        exportPlainTextUseCase = exportPlainTextUseCase,
         checkAppUpdateUseCase = checkAppUpdateUseCase
     )
 }

@@ -146,4 +146,5 @@
     <string name="status_update_downloaded">Update downloaded. Restart to apply.</string>
     <string name="btn_restart_update">Restart</string>
     <string name="status_update_failed">Unable to check for updates</string>
+    <string name="btn_export_text">Export Text</string>
 </resources>

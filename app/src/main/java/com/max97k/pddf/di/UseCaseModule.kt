@@ -6,6 +6,7 @@ import com.max97k.pddf.domain.usecase.AutoUnlockUseCase
 import com.max97k.pddf.domain.usecase.BatchProcessUseCase
 import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
+import com.max97k.pddf.domain.usecase.ExportPlainTextUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,5 +54,14 @@ class UseCaseModule {
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): BatchProcessUseCase {
         return BatchProcessUseCase(pdfRepository, decryptPdfUseCase, ioDispatcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExportPlainTextUseCase(
+        pdfRepository: PdfRepository,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): ExportPlainTextUseCase {
+        return ExportPlainTextUseCase(pdfRepository, ioDispatcher)
     }
 }

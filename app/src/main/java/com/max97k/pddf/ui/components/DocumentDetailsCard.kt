@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +36,8 @@ import java.util.Locale
 fun DocumentDetailsCard(
     metadata: PdfMetadata,
     modifier: Modifier = Modifier,
-    onPreview: (() -> Unit)? = null
+    onPreview: (() -> Unit)? = null,
+    onExportText: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     val view = androidx.compose.ui.platform.LocalView.current
@@ -64,6 +66,12 @@ fun DocumentDetailsCard(
                         TextButton(onClick = onPreview) {
                             Text("👁️ " + stringResource(R.string.btn_preview_pdf))
                         }
+                    }
+                    if (onExportText != null) {
+                        TextButton(onClick = onExportText) {
+                            Text("📝 " + stringResource(R.string.btn_export_text))
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
                     Icon(
                         imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
