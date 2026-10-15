@@ -12,6 +12,12 @@ import com.max97k.pddf.domain.repository.PdfEncryptionCheck
 import com.max97k.pddf.domain.repository.PdfRepository
 import com.max97k.pddf.util.FileUtils
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.cos.COSBase
+import com.tom_roush.pdfbox.cos.COSDictionary
+import com.tom_roush.pdfbox.cos.COSName
+import com.tom_roush.pdfbox.cos.COSStream
+import com.tom_roush.pdfbox.filter.FilterFactory
+import java.security.MessageDigest
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -265,6 +271,148 @@ open class PdfRepositoryImpl @Inject constructor(
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+
+    override suspend fun compressPdf(
+        sourceUri: String,
+        destUri: String
+    ): com.max97k.pddf.util.Result<Long> = withContext(ioDispatcher) {
+        var originalSize = 0L
+        try {
+            val uri = parseUri(sourceUri)
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
+                originalSize = fd.statSize
+            }
+        } catch (e: Exception) {
+            return@withContext com.max97k.pddf.util.Result.Error(e, "Could not determine original size")
+        }
+
+        if (originalSize == 0L) {
+             val file = if (sourceUri.startsWith("file://")) File(parseUri(sourceUri).path ?: sourceUri) else File(sourceUri)
+             if (file.exists()) {
+                 originalSize = file.length()
+             } else {
+                 return@withContext com.max97k.pddf.util.Result.Error(Exception("File not found"), "File not found")
+             }
+        }
+
+        try {
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                val doc = PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                )
+                doc.use { document ->
+                    // 1. Remove metadata
+                    if (document.documentCatalog != null) {
+                        document.documentCatalog.metadata = null
+                    }
+
+                    // 2. Reapply FlateDecode and strip duplicate fonts
+                    val md = MessageDigest.getInstance("SHA-256")
+                    val fontCache = mutableMapOf<String, com.tom_roush.pdfbox.pdmodel.font.PDFont>()
+
+                    document.pages.forEach { page ->
+                        val resources = page.resources
+                        if (resources != null) {
+                            val fontNames = resources.fontNames
+                            for (fontName in fontNames) {
+                                val font = resources.getFont(fontName)
+                                if (font != null) {
+                                    try {
+                                        val fontCos = font.cosObject
+                                        // Hash a portion of the font dictionary to detect exact duplicates
+                                        val hashString = fontCos.keySet().sorted().joinToString("") { key ->
+                                            key.name + (fontCos.getItem(key)?.toString() ?: "")
+                                        }
+                                        val hash = md.digest(hashString.toByteArray()).joinToString("") { "%02x".format(it) }
+                                        val existingFont = fontCache[hash]
+                                        if (existingFont != null && existingFont.cosObject != font.cosObject) {
+                                            resources.put(fontName, existingFont)
+                                        } else {
+                                            fontCache[hash] = font
+                                        }
+                                    } catch (e: Exception) { }
+                                }
+                            }
+                        }
+                    }
+
+                    // Prune unreferenced objects
+                    document.document.dereferenceObjectStreams()
+                    val objects = document.document.objects
+                    val referenced = mutableSetOf<com.tom_roush.pdfbox.cos.COSObjectKey>()
+                    // Traversing the document from trailer to find referenced
+                    // We can just rely on PDFBox's save? Wait, the review said PDFBox save doesn't prune.
+                    // How to prune in PDFBox: We can get the xref table.
+                    // Or we could create a new PDDocument, and import pages... Wait, but that loses metadata.
+                    // Actually, the review said: "There is no logic implemented to actually identify and prune unreferenced indirect objects. While PDDocument.save() may do some superficial cleanup, it does not act as a full garbage collector for unreachable COSBase objects within the pool unless explicitly traversed and cleaned."
+
+                    // Let's implement a simple graph traversal starting from the trailer.
+                    fun traverse(base: com.tom_roush.pdfbox.cos.COSBase?, visited: MutableSet<com.tom_roush.pdfbox.cos.COSObjectKey>) {
+                        if (base == null) return
+                        if (base is com.tom_roush.pdfbox.cos.COSObject) {
+                            val key = com.tom_roush.pdfbox.cos.COSObjectKey(base.objectNumber, base.generationNumber)
+                            if (visited.add(key)) {
+                                traverse(base.`object`, visited)
+                            }
+                        } else if (base is com.tom_roush.pdfbox.cos.COSDictionary) {
+                            for (value in base.values) {
+                                traverse(value, visited)
+                            }
+                        } else if (base is com.tom_roush.pdfbox.cos.COSArray) {
+                            for (value in base) {
+                                traverse(value, visited)
+                            }
+                        }
+                    }
+
+                    traverse(document.document.trailer, referenced)
+
+                    val toRemove = objects.filter {
+                        val key = com.tom_roush.pdfbox.cos.COSObjectKey(it.objectNumber, it.generationNumber)
+                        !referenced.contains(key)
+                    }
+                    toRemove.forEach { document.document.removeObject(com.tom_roush.pdfbox.cos.COSObjectKey(it.objectNumber, it.generationNumber)) }
+
+                    // Apply FlateDecode to all streams that don't have it
+                    for (obj in document.document.objects) {
+                        val base = obj.`object`
+                        if (base is COSStream) {
+                            val filters = base.filters
+                            val filtersStr = filters?.toString() ?: ""
+                            if (filters == null || (!filtersStr.contains("FlateDecode") && !filtersStr.contains("DCTDecode") && !filtersStr.contains("JBIG2Decode") && !filtersStr.contains("JPXDecode"))) {
+                                try {
+                                    val uncompressedBytes = base.createInputStream().readBytes()
+                                    base.createOutputStream(COSName.FLATE_DECODE).use { it.write(uncompressedBytes) }
+                                } catch (e: Exception) {
+                                    // Ignore if we can't compress this stream
+                                }
+                            }
+                        }
+                    }
+
+                    val tempFile = File.createTempFile("compress_tmp_", ".pdf", context.cacheDir)
+                    tempFile.outputStream().buffered().use { outputStream ->
+                        document.save(outputStream)
+                    }
+
+                    val newSize = tempFile.length()
+
+                    if (atomicReplace(tempFile, destUri)) {
+                        if (tempFile.exists()) FileUtils.secureDelete(tempFile)
+                        return@withContext com.max97k.pddf.util.Result.Success(originalSize - newSize)
+                    } else {
+                        if (tempFile.exists()) FileUtils.secureDelete(tempFile)
+                        return@withContext com.max97k.pddf.util.Result.Error(Exception("Replace failed"), "Replace failed")
+                    }
+                }
+            } ?: return@withContext com.max97k.pddf.util.Result.Error(Exception("Input stream null"), "Input stream null")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return@withContext com.max97k.pddf.util.Result.Error(e, e.message)
         }
     }
 
