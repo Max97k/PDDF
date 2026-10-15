@@ -68,6 +68,9 @@ sealed interface MainUiAction {
     data object OpenDownloads : MainUiAction
     data class OpenUrl(val url: String) : MainUiAction
 
+    // Watermark
+    data class AddWatermark(val uri: Uri, val text: String) : MainUiAction
+
     // App Lifecycle
     data object AppBackgrounded : MainUiAction
     data object AppForegrounded : MainUiAction

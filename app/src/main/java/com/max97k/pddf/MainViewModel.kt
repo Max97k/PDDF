@@ -65,7 +65,8 @@ class MainViewModel @Inject constructor(
     private val passwordVaultUseCase: PasswordVaultUseCase,
     private val autoUnlockUseCase: AutoUnlockUseCase,
     private val batchProcessUseCase: BatchProcessUseCase,
-    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase
+    private val checkAppUpdateUseCase: com.max97k.pddf.domain.usecase.CheckAppUpdateUseCase,
+    private val pdfRepository: com.max97k.pddf.domain.repository.PdfRepository
 ) : AndroidViewModel(application) {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -284,6 +285,20 @@ class MainViewModel @Inject constructor(
             }
             is MainUiAction.ResetAppUpdateStatus -> {
                 checkAppUpdateUseCase.resetStatus()
+            }
+            is MainUiAction.AddWatermark -> {
+                viewModelScope.launch {
+                    val context = getApplication<Application>()
+                    val tempFile = java.io.File(java.io.File(context.cacheDir, "decrypted").apply { mkdirs() }, "watermarked_temp_${System.currentTimeMillis()}.pdf")
+                    tempFile.deleteOnExit()
+                    val success = pdfRepository.addWatermark(action.uri.toString(), tempFile.absolutePath, action.text)
+                    if (success) {
+                        val shareUri = pdfRepository.getShareableUri(tempFile.absolutePath)
+                        emitEffect(UiEffect.SharePdf(Uri.parse(shareUri)))
+                    } else {
+                        emitEffect(UiEffect.ShowToast("Failed to apply watermark"))
+                    }
+                }
             }
         }
     }

@@ -419,6 +419,62 @@ open class PdfRepositoryImpl @Inject constructor(
         }.absolutePath
     }
 
+    override suspend fun addWatermark(
+        sourceUri: String,
+        destUri: String,
+        text: String,
+        opacity: Float,
+        fontSize: Float
+    ): Boolean = withContext(ioDispatcher) {
+        try {
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                ).use { document ->
+                    for (page in document.pages) {
+                        com.tom_roush.pdfbox.pdmodel.PDPageContentStream(
+                            document, page, com.tom_roush.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, true, true
+                        ).use { contentStream ->
+                            val font = com.tom_roush.pdfbox.pdmodel.font.PDType1Font.HELVETICA_BOLD
+                            contentStream.setFont(font, fontSize)
+
+                            val gs = com.tom_roush.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState()
+                            gs.nonStrokingAlphaConstant = opacity
+                            contentStream.setGraphicsStateParameters(gs)
+
+                            contentStream.setNonStrokingColor(0.5f, 0.5f, 0.5f) // GRAY
+
+                            val mediaBox = page.mediaBox
+                            val cx = mediaBox.width / 2f
+                            val cy = mediaBox.height / 2f
+
+                            val stringWidth = font.getStringWidth(text) / 1000f * fontSize
+                            val startX = cx - (stringWidth / 2f)
+                            val startY = cy
+
+                            contentStream.transform(
+                                com.tom_roush.pdfbox.util.Matrix.getRotateInstance(Math.toRadians(45.0), cx, cy)
+                            )
+
+                            contentStream.beginText()
+                            contentStream.newLineAtOffset(startX - cx, startY - cy)
+                            contentStream.showText(text)
+                            contentStream.endText()
+                        }
+                    }
+                    openSafeOutputStream(destUri)?.use { outputStream ->
+                        document.save(outputStream)
+                        return@withContext true
+                    } ?: return@withContext false
+                }
+            } ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     override suspend fun getShareableUri(fileUri: String): String = withContext(ioDispatcher) {
         if (fileUri.startsWith("content://")) {
             return@withContext fileUri

@@ -111,6 +111,14 @@ class DomainUseCasesTest {
         var lastDecryptedOutput: String? = null
         var lastDecryptedPasswordValue: String? = null
 
+        override suspend fun addWatermark(
+            sourceUri: String,
+            destUri: String,
+            text: String,
+            opacity: Float,
+            fontSize: Float
+        ): Boolean = true
+
         override suspend fun checkEncryption(sourceUri: String): PdfEncryptionCheck = checkEncryptionResult
 
         override suspend fun decrypt(

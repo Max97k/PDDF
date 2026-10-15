@@ -1062,6 +1062,9 @@ fun PDFDecryptorScreen(
                             putExtra(Intent.EXTRA_TITLE, fileName)
                         }
                         savePreviewDocumentLauncher.launch(intent)
+                    },
+                    onAddWatermark = { text ->
+                        onAction(MainUiAction.AddWatermark(uiState.previewPdfUri, text))
                     }
                 )
             }

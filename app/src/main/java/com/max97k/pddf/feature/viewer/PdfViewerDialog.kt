@@ -15,7 +15,8 @@ fun PdfViewerDialog(
     title: String = "",
     onDismiss: () -> Unit,
     onShare: (() -> Unit)? = null,
-    onSaveAs: (() -> Unit)? = null
+    onSaveAs: (() -> Unit)? = null,
+    onAddWatermark: ((String) -> Unit)? = null
 ) {
     BackHandler(onBack = onDismiss)
     Box(
@@ -29,7 +30,8 @@ fun PdfViewerDialog(
             title = title,
             onClose = onDismiss,
             onShare = onShare,
-            onSaveAs = onSaveAs
+            onSaveAs = onSaveAs,
+            onAddWatermark = onAddWatermark
         )
     }
 }
