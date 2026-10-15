@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -46,6 +47,8 @@ fun PostDecryptActionSection(
     previewUri: Uri?,
     lastDecryptedUri: Uri?,
     onPreviewClick: () -> Unit,
+    onCompressClick: () -> Unit = {},
+    compressionPercentage: Int? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -78,6 +81,34 @@ fun PostDecryptActionSection(
                 Text(
                     text = stringResource(R.string.btn_preview_pdf),
                     fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+
+
+        // Compress Button
+        if (lastDecryptedUri != null) {
+            OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onCompressClick()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Compress,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (compressionPercentage != null) "Compress & Save (-$compressionPercentage%)" else "Compress & Save",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
