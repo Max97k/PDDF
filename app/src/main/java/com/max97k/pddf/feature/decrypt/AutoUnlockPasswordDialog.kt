@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import com.max97k.pddf.R
+import com.max97k.pddf.feature.vault.PasswordStrengthIndicator
 
 @Composable
 fun AutoUnlockPasswordDialog(
@@ -120,6 +121,7 @@ fun AutoUnlockPasswordDialog(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+                PasswordStrengthIndicator(password = inputPass)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="password_strength_weak" tools:ignore="MissingTranslation">Weak</string>
+    <string name="password_strength_medium" tools:ignore="MissingTranslation">Medium</string>
+    <string name="password_strength_strong" tools:ignore="MissingTranslation">Strong</string>
+    <string name="password_strength_none" tools:ignore="MissingTranslation">No password</string>
+    <string name="password_strength_tip_weak" tools:ignore="MissingTranslation">Password is easily guessable or too short.</string>
+    <string name="password_strength_tip_medium" tools:ignore="MissingTranslation">Could be stronger. Try adding symbols or numbers.</string>
+    <string name="password_strength_tip_strong" tools:ignore="MissingTranslation">Excellent password.</string>
+    <string name="password_strength_tip_none" tools:ignore="MissingTranslation"></string>
+</resources>
