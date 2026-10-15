@@ -31,6 +31,17 @@ open class DecryptPdfUseCase(
         pdfRepository.decrypt(inputUriString, outputUriString, passwordValue)
     }
 
+    open suspend fun decryptWithTiming(
+        inputUriString: String,
+        outputUriString: String,
+        passwordValue: String
+    ): Pair<DecryptStatus, Long> = withContext(ioDispatcher) {
+        val startTime = System.currentTimeMillis()
+        val status = pdfRepository.decrypt(inputUriString, outputUriString, passwordValue)
+        val duration = System.currentTimeMillis() - startTime
+        Pair(status, duration)
+    }
+
     open suspend fun extractMetadata(
         uriString: String,
         passwordValue: String = ""

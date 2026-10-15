@@ -141,7 +141,7 @@ class MainViewModelTest {
 
         val outputFile = File.createTempFile("output", ".pdf", application.cacheDir)
 
-        val status = viewModel.decryptSinglePdf(
+        val (status, _) = viewModel.decryptSinglePdf(
             application,
             Uri.fromFile(inputFile),
             Uri.fromFile(outputFile),
@@ -166,7 +166,7 @@ class MainViewModelTest {
 
         val outputFile = File.createTempFile("output_decrypted", ".pdf", application.cacheDir)
 
-        val status = viewModel.decryptSinglePdf(
+        val (status, _) = viewModel.decryptSinglePdf(
             application,
             Uri.fromFile(inputFile),
             Uri.fromFile(outputFile),
@@ -191,7 +191,7 @@ class MainViewModelTest {
 
         val outputFile = File.createTempFile("output_wrong", ".pdf", application.cacheDir)
 
-        val status = viewModel.decryptSinglePdf(
+        val (status, _) = viewModel.decryptSinglePdf(
             application,
             Uri.fromFile(inputFile),
             Uri.fromFile(outputFile),

@@ -54,7 +54,7 @@ class DecryptPdfTest {
 
     @Test
     fun testDecryptPdf_withCorrectPassword() = runTest {
-        val result = viewModel.decryptSinglePdf(context, encryptedUri, outputUri, "u121837872")
+        val (result, _) = viewModel.decryptSinglePdf(context, encryptedUri, outputUri, "u121837872")
 
         assertEquals(DecryptStatus.SUCCESS, result)
         assertTrue("Output file should not be empty", outputFile.length() > 0)
@@ -62,7 +62,7 @@ class DecryptPdfTest {
 
     @Test
     fun testDecryptPdf_withCorrectPassword_uppercase() = runTest {
-        val result = viewModel.decryptSinglePdf(context, encryptedUri, outputUri, "U121837872")
+        val (result, _) = viewModel.decryptSinglePdf(context, encryptedUri, outputUri, "U121837872")
 
         assertEquals(DecryptStatus.SUCCESS, result)
         assertTrue("Output file should not be empty", outputFile.length() > 0)
@@ -70,13 +70,13 @@ class DecryptPdfTest {
 
     @Test
     fun testDecryptPdf_withWrongPassword() = runTest {
-        val result = viewModel.decryptSinglePdf(context, invalidPasswordUri, outputUri, "wrongpassword")
+        val (result, _) = viewModel.decryptSinglePdf(context, invalidPasswordUri, outputUri, "wrongpassword")
         assertEquals(DecryptStatus.WRONG_PASSWORD, result)
     }
 
     @Test
     fun testDecryptPdf_withUnencryptedPdf() = runTest {
-        val result = viewModel.decryptSinglePdf(context, unencryptedUri, outputUri, "")
+        val (result, _) = viewModel.decryptSinglePdf(context, unencryptedUri, outputUri, "")
         assertEquals(DecryptStatus.NOT_ENCRYPTED, result)
     }
 }

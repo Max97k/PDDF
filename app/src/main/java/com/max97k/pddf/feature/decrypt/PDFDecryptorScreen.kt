@@ -618,6 +618,7 @@ fun PDFDecryptorScreen(
                                             uiState.selectedMetadata?.let { metadata ->
                                                 DocumentDetailsCard(
                                                     metadata = metadata,
+                                                    decryptionDurationMs = uiState.lastDecryptionDurationMs,
                                                     onPreview = if (uiState.activePreviewUri != null) {
                                                         { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
                                                     } else null
@@ -852,6 +853,7 @@ fun PDFDecryptorScreen(
                                         uiState.selectedMetadata?.let { metadata ->
                                             DocumentDetailsCard(
                                                 metadata = metadata,
+                                                decryptionDurationMs = uiState.lastDecryptionDurationMs,
                                                 onPreview = if (uiState.activePreviewUri != null) {
                                                     { onAction(MainUiAction.SetPreviewPdfUri(uiState.activePreviewUri)) }
                                                 } else null
