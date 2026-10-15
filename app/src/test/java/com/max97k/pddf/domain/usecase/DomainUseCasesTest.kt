@@ -177,7 +177,10 @@ class DomainUseCasesTest {
         override fun openSafeInputStream(uriString: String): InputStream? = null
 
         override fun openSafeOutputStream(uriString: String): OutputStream? = null
+        override suspend fun extractPageText(sourceUri: String, page: Int): String? = null
+        override suspend fun getPageCount(sourceUri: String): Int = 0
     }
+
 
     @Test
     fun testPasswordVaultUseCase_insertAndDelete() = runTest(testDispatcher) {

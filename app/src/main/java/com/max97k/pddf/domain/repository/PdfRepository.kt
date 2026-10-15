@@ -66,4 +66,7 @@ interface PdfRepository {
     fun openSafeInputStream(uriString: String): InputStream?
 
     fun openSafeOutputStream(uriString: String): OutputStream?
+    suspend fun extractPageText(sourceUri: String, page: Int): String?
+
+    suspend fun getPageCount(sourceUri: String): Int
 }

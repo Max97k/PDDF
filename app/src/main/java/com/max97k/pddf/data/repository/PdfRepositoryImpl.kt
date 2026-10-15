@@ -416,4 +416,45 @@ open class PdfRepositoryImpl @Inject constructor(
             null
         }
     }
+
+    override suspend fun extractPageText(sourceUri: String, page: Int): String? = withContext(ioDispatcher) {
+        try {
+            val uri = Uri.parse(sourceUri)
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val memoryLimit = Runtime.getRuntime().maxMemory() / 4
+                val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(memoryLimit)
+                )
+                doc.use {
+                    val stripper = com.tom_roush.pdfbox.text.PDFTextStripper()
+                    stripper.startPage = page
+                    stripper.endPage = page
+                    return@withContext stripper.getText(it)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    override suspend fun getPageCount(sourceUri: String): Int = withContext(ioDispatcher) {
+        try {
+            val uri = Uri.parse(sourceUri)
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val memoryLimit = Runtime.getRuntime().maxMemory() / 4
+                val doc = com.tom_roush.pdfbox.pdmodel.PDDocument.load(
+                    inputStream.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(memoryLimit)
+                )
+                doc.use {
+                    return@withContext it.numberOfPages
+                }
+            } ?: 0
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
+        }
+    }
 }
