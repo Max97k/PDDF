@@ -168,10 +168,23 @@ fun PDFDecryptorScreen(
         }
     )
 
+    val exportReportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("*/*")
+    ) { uri ->
+        if (uri != null) {
+            val actualFormat = uiState.exportFormat
+            viewModel.onAction(MainUiAction.ExportReportToUri(uri, actualFormat))
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
+                is UiEffect.LaunchCreateExportDocument -> {
+                    exportReportLauncher.launch(effect.defaultFileName)
+                }
                 is UiEffect.ShowSnackbar -> {
+
                     scope.launch {
                         val result = snackbarHostState.showSnackbar(
                             message = effect.message,
@@ -1182,6 +1195,8 @@ fun PDFDecryptorScreen(
             onScreenshotProtectionToggled = { enabled ->
                 onAction(MainUiAction.SetScreenshotProtection(enabled))
             },
+            onExportCsv = { onAction(MainUiAction.RequestExportCsv) },
+            onExportJson = { onAction(MainUiAction.RequestExportJson) },
             onDismiss = { showSettingsSheet = false }
         )
     }    },

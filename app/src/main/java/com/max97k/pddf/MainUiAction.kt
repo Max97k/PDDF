@@ -28,6 +28,9 @@ sealed interface MainUiAction {
     data class DecryptToUri(val destUri: Uri) : MainUiAction
     data class DecryptAndPreview(val uri: Uri, val passwordValue: String) : MainUiAction
     data object RequestSaveAsPicker : MainUiAction
+    data object RequestExportCsv : MainUiAction
+    data object RequestExportJson : MainUiAction
+    data class ExportReportToUri(val uri: Uri, val format: String) : MainUiAction
     data object CancelBatch : MainUiAction
     data class ReversePages(val uri: Uri) : MainUiAction
 

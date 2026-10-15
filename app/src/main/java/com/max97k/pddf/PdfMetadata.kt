@@ -9,6 +9,7 @@ data class PdfMetadata(
     val author: String,
     val pageCount: Int,
     val fileSizeMb: Double,
+    val pdfVersion: String,
     val encryptionMethod: String,
     val canPrint: Boolean,
     val canCopy: Boolean,

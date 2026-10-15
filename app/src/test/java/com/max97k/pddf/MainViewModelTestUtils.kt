@@ -53,7 +53,8 @@ fun createTestMainViewModel(
         pdfRepository = pdfRepository,
         reversePdfPagesUseCase = com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase(pdfRepository, ioDispatcher),
         stampPageNumbersUseCase = stampPageNumbersUseCase,
-        extractAttachmentsUseCase = extractAttachmentsUseCase
+        extractAttachmentsUseCase = extractAttachmentsUseCase,
+        exportMetadataReportUseCase = com.max97k.pddf.domain.usecase.ExportMetadataReportUseCase(ioDispatcher)
     )
 }
 

@@ -38,6 +38,7 @@ sealed interface UiEffect {
      * Launch the system SAF create document picker for saving a single decrypted PDF.
      */
     data class LaunchCreateDocument(val defaultFileName: String) : UiEffect
+    data class LaunchCreateExportDocument(val defaultFileName: String, val format: String) : UiEffect
 
     /**
      * Launch the system create document picker from the PDF preview dialog.

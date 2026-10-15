@@ -8,6 +8,7 @@ import com.max97k.pddf.domain.usecase.DecryptPdfUseCase
 import com.max97k.pddf.domain.usecase.PasswordVaultUseCase
 import com.max97k.pddf.domain.usecase.ReversePdfPagesUseCase
 import com.max97k.pddf.domain.usecase.ExportPlainTextUseCase
+import com.max97k.pddf.domain.usecase.ExportMetadataReportUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -82,5 +83,13 @@ class UseCaseModule {
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): ExportPlainTextUseCase {
         return ExportPlainTextUseCase(pdfRepository, ioDispatcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExportMetadataReportUseCase(
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): ExportMetadataReportUseCase {
+        return ExportMetadataReportUseCase(ioDispatcher)
     }
 }

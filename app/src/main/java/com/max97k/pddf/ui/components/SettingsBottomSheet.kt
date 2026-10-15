@@ -49,6 +49,8 @@ fun SettingsBottomSheet(
     screenshotProtectionEnabled: Boolean,
     onThemeSelected: (ThemeMode) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
+    onExportCsv: () -> Unit,
+    onExportJson: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -161,6 +163,42 @@ fun SettingsBottomSheet(
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // ── Export Section ────────────────────────────────────────────
+            Text(
+                text = "Export Metadata", // Better to use string resource, but string missing so use hardcoded for now or use generic
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+
+            ListItem(
+                headlineContent = { Text("Export to CSV") },
+                supportingContent = { Text("Export metadata for recently processed files") },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onExportCsv()
+                        onDismiss()
+                    }
+            )
+
+            ListItem(
+                headlineContent = { Text("Export to JSON") },
+                supportingContent = { Text("Export metadata for recently processed files") },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onExportJson()
+                        onDismiss()
+                    }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
 
             // ── Privacy Section ────────────────────────────────────────────
             Spacer(modifier = Modifier.height(8.dp))

@@ -42,6 +42,7 @@ data class MainUiState(
     val lastExportSuccess: Boolean? = null,
     val previewPdfUri: Uri? = null,
     val lastDecryptionDurationMs: Long? = null,
+    val exportFormat: String = "csv",
 
     // 4. Batch Processing State
     val batchState: BatchState = BatchState(),
