@@ -56,6 +56,21 @@ open class DecryptPdfUseCase(
         pdfRepository.copy(sourceUriString, destUriString)
     }
 
+    open suspend fun extractPages(
+        sourceUri: String,
+        destUri: String,
+        pageRange: String
+    ): kotlin.Result<Int> = withContext(ioDispatcher) {
+        pdfRepository.extractPages(sourceUri, destUri, pageRange)
+    }
+
+    open suspend fun createTempFile(
+        prefix: String,
+        suffix: String = ".pdf"
+    ): String = withContext(ioDispatcher) {
+        pdfRepository.createTempFile(prefix, suffix)
+    }
+
     open fun openSafeInputStream(uriString: String): InputStream? {
         return pdfRepository.openSafeInputStream(uriString)
     }

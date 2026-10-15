@@ -668,6 +668,52 @@ open class PdfRepositoryImpl @Inject constructor(
         FileUtils.getFileName(context, uri)
     }
 
+    override suspend fun extractPages(
+        sourceUri: String,
+        destUri: String,
+        pageRange: String
+    ): kotlin.Result<Int> = withContext(ioDispatcher) {
+        try {
+            val srcStream = openSafeInputStream(sourceUri)
+                ?: return@withContext kotlin.Result.failure(Exception("Cannot open source file"))
+            val dstStream = openSafeOutputStream(destUri)
+                ?: run {
+                    srcStream.close()
+                    return@withContext kotlin.Result.failure(Exception("Cannot open destination file"))
+                }
+
+            srcStream.use { input ->
+                PDDocument.load(
+                    input.buffered(),
+                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                ).use { sourceDoc ->
+                    val totalPages = sourceDoc.numberOfPages
+                    val pagesToExtract = com.max97k.pddf.util.PageRangeParser.parse(pageRange, totalPages)
+
+                    if (pagesToExtract.isEmpty()) {
+                        dstStream.close()
+                        return@withContext kotlin.Result.failure(IllegalArgumentException("Invalid or empty page range"))
+                    }
+
+                    PDDocument().use { destDoc ->
+                        for (pageNum in pagesToExtract) {
+                            val page = sourceDoc.getPage(pageNum - 1)
+                            destDoc.importPage(page)
+                        }
+
+                        dstStream.buffered().use { output ->
+                            destDoc.save(output)
+                        }
+                    }
+                    kotlin.Result.success(pagesToExtract.size)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            kotlin.Result.failure(e)
+        }
+    }
+
     override suspend fun createDocumentInDirectory(
         directoryUriString: String,
         displayName: String,

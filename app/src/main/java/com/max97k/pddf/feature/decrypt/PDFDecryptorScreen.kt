@@ -99,6 +99,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -185,7 +186,8 @@ fun PDFDecryptorScreen(
         onAction = viewModel::onAction,
         modifier = modifier,
         snackbarHostState = snackbarHostState,
-        windowWidthSizeClass = windowWidthSizeClass
+        windowWidthSizeClass = windowWidthSizeClass,
+        viewModel = viewModel
     )
 }
 
@@ -196,7 +198,8 @@ fun PDFDecryptorScreen(
     onAction: (MainUiAction) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact
+    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
+    viewModel: MainViewModel? = null
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
@@ -224,6 +227,7 @@ fun PDFDecryptorScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
     var isAppPaused by remember { mutableStateOf(false) }
+    var showExtractPagesDialog by remember { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         isAppPaused = true
@@ -369,6 +373,30 @@ fun PDFDecryptorScreen(
     // MUST NOT reuse createDocumentLauncher — that one triggers a full re-decryption
     // with uiState.password (which is "" when opened from external sources like Gmail),
     // resulting in a 0-byte output file.
+    var pageRangeToExtract by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val extractPdfDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val destUri = result.data?.data
+                val sourceUri = uiState.previewPdfUri
+                val range = pageRangeToExtract
+                if (destUri != null && sourceUri != null && range != null && viewModel != null) {
+                    scope.launch {
+                        val extractResult = viewModel.extractPages(sourceUri.toString(), destUri.toString(), range)
+                        if (extractResult.isSuccess) {
+                            android.widget.Toast.makeText(context, "Pages extracted successfully", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(context, "Extraction failed", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                pageRangeToExtract = null
+            }
+        }
+    )
+
     val savePreviewDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { result ->
@@ -1102,8 +1130,53 @@ fun PDFDecryptorScreen(
                     },
                     onAddWatermark = { text ->
                         onAction(MainUiAction.AddWatermark(uiState.previewPdfUri, text))
-                    }
+                    },
+                    onExtract = { showExtractPagesDialog = true }
                 )
+                if (showExtractPagesDialog && viewModel != null) {
+                    val totalPages = uiState.selectedMetadata?.pageCount ?: 0
+                    com.max97k.pddf.feature.viewer.PdfExtractPagesDialog(
+                        totalPages = totalPages,
+                        onDismiss = { showExtractPagesDialog = false },
+                        onSaveAs = { pageRange ->
+                            showExtractPagesDialog = false
+                            pageRangeToExtract = pageRange
+                            val fileName = "extracted_${uiState.selectedFileNames.firstOrNull() ?: "document"}.pdf"
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_TITLE, fileName)
+                            }
+                            extractPdfDocumentLauncher.launch(intent)
+                        },
+                        onShare = { pageRange ->
+                            showExtractPagesDialog = false
+                            scope.launch {
+                                try {
+                                    val tempUri = viewModel.createTempFile("extracted_", ".pdf")
+                                    val extractResult = viewModel.extractPages(
+                                        sourceUri = uiState.previewPdfUri.toString(),
+                                        destUri = tempUri,
+                                        pageRange = pageRange
+                                    )
+                                    if (extractResult.isSuccess) {
+                                        // Wait until file is fully written, then create share intent
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "application/pdf"
+                                            putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(tempUri))
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        context.startActivity(Intent.createChooser(shareIntent, "Share extracted pages"))
+                                    } else {
+                                        android.widget.Toast.makeText(context, "Extraction failed", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Extraction error", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     )

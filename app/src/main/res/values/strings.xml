@@ -172,4 +172,10 @@
     <string name="btn_rotate">Rotate</string>
     <string name="btn_rotate_cw">Rotate All Pages 90° CW</string>
     <string name="btn_rotate_ccw">Rotate All Pages 90° CCW</string>
+
+    <string name="btn_extract_pages">Extract Pages</string>
+    <string name="dialog_title_extract_pages">Extract Pages</string>
+    <string name="hint_page_range">e.g., 1-3, 5, 8-10</string>
+    <string name="msg_extracted_pages_preview">%1$d page(s) selected</string>
+    <string name="error_invalid_page_range">Invalid page range</string>
 </resources>

@@ -15,7 +15,8 @@ fun PdfViewerDialog(
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
     onAddWatermark: ((String) -> Unit)? = null,
-    onRotateAll: ((Int) -> Unit)? = null
+    onRotateAll: ((Int) -> Unit)? = null,
+    onExtract: (() -> Unit)? = null
 ) {
     FeaturePdfViewerDialog(
         uri = uri,
@@ -25,7 +26,8 @@ fun PdfViewerDialog(
         onShare = onShare,
         onSaveAs = onSaveAs,
         onAddWatermark = onAddWatermark,
-        onRotateAll = onRotateAll
+        onRotateAll = onRotateAll,
+        onExtract = onExtract
     )
 }
 
@@ -38,7 +40,8 @@ fun PdfViewerScreen(
     onShare: (() -> Unit)? = null,
     onSaveAs: (() -> Unit)? = null,
     onAddWatermark: ((String) -> Unit)? = null,
-    onRotateAll: ((Int) -> Unit)? = null
+    onRotateAll: ((Int) -> Unit)? = null,
+    onExtract: (() -> Unit)? = null
 ) {
     FeaturePdfViewerScreen(
         uri = uri,
@@ -48,6 +51,7 @@ fun PdfViewerScreen(
         onShare = onShare,
         onSaveAs = onSaveAs,
         onAddWatermark = onAddWatermark,
-        onRotateAll = onRotateAll
+        onRotateAll = onRotateAll,
+        onExtract = onExtract
     )
 }
