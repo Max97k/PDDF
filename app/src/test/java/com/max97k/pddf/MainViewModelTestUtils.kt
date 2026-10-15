@@ -27,7 +27,7 @@ fun createTestMainViewModel(
     themePreferences: ThemePreferences = ThemePreferences(application),
     securityPreferences: SecurityPreferences = SecurityPreferences(application),
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    pdfRepository: PdfRepository = PdfRepositoryImpl(application, ioDispatcher),
+    pdfRepository: PdfRepository = PdfRepositoryImpl(application, ioDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase()),
     decryptPdfUseCase: DecryptPdfUseCase = DecryptPdfUseCase(pdfRepository, ioDispatcher),
     passwordVaultUseCase: PasswordVaultUseCase = PasswordVaultUseCase(repository),
     autoUnlockUseCase: AutoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptPdfUseCase, passwordVaultUseCase, ioDispatcher),

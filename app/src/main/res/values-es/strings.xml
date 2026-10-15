@@ -208,4 +208,11 @@
     <string name="density_compact">Compacto</string>
     <string name="density_standard">Estándar</string>
     <string name="density_comfortable">Cómodo</string>
+
+    <string name="title_font_diagnostics">Diagnóstico de fuentes</string>
+    <string name="warning_missing_fonts">Advertencia: El documento depende de fuentes del sistema no incrustadas y ausentes.</string>
+    <string name="label_embedded">Incrustada</string>
+    <string name="label_not_embedded">No incrustada</string>
+    <string name="label_subset"> (Subconjunto)</string>
+    <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
 </resources>

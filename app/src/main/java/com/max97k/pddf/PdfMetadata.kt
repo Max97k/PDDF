@@ -4,6 +4,14 @@ import androidx.compose.runtime.Immutable
 import com.max97k.pddf.domain.usecase.PdfAttachment
 
 @Immutable
+data class PdfFontInfo(
+    val name: String,
+    val subType: String,
+    val isEmbedded: Boolean,
+    val isSubset: Boolean
+)
+
+@Immutable
 data class PdfMetadata(
     val title: String,
     val author: String,
@@ -14,7 +22,9 @@ data class PdfMetadata(
     val canPrint: Boolean,
     val canCopy: Boolean,
     val signatures: List<SignatureInfo> = emptyList(),
-    val attachments: List<PdfAttachment> = emptyList()
+    val attachments: List<PdfAttachment> = emptyList(),
+    val fonts: List<PdfFontInfo> = emptyList(),
+    val hasMissingNonEmbeddedSystemFonts: Boolean = false
 ) {
     val isEncrypted: Boolean
         get() = encryptionMethod.isNotBlank() && encryptionMethod != "None"

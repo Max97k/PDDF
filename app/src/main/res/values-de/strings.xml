@@ -208,4 +208,11 @@
     <string name="density_compact">Kompakt</string>
     <string name="density_standard">Standard</string>
     <string name="density_comfortable">Komfortabel</string>
+
+    <string name="title_font_diagnostics">Schriftartendiagnose</string>
+    <string name="warning_missing_fonts">Warnung: Dokument verwendet fehlende, nicht eingebettete Systemschriftarten.</string>
+    <string name="label_embedded">Eingebettet</string>
+    <string name="label_not_embedded">Nicht eingebettet</string>
+    <string name="label_subset"> (Untersatz)</string>
+    <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
 </resources>

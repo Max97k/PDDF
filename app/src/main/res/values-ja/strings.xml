@@ -206,4 +206,11 @@
     <string name="density_compact">コンパクト</string>
     <string name="density_standard">標準</string>
     <string name="density_comfortable">ゆったり</string>
+
+    <string name="title_font_diagnostics">フォント診断</string>
+    <string name="warning_missing_fonts">警告: ドキュメントは埋め込まれていない不足しているシステムフォントに依存しています。</string>
+    <string name="label_embedded">埋め込み済み</string>
+    <string name="label_not_embedded">未埋め込み</string>
+    <string name="label_subset">（サブセット）</string>
+    <string name="label_font_item">- %1$s: %2$s, %3$s%4$s</string>
 </resources>

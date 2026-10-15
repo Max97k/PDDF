@@ -208,4 +208,11 @@
     <string name="density_compact">Compact</string>
     <string name="density_standard">Standard</string>
     <string name="density_comfortable">Confortable</string>
+
+    <string name="title_font_diagnostics">Diagnostic des polices</string>
+    <string name="warning_missing_fonts">Avertissement : Le document dépend de polices système non intégrées manquantes.</string>
+    <string name="label_embedded">Intégrée</string>
+    <string name="label_not_embedded">Non intégrée</string>
+    <string name="label_subset"> (Sous-ensemble)</string>
+    <string name="label_font_item">- %1$s : %2$s, %3$s%4$s</string>
 </resources>

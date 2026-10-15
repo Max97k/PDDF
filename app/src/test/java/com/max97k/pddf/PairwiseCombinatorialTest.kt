@@ -106,7 +106,7 @@ class PairwiseCombinatorialTest(
             .allowMainThreadQueries()
             .build()
         repository = PasswordRepository(database.passwordDao(), CryptoManager())
-        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepo = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         vaultUseCase = PasswordVaultUseCase(repository)
         decryptUseCase = DecryptPdfUseCase(pdfRepo, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepo, decryptUseCase, vaultUseCase, testDispatcher)

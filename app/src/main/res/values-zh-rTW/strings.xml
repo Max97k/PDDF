@@ -206,4 +206,11 @@
     <string name="density_compact">緊湊</string>
     <string name="density_standard">標準</string>
     <string name="density_comfortable">寬鬆</string>
+
+    <string name="title_font_diagnostics">字型診斷</string>
+    <string name="warning_missing_fonts">警告：文件依賴缺失的非內嵌系統字型。</string>
+    <string name="label_embedded">已內嵌</string>
+    <string name="label_not_embedded">未內嵌</string>
+    <string name="label_subset">（子集）</string>
+    <string name="label_font_item">- %1$s：%2$s，%3$s%4$s</string>
 </resources>

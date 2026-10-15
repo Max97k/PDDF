@@ -89,7 +89,7 @@ class RealWorldScenarioE2ETest {
             .allowMainThreadQueries()
             .build()
         repository = PasswordRepository(database.passwordDao(), CryptoManager())
-        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher)
+        val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(application, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         vaultUseCase = PasswordVaultUseCase(repository)
         decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
         autoUnlockUseCase = AutoUnlockUseCase(pdfRepository, decryptUseCase, vaultUseCase, testDispatcher)

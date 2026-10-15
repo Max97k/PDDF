@@ -206,4 +206,11 @@
     <string name="density_compact">紧凑</string>
     <string name="density_standard">标准</string>
     <string name="density_comfortable">宽松</string>
+
+    <string name="title_font_diagnostics">字体诊断</string>
+    <string name="warning_missing_fonts">警告：文档依赖缺失的非嵌入系统字体。</string>
+    <string name="label_embedded">已嵌入</string>
+    <string name="label_not_embedded">未嵌入</string>
+    <string name="label_subset">（子集）</string>
+    <string name="label_font_item">- %1$s：%2$s，%3$s%4$s</string>
 </resources>
