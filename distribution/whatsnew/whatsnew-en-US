@@ -1,1 +1,1 @@
-v0.8.0 Release: Resolved app launch crash caused by R8 obfuscation missing kotlinx.serialization type-safe navigation route rules; hardened Proguard configuration and improved release build stability.
+v0.9.4 Release: Major multi-feature upgrade with smart vault password auto-matching, batch retry, PDF text-to-speech reader, AES-256 re-encryption, photo-preserving night mode, bookmarks, TOC outline drawer, and inactivity auto-lock.
