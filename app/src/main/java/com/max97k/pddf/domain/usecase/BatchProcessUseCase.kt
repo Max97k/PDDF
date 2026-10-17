@@ -23,7 +23,8 @@ class BatchProcessUseCase(
         val errorCount: Int = 0,
         val cancelledCount: Int = 0,
         val lastDecryptedUri: String? = null,
-        val errorOutputDir: Boolean = false
+        val errorOutputDir: Boolean = false,
+        val failedFiles: List<com.max97k.pddf.domain.model.FailedFileRecord> = emptyList()
     )
 
     suspend fun processInPlace(
@@ -38,6 +39,7 @@ class BatchProcessUseCase(
         var errorCount = 0
         var cancelledCount = 0
         var lastUri: String? = null
+        val failedRecords = mutableListOf<com.max97k.pddf.domain.model.FailedFileRecord>()
 
         try {
             for ((index, inputUri) in inputUriStrings.withIndex()) {
@@ -57,14 +59,27 @@ class BatchProcessUseCase(
                             lastUri = inputUri
                             successCount++
                         }
-                        DecryptStatus.NOT_ENCRYPTED -> notEncryptedCount++
-                        DecryptStatus.WRONG_PASSWORD -> wrongPasswordCount++
-                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> unsupportedCount++
-                        DecryptStatus.ERROR -> errorCount++
+                        DecryptStatus.NOT_ENCRYPTED -> {
+                            notEncryptedCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.NOT_ENCRYPTED, "Not encrypted"))
+                        }
+                        DecryptStatus.WRONG_PASSWORD -> {
+                            wrongPasswordCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.WRONG_PASSWORD, "Wrong password"))
+                        }
+                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                            unsupportedCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.UNSUPPORTED_ENCRYPTION, "Unsupported encryption"))
+                        }
+                        DecryptStatus.ERROR -> {
+                            errorCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.ERROR, "Error decrypting"))
+                        }
                     }
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     errorCount++
+                    failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.ERROR, e.message ?: "Unknown error"))
                 } finally {
                     if (tempUri != null) {
                         pdfRepository.deleteFile(tempUri)
@@ -83,7 +98,8 @@ class BatchProcessUseCase(
             unsupportedCount = unsupportedCount,
             errorCount = errorCount,
             cancelledCount = cancelledCount,
-            lastDecryptedUri = lastUri
+            lastDecryptedUri = lastUri,
+            failedFiles = failedRecords
         )
     }
 
@@ -101,6 +117,7 @@ class BatchProcessUseCase(
         var errorCount = 0
         var cancelledCount = 0
         var lastUri: String? = null
+        val failedRecords = mutableListOf<com.max97k.pddf.domain.model.FailedFileRecord>()
 
         try {
             for ((index, inputUri) in inputUriStrings.withIndex()) {
@@ -138,16 +155,30 @@ class BatchProcessUseCase(
                                 successCount++
                             } else {
                                 errorCount++
+                                failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, originalName, DecryptStatus.ERROR, "Failed to copy to output directory"))
                             }
                         }
-                        DecryptStatus.NOT_ENCRYPTED -> notEncryptedCount++
-                        DecryptStatus.WRONG_PASSWORD -> wrongPasswordCount++
-                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> unsupportedCount++
-                        DecryptStatus.ERROR -> errorCount++
+                        DecryptStatus.NOT_ENCRYPTED -> {
+                            notEncryptedCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.NOT_ENCRYPTED, "Not encrypted"))
+                        }
+                        DecryptStatus.WRONG_PASSWORD -> {
+                            wrongPasswordCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.WRONG_PASSWORD, "Wrong password"))
+                        }
+                        DecryptStatus.UNSUPPORTED_ENCRYPTION -> {
+                            unsupportedCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.UNSUPPORTED_ENCRYPTION, "Unsupported encryption"))
+                        }
+                        DecryptStatus.ERROR -> {
+                            errorCount++
+                            failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.ERROR, "Error decrypting"))
+                        }
                     }
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     errorCount++
+                    failedRecords.add(com.max97k.pddf.domain.model.FailedFileRecord(inputUri, pdfRepository.getFileName(inputUri), DecryptStatus.ERROR, e.message ?: "Unknown error"))
                 } finally {
                     if (tempUri != null) {
                         pdfRepository.deleteFile(tempUri)
@@ -166,7 +197,8 @@ class BatchProcessUseCase(
             unsupportedCount = unsupportedCount,
             errorCount = errorCount,
             cancelledCount = cancelledCount,
-            lastDecryptedUri = lastUri
+            lastDecryptedUri = lastUri,
+            failedFiles = failedRecords
         )
     }
 

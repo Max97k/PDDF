@@ -45,6 +45,9 @@ sealed interface MainUiAction {
     data object RequestSaveAllAttachments : MainUiAction
     data class SaveAllAttachmentsToDirectory(val directoryUri: Uri) : MainUiAction
 
+    // Batch Retry
+    data class RetryFailedBatchItems(val selectedUris: List<Uri>, val alternativePassword: String) : MainUiAction
+
     // External Intent & Auto-Unlock
     data class StartAutoUnlock(val uri: Uri) : MainUiAction
     data class HandleExternalIntent(
@@ -72,6 +75,7 @@ sealed interface MainUiAction {
     data class SetSavePasswordDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPasswordListDialogVisible(val visible: Boolean) : MainUiAction
     data class SetWhatsNewDialogVisible(val visible: Boolean) : MainUiAction
+    data class SetBatchFailureDialogVisible(val visible: Boolean) : MainUiAction
     data class SetPreviewPdfUri(val uri: Uri?) : MainUiAction
     data class RotatePreview(val degrees: Int) : MainUiAction
     data class SetStampDialogVisible(val visible: Boolean) : MainUiAction

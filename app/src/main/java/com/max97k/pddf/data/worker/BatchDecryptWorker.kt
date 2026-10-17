@@ -50,6 +50,11 @@ class BatchDecryptWorker @AssistedInject constructor(
         const val KEY_ERROR_COUNT = "error_count"
         const val KEY_CANCELLED_COUNT = "cancelled_count"
         const val KEY_LAST_DECRYPTED_URI = "last_decrypted_uri"
+
+        const val KEY_FAILED_URIS = "failed_uris"
+        const val KEY_FAILED_FILENAMES = "failed_filenames"
+        const val KEY_FAILED_ERRORTYPES = "failed_errortypes"
+        const val KEY_FAILED_MESSAGES = "failed_messages"
     }
 
     private val notificationManager =
@@ -173,7 +178,11 @@ class BatchDecryptWorker @AssistedInject constructor(
             KEY_UNSUPPORTED_COUNT to result.unsupportedCount,
             KEY_ERROR_COUNT to result.errorCount,
             KEY_CANCELLED_COUNT to result.cancelledCount,
-            KEY_LAST_DECRYPTED_URI to result.lastDecryptedUri?.toString()
+            KEY_LAST_DECRYPTED_URI to result.lastDecryptedUri?.toString(),
+            KEY_FAILED_URIS to result.failedFiles.map { it.uri }.toTypedArray(),
+            KEY_FAILED_FILENAMES to result.failedFiles.map { it.fileName }.toTypedArray(),
+            KEY_FAILED_ERRORTYPES to result.failedFiles.map { it.errorType.name }.toTypedArray(),
+            KEY_FAILED_MESSAGES to result.failedFiles.map { it.message }.toTypedArray()
         )
 
         Result.success(outputData)
