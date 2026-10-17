@@ -217,6 +217,13 @@ class DomainUseCasesTest {
 
         override suspend fun deleteFile(filePathOrUri: String): Boolean = true
 
+        override suspend fun reEncrypt(
+            sourceUri: String,
+            destUri: String,
+            newPasswordChars: CharArray,
+            keyLength: Int
+        ): Result<Unit> = Result.success(Unit)
+
         override suspend fun getFileName(uriString: String): String =
             uriString.substringAfterLast("/")
 

@@ -80,6 +80,11 @@ sealed interface MainUiAction {
     data class RotatePreview(val degrees: Int) : MainUiAction
     data class SetStampDialogVisible(val visible: Boolean) : MainUiAction
 
+    // Re-Encryption Actions
+    data class RequestReEncrypt(val uri: Uri) : MainUiAction
+    data object DismissReEncryptDialog : MainUiAction
+    data class SubmitReEncrypt(val passwordChars: CharArray) : MainUiAction
+
     // Settings
     data class SetTheme(val mode: ThemeMode) : MainUiAction
     data class SetDensityMode(val mode: DensityMode) : MainUiAction

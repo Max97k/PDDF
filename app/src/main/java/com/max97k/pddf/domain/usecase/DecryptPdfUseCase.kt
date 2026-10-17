@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.domain.usecase
+package com.max97k.pddf.domain.usecase
 
 import com.max97k.pddf.DecryptStatus
 import com.max97k.pddf.PdfMetadata
@@ -40,6 +40,15 @@ open class DecryptPdfUseCase(
         val status = pdfRepository.decrypt(inputUriString, outputUriString, passwordValue)
         val duration = System.currentTimeMillis() - startTime
         Pair(status, duration)
+    }
+
+    open suspend fun reEncrypt(
+        inputUriString: String,
+        outputUriString: String,
+        newPasswordChars: CharArray,
+        keyLength: Int = 256
+    ): Result<Unit> = withContext(ioDispatcher) {
+        pdfRepository.reEncrypt(inputUriString, outputUriString, newPasswordChars, keyLength)
     }
 
     open suspend fun extractMetadata(

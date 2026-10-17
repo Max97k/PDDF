@@ -477,6 +477,46 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
+            is MainUiAction.RequestReEncrypt -> {
+                _uiState.update { it.copy(showReEncryptDialog = true, activeReEncryptUri = action.uri) }
+            }
+            is MainUiAction.DismissReEncryptDialog -> {
+                _uiState.update { it.copy(showReEncryptDialog = false, activeReEncryptUri = null) }
+            }
+            is MainUiAction.SubmitReEncrypt -> {
+                val uri = _uiState.value.activeReEncryptUri
+                if (uri != null) {
+                    _uiState.update { it.copy(showReEncryptDialog = false, isProcessing = true) }
+                    viewModelScope.launch {
+                        val charsCopy = action.passwordChars.copyOf() // In case it gets wiped too early by UI
+                        com.max97k.pddf.util.MemoryUtils.wipe(action.passwordChars) // wipe UI copy if we can
+
+                        val destUriString = uri.toString()
+                        val result = decryptPdfUseCase.reEncrypt(
+                            inputUriString = uri.toString(),
+                            outputUriString = destUriString,
+                            newPasswordChars = charsCopy
+                        )
+                        com.max97k.pddf.util.MemoryUtils.wipe(charsCopy)
+
+                        _uiState.update { state ->
+                            state.copy(
+                                isProcessing = false,
+                                activeReEncryptUri = null,
+                                statusMessage = if (result.isSuccess) "✅ PDF Protected Successfully" else "❌ Failed to Protect PDF"
+                            )
+                        }
+                        if (result.isSuccess) {
+                            emitEffect(UiEffect.ShowSnackbar("PDF Protected Successfully"))
+                        } else {
+                            emitEffect(UiEffect.ShowSnackbar("Failed to Protect PDF"))
+                        }
+                    }
+                } else {
+                    _uiState.update { it.copy(showReEncryptDialog = false) }
+                    com.max97k.pddf.util.MemoryUtils.wipe(action.passwordChars)
+                }
+            }
         }
     }
 
