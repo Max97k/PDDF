@@ -1,6 +1,13 @@
 package com.max97k.pddf.feature.viewer
 
 import android.content.Context
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material3.Slider
 import android.content.ContextWrapper
 import android.net.Uri
 import android.util.Log
@@ -9,6 +16,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.Palette
 import com.max97k.pddf.ui.components.ReadingModeBottomSheet
@@ -219,6 +227,29 @@ fun PdfViewerScreen(
     var currentPageIndex by remember { mutableStateOf<Int?>(null) }
 
 
+
+    val repository = remember(context) {
+        try {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                PdfViewerEntryPoint::class.java
+            ).pdfRepository()
+        } catch (_: Exception) {
+            com.max97k.pddf.data.repository.PdfRepositoryImpl(
+                context.applicationContext,
+                kotlinx.coroutines.Dispatchers.IO
+            )
+        }
+    }
+
+    val ttsController = remember { PdfTextToSpeechController(context, repository, coroutineScope) }
+    var ttsBarVisible by rememberSaveable { mutableStateOf(false) }
+
+    DisposableEffect(ttsController) {
+        onDispose { ttsController.release() }
+    }
+
+
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
             if (topBarVisible) {
@@ -268,9 +299,6 @@ fun PdfViewerScreen(
         )
     }
 
-    val repository = remember(context) {
-        EntryPointAccessors.fromApplication(context.applicationContext, PdfViewerEntryPoint::class.java).pdfRepository()
-    }
     var outline by remember { mutableStateOf<List<com.max97k.pddf.feature.viewer.OutlineItem>>(emptyList()) }
 
     LaunchedEffect(uri) {
@@ -364,6 +392,17 @@ fun PdfViewerScreen(
                             )
                         }
                         // Search toggle — open search on first tap, close on second tap.
+
+                        IconButton(onClick = {
+                            ttsBarVisible = !ttsBarVisible
+                            if (!ttsBarVisible) ttsController.stop()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.RecordVoiceOver,
+                                contentDescription = "Text to Speech"
+                            )
+                        }
+
                         IconButton(onClick = {
                             showBookmarksSheet = false
                             isSearchActive = !isSearchActive
@@ -736,6 +775,67 @@ fun PdfViewerScreen(
                         }
                     }
                 )
+
+
+                AnimatedVisibility(
+                    visible = ttsBarVisible,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    val isPlaying by ttsController.isPlaying.collectAsState()
+                    val currentPage by ttsController.currentPage.collectAsState()
+                    val totalPages by ttsController.totalPages.collectAsState()
+                    val rate by ttsController.playbackRate.collectAsState()
+
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                        tonalElevation = 8.dp,
+                        shadowElevation = 8.dp
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = { ttsController.previousPage() }) {
+                                    Icon(Icons.Default.SkipPrevious, "Previous Page")
+                                }
+                                IconButton(onClick = {
+                                    if (isPlaying) ttsController.pause() else ttsController.play(uri.toString(), currentPage)
+                                }) {
+                                    Icon(
+                                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                        if (isPlaying) "Pause" else "Play"
+                                    )
+                                }
+                                IconButton(onClick = { ttsController.stop() }) {
+                                    Icon(Icons.Default.Stop, "Stop")
+                                }
+                                IconButton(onClick = { ttsController.nextPage() }) {
+                                    Icon(Icons.Default.SkipNext, "Next Page")
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Speed: ${"%.1f".format(rate)}x", modifier = Modifier.padding(end = 8.dp))
+                                Slider(
+                                    value = rate,
+                                    onValueChange = { ttsController.setRate(it) },
+                                    valueRange = 0.5f..2.0f,
+                                    steps = 14
+                                )
+                            }
+                            Text(
+                                "Page: $currentPage / ${if (totalPages > 0) totalPages else "-"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+                }
 
                 DisposableEffect(containerId, fragmentManager) {
                     onDispose {

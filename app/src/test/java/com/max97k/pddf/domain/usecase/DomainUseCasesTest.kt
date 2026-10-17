@@ -251,6 +251,10 @@ class DomainUseCasesTest {
         ): Boolean = true
 
         override suspend fun getOutline(sourceUri: String, passwordValue: String): List<com.max97k.pddf.feature.viewer.OutlineItem> = emptyList()
+
+        override suspend fun extractPageText(sourceUri: String, page: Int): String? = null
+
+        override suspend fun getPageCount(sourceUri: String): Int = 0
     }
 
     @Test
