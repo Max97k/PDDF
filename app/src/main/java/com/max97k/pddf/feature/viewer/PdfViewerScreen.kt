@@ -136,6 +136,9 @@ fun PdfViewerScreen(
     val readingMode by securityPreferences.readingMode.collectAsState()
     val scope = rememberCoroutineScope()
 
+    // Tracks visibility of custom print options dialog
+    var showPrintDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
             if (topBarVisible) {
@@ -160,6 +163,29 @@ fun PdfViewerScreen(
         WindowInsets.safeDrawing
     } else {
         WindowInsets(0, 0, 0, 0)
+    }
+
+    if (showPrintDialog) {
+        PdfPrintOptionsDialog(
+            onDismiss = { showPrintDialog = false },
+            onConfirm = { isGrayscale, pageRange ->
+                showPrintDialog = false
+                val printManager = context.getSystemService(Context.PRINT_SERVICE) as? android.print.PrintManager
+                printManager?.let {
+                    val fileName = com.max97k.pddf.util.FileUtils.getFileName(context, uri)
+                    val adapter = com.max97k.pddf.print.PdfPrintDocumentAdapter(
+                        context = context,
+                        originalUri = uri,
+                        fileName = fileName,
+                        isTempFile = false,
+                        isGrayscale = isGrayscale,
+                        customPageRange = pageRange
+                    )
+                    val builder = android.print.PrintAttributes.Builder()
+                    it.print(fileName, adapter, builder.build())
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -227,13 +253,7 @@ fun PdfViewerScreen(
                         }
 
                         IconButton(onClick = {
-                            val printManager = context.getSystemService(Context.PRINT_SERVICE) as? android.print.PrintManager
-                            printManager?.let {
-                                val fileName = com.max97k.pddf.util.FileUtils.getFileName(context, uri)
-                                val adapter = com.max97k.pddf.print.PdfPrintDocumentAdapter(context, uri, fileName)
-                                val builder = android.print.PrintAttributes.Builder()
-                                it.print(fileName, adapter, builder.build())
-                            }
+                            showPrintDialog = true
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Print,
