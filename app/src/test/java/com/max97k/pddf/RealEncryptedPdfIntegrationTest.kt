@@ -177,8 +177,8 @@ class RealEncryptedPdfIntegrationTest {
         val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, testDispatcher, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptUseCase = DecryptPdfUseCase(pdfRepository, testDispatcher)
 
-        val fakeDao = DomainUseCasesTest.FakePasswordDao()
-        val repository = PasswordRepository(fakeDao)
+        val passwordRepository = com.max97k.pddf.data.PasswordRepository(androidx.room.Room.inMemoryDatabaseBuilder(context, com.max97k.pddf.data.AppDatabase::class.java).allowMainThreadQueries().build().passwordDao(), com.max97k.pddf.util.CryptoManager(context), testDispatcher)
+        val repository = passwordRepository
         val vaultUseCase = PasswordVaultUseCase(repository)
         vaultUseCase.insertPassword("My Bank Account", testPassword)
 

@@ -411,7 +411,7 @@ class DomainUseCasesTest {
     fun testBatchProcessUseCase_processInPlace_success() = runTest(testDispatcher) {
         val fakeRepo = FakePdfRepository(decryptResult = DecryptStatus.SUCCESS)
         val decryptPdfUseCase = DecryptPdfUseCase(fakeRepo, testDispatcher)
-        val batchProcessUseCase = BatchProcessUseCase(fakeRepo, decryptPdfUseCase, testDispatcher)
+        val batchProcessUseCase = BatchProcessUseCase(fakeRepo, decryptPdfUseCase, FakePasswordRepository(), testDispatcher)
 
         val result = batchProcessUseCase.processInPlace(
             inputUriStrings = listOf("content://pdf/1", "content://pdf/2"),

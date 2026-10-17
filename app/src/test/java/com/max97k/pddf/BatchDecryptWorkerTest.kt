@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -23,7 +23,8 @@ class BatchDecryptWorkerTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, kotlinx.coroutines.Dispatchers.IO, com.max97k.pddf.domain.usecase.AnalyzePdfFontsUseCase())
         val decryptPdfUseCase = com.max97k.pddf.domain.usecase.DecryptPdfUseCase(pdfRepository, kotlinx.coroutines.Dispatchers.IO)
-        val batchProcessUseCase = com.max97k.pddf.domain.usecase.BatchProcessUseCase(pdfRepository, decryptPdfUseCase, kotlinx.coroutines.Dispatchers.IO)
+        val passwordRepository = com.max97k.pddf.data.PasswordRepository(androidx.room.Room.inMemoryDatabaseBuilder(context, com.max97k.pddf.data.AppDatabase::class.java).allowMainThreadQueries().build().passwordDao(), com.max97k.pddf.util.CryptoManager(context), kotlinx.coroutines.Dispatchers.IO)
+        val batchProcessUseCase = com.max97k.pddf.domain.usecase.BatchProcessUseCase(pdfRepository, decryptPdfUseCase, passwordRepository, kotlinx.coroutines.Dispatchers.IO)
         val worker = TestListenableWorkerBuilder<BatchDecryptWorker>(context)
             .setWorkerFactory(object : androidx.work.WorkerFactory() {
                 override fun createWorker(
@@ -59,7 +60,8 @@ class BatchDecryptWorkerTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val pdfRepository = com.max97k.pddf.data.repository.PdfRepositoryImpl(context, kotlinx.coroutines.Dispatchers.IO)
         val decryptPdfUseCase = com.max97k.pddf.domain.usecase.DecryptPdfUseCase(pdfRepository, kotlinx.coroutines.Dispatchers.IO)
-        val batchProcessUseCase = com.max97k.pddf.domain.usecase.BatchProcessUseCase(pdfRepository, decryptPdfUseCase, kotlinx.coroutines.Dispatchers.IO)
+        val passwordRepository = com.max97k.pddf.data.PasswordRepository(androidx.room.Room.inMemoryDatabaseBuilder(context, com.max97k.pddf.data.AppDatabase::class.java).allowMainThreadQueries().build().passwordDao(), com.max97k.pddf.util.CryptoManager(context), kotlinx.coroutines.Dispatchers.IO)
+        val batchProcessUseCase = com.max97k.pddf.domain.usecase.BatchProcessUseCase(pdfRepository, decryptPdfUseCase, passwordRepository, kotlinx.coroutines.Dispatchers.IO)
         val worker = TestListenableWorkerBuilder<BatchDecryptWorker>(context)
             .setWorkerFactory(object : androidx.work.WorkerFactory() {
                 override fun createWorker(
