@@ -30,6 +30,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import com.max97k.pddf.R
 import com.max97k.pddf.data.ThemeMode
 import com.max97k.pddf.data.DensityMode
@@ -50,12 +52,14 @@ fun SettingsBottomSheet(
     currentDensity: DensityMode,
     currentBatchNotificationPreference: com.max97k.pddf.data.NotificationPreference,
     screenshotProtectionEnabled: Boolean,
+    currentAutoLockDuration: Long,
     onThemeSelected: (ThemeMode) -> Unit,
     onDensitySelected: (DensityMode) -> Unit,
     onBatchNotificationSelected: (com.max97k.pddf.data.NotificationPreference) -> Unit,
     onScreenshotProtectionToggled: (Boolean) -> Unit,
     onExportCsv: () -> Unit,
     onExportJson: () -> Unit,
+    onAutoLockDurationSelected: (Long) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -349,6 +353,67 @@ fun SettingsBottomSheet(
                 SafPermissionsDialog(
                     onDismiss = { showSafDialog = false }
                 )
+            }
+
+            // Auto-Lock Section
+            var expandedAutoLock by remember { mutableStateOf(false) }
+
+            ListItem(
+                headlineContent = { Text("Auto-Lock Duration") },
+                supportingContent = {
+                    val durationText = when (currentAutoLockDuration) {
+                        60000L -> "1 min"
+                        300000L -> "5 min"
+                        900000L -> "15 min"
+                        else -> "Never"
+                    }
+                    Text(durationText)
+                },
+                trailingContent = {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                        contentDescription = "Select Auto-Lock Duration"
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedAutoLock = !expandedAutoLock }
+            )
+
+            if (expandedAutoLock) {
+                val autoLockOptions = listOf(
+                    60000L to "1 min",
+                    300000L to "5 min",
+                    900000L to "15 min",
+                    -1L to "Never"
+                )
+
+                autoLockOptions.forEach { (duration, label) ->
+                    ListItem(
+                        headlineContent = { Text(label) },
+                        trailingContent = {
+                            if (currentAutoLockDuration == duration || (duration == -1L && currentAutoLockDuration <= 0)) {
+                                Text(
+                                    text = stringResource(R.string.symbol_checkmark),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 32.dp)
+                            .clickable(
+                                onClick = {
+                                    onAutoLockDurationSelected(duration)
+                                    expandedAutoLock = false
+                                }
+                            )
+                            .semantics { role = Role.RadioButton }
+                    )
+                }
             }
         }
     }

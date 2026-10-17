@@ -91,6 +91,7 @@ sealed interface MainUiAction {
     data class UpdateConflictSettings(val mode: ConflictMode, val remember: Boolean) : MainUiAction
     data class SetScreenshotProtection(val enabled: Boolean) : MainUiAction
     data class SetBatchNotificationPreference(val pref: com.max97k.pddf.data.NotificationPreference) : MainUiAction
+    data class SetAutoLockDuration(val duration: Long) : MainUiAction
 
     // External Navigation / System Actions
     data class CopyUriStream(val sourceUri: Uri, val destUri: Uri) : MainUiAction

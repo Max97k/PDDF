@@ -39,6 +39,7 @@ class SecurityPreferences(
         const val KEY_READING_MODE = "reading_mode"
         const val KEY_BATCH_NOTIFICATION_PREF = "batch_notification_pref"
         const val KEY_PRESERVE_IMAGES = "preserve_images"
+        const val KEY_AUTO_LOCK_DURATION = "auto_lock_duration"
 
         /**
          * Synchronous read for use in Activity.onCreate() before setContent{}.
@@ -101,5 +102,15 @@ class SecurityPreferences(
     suspend fun saveBatchNotificationPreference(pref: NotificationPreference) = withContext(ioDispatcher) {
         prefs.edit().putString(KEY_BATCH_NOTIFICATION_PREF, pref.name).apply()
         _batchNotificationPreference.value = pref
+    }
+
+    private val _autoLockDuration = MutableStateFlow(
+        prefs.getLong(KEY_AUTO_LOCK_DURATION, 60000L)
+    )
+    val autoLockDuration: StateFlow<Long> = _autoLockDuration.asStateFlow()
+
+    suspend fun saveAutoLockDuration(duration: Long) = withContext(ioDispatcher) {
+        prefs.edit().putLong(KEY_AUTO_LOCK_DURATION, duration).apply()
+        _autoLockDuration.value = duration
     }
 }

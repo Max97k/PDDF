@@ -10,6 +10,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -151,6 +153,16 @@ class MainActivity : FragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         FileUtils.cleanUpDecryptedCache(this)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        viewModel.onUserInteraction()
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        viewModel.onUserInteraction()
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onNewIntent(intent: Intent) {

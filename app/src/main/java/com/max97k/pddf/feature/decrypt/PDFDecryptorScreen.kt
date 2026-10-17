@@ -1245,6 +1245,7 @@ fun PDFDecryptorScreen(
             currentDensity = uiState.densityMode,
             currentBatchNotificationPreference = uiState.batchNotificationPreference,
             screenshotProtectionEnabled = uiState.screenshotProtectionEnabled,
+            currentAutoLockDuration = uiState.autoLockDuration,
             onThemeSelected = { mode -> onAction(MainUiAction.SetTheme(mode)) },
             onDensitySelected = { mode -> onAction(MainUiAction.SetDensityMode(mode)) },
             onBatchNotificationSelected = { pref -> onAction(MainUiAction.SetBatchNotificationPreference(pref)) },
@@ -1253,6 +1254,9 @@ fun PDFDecryptorScreen(
             },
             onExportCsv = { onAction(MainUiAction.RequestExportCsv) },
             onExportJson = { onAction(MainUiAction.RequestExportJson) },
+            onAutoLockDurationSelected = { duration ->
+                onAction(MainUiAction.SetAutoLockDuration(duration))
+            },
             onDismiss = { showSettingsSheet = false }
         )
     }    },

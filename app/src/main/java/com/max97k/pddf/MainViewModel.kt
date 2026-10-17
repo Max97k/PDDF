@@ -119,7 +119,8 @@ class MainViewModel @Inject constructor(
         savedPasswords,
         securityPreferences.screenshotProtection,
         checkAppUpdateUseCase.updateStatus,
-        securityPreferences.batchNotificationPreference
+        securityPreferences.batchNotificationPreference,
+        securityPreferences.autoLockDuration
     ) { params ->
         val baseState = params[0] as MainUiState
         val theme = params[1] as ThemeMode
@@ -129,6 +130,7 @@ class MainViewModel @Inject constructor(
         val screenshotProtection = params[4] as Boolean
         val updateStatus = params[5] as com.max97k.pddf.domain.model.AppUpdateStatus
         val batchNotificationPref = params[6] as com.max97k.pddf.data.NotificationPreference
+        val autoLockDur = params[7] as Long
 
         baseState.copy(
             themeMode = theme,
@@ -137,7 +139,8 @@ class MainViewModel @Inject constructor(
             screenshotProtectionEnabled = screenshotProtection,
             appUpdateStatus = updateStatus,
             showStampDialog = showStampDialog.value,
-            batchNotificationPreference = batchNotificationPref
+            batchNotificationPreference = batchNotificationPref,
+            autoLockDuration = autoLockDur
         )
     }.stateIn(
         scope = viewModelScope,
@@ -179,7 +182,8 @@ class MainViewModel @Inject constructor(
     private var batchJob: Job? = null
 
     private var backgroundTime: Long = 0
-    private val TIMEOUT_MILLIS = 60000L // 60 seconds auto-clear
+    private var lastInteractionTime: Long = 0L
+    private var autoLockJob: Job? = null
 
     private val prefs = application.getSharedPreferences("pdf_decryptor_prefs", Context.MODE_PRIVATE)
     private var pdfBoxInitJob: Job? = null
@@ -398,6 +402,12 @@ class MainViewModel @Inject constructor(
             is MainUiAction.SetDensityMode -> setDensityMode(action.mode)
             is MainUiAction.UpdateConflictSettings -> updateConflictSettings(action.mode, action.remember)
             is MainUiAction.SetScreenshotProtection -> setScreenshotProtection(action.enabled)
+            is MainUiAction.SetAutoLockDuration -> {
+                viewModelScope.launch {
+                    securityPreferences.saveAutoLockDuration(action.duration)
+                }
+                onUserInteraction()
+            }
             is MainUiAction.CopyUriStream -> copyUriStream(getApplication<Application>(), action.sourceUri, action.destUri)
             is MainUiAction.OpenPdfExternal -> emitEffect(UiEffect.OpenPdfExternally(action.uri))
             is MainUiAction.SharePdf -> emitEffect(UiEffect.SharePdf(action.uri))
@@ -1449,15 +1459,38 @@ class MainViewModel @Inject constructor(
         deletePassword(entity.id)
     }
 
+    fun onUserInteraction() {
+        lastInteractionTime = System.currentTimeMillis()
+        autoLockJob?.cancel()
+        val duration = uiState.value.autoLockDuration
+        if (duration > 0) {
+            autoLockJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(duration)
+                triggerAutoLock()
+            }
+        }
+    }
+
+    private fun triggerAutoLock() {
+        clearSensitiveData()
+        _uiState.update { it.copy(previewPdfUri = null, isAutoUnlocking = false) }
+        previewPdfUri.value = null
+        isAutoUnlocking.value = false
+        FileUtils.cleanUpDecryptedCache(getApplication<Application>())
+    }
+
     fun onAppBackgrounded() {
         backgroundTime = System.currentTimeMillis()
+        autoLockJob?.cancel()
     }
 
     fun onAppForegrounded() {
-        if (backgroundTime > 0 && System.currentTimeMillis() - backgroundTime > TIMEOUT_MILLIS) {
-            clearSensitiveData()
+        val duration = uiState.value.autoLockDuration
+        if (backgroundTime > 0 && duration > 0 && (System.currentTimeMillis() - backgroundTime) > duration) {
+            triggerAutoLock()
         }
         backgroundTime = 0
+        onUserInteraction()
     }
 
     fun clearSensitiveData() {
