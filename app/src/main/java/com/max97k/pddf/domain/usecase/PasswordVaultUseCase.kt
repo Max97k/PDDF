@@ -26,6 +26,14 @@ class PasswordVaultUseCase(
         repository.deleteById(id)
     }
 
+    suspend fun exportEncryptedVault(outputStream: java.io.OutputStream): Result<Unit> {
+        return repository.exportEncryptedVault(outputStream)
+    }
+
+    suspend fun importEncryptedVault(inputStream: java.io.InputStream): Result<Int> {
+        return repository.importEncryptedVault(inputStream)
+    }
+
     suspend fun getAllDecryptedPasswords(): List<PasswordEntity> {
         return repository.getAllDecryptedPasswords()
     }

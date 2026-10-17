@@ -50,6 +50,11 @@ import com.max97k.pddf.R
 import com.max97k.pddf.data.PasswordEntity
 import com.max97k.pddf.data.DensityMode
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.Download
+
 @Composable
 fun SavedPasswordListDialog(
     savedPasswords: List<PasswordEntity>,
@@ -57,6 +62,8 @@ fun SavedPasswordListDialog(
     onDismiss: () -> Unit,
     onSelectPassword: (String) -> Unit,
     onDeletePassword: (PasswordEntity) -> Unit,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -98,7 +105,23 @@ fun SavedPasswordListDialog(
             securePolicy = SecureFlagPolicy.SecureOn
         ),
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.dialog_title_saved_passwords)) },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(R.string.dialog_title_saved_passwords))
+                Row {
+                    IconButton(onClick = onExportClick) {
+                        Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.content_desc_export_vault))
+                    }
+                    IconButton(onClick = onImportClick) {
+                        Icon(Icons.Default.Download, contentDescription = stringResource(R.string.content_desc_import_vault))
+                    }
+                }
+            }
+        },
         text = {
             if (savedPasswords.isEmpty()) {
                 Text(stringResource(R.string.msg_no_saved_passwords))

@@ -87,4 +87,99 @@ open class PasswordRepository(
             Result.Error(e)
         }
     }
+
+    override suspend fun exportEncryptedVault(outputStream: java.io.OutputStream): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            val list = passwordDao.getAllPasswordsList()
+            // To ensure we can wipe plaintext memory effectively and avoid org.json Stub! errors in tests,
+            // we'll serialize to a simple CSV-like format using a CharArray manually, without using String or StringBuilder.
+            // Format: name|password\n
+
+            // First, calculate total length needed
+            var totalLength = 0
+            for (entity in list) {
+                totalLength += entity.name.length + 1 + entity.passwordValue.length + 1
+            }
+
+            val chars = CharArray(totalLength)
+            var idx = 0
+            for (entity in list) {
+                for (c in entity.name) {
+                    chars[idx++] = if (c == '|' || c == '\n') '_' else c
+                }
+                chars[idx++] = '|'
+                entity.usePasswordChars { passChars ->
+                    for (c in passChars) {
+                        chars[idx++] = c
+                    }
+                }
+                chars[idx++] = '\n'
+            }
+
+            val encryptedString = cryptoManager.encrypt(chars)
+            com.max97k.pddf.util.MemoryUtils.wipe(chars)
+
+            val bytes = encryptedString.toByteArray(kotlin.text.Charsets.UTF_8)
+            outputStream.use { it.write(bytes) }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun importEncryptedVault(inputStream: java.io.InputStream): Result<Int> = withContext(ioDispatcher) {
+        try {
+            val bytes = inputStream.use { it.readBytes() }
+            val encryptedString = String(bytes, kotlin.text.Charsets.UTF_8)
+
+            val chars = cryptoManager.decryptToChars(encryptedString)
+            var count = 0
+
+            var i = 0
+            while (i < chars.size) {
+                // Find length of name and password
+                var nameLen = 0
+                var tempI = i
+                while (tempI < chars.size && chars[tempI] != '|') {
+                    nameLen++
+                    tempI++
+                }
+                tempI++ // skip '|'
+                var passLen = 0
+                while (tempI < chars.size && chars[tempI] != '\n') {
+                    passLen++
+                    tempI++
+                }
+
+                if (nameLen > 0 || passLen > 0) {
+                    val nameChars = CharArray(nameLen)
+                    for (j in 0 until nameLen) {
+                        nameChars[j] = chars[i++]
+                    }
+                    val nameStr = String(nameChars)
+                    com.max97k.pddf.util.MemoryUtils.wipe(nameChars)
+
+                    i++ // skip '|'
+
+                    val passChars = CharArray(passLen)
+                    for (j in 0 until passLen) {
+                        passChars[j] = chars[i++]
+                    }
+
+                    i++ // skip '\n'
+
+                    passwordDao.insertPassword(PasswordEntity(name = nameStr, passwordValue = String(passChars)))
+                    com.max97k.pddf.util.MemoryUtils.wipe(passChars)
+                    count++
+                } else {
+                    i++
+                }
+            }
+
+            com.max97k.pddf.util.MemoryUtils.wipe(chars)
+            Result.Success(count)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
 }

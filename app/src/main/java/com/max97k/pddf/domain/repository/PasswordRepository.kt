@@ -16,4 +16,8 @@ interface PasswordRepository {
     suspend fun deleteById(id: Int): Result<Unit>
 
     suspend fun recordPasswordHit(id: Int): Result<Unit>
+
+    suspend fun exportEncryptedVault(outputStream: java.io.OutputStream): Result<Unit>
+
+    suspend fun importEncryptedVault(inputStream: java.io.InputStream): Result<Int>
 }

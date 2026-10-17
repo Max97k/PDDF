@@ -155,7 +155,7 @@ class PDFDecryptorScreenshotTest {
           savedPasswords = samplePasswords,
           onDismiss = {},
           onSelectPassword = {},
-          onDeletePassword = {}
+          onDeletePassword = {}, onExportClick = {}, onImportClick = {}
         )
       }
     }

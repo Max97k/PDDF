@@ -101,6 +101,13 @@
     <string name="msg_no_matching_passwords">一致するパスワードがありません</string>
     <string name="content_desc_delete_named">%1$s を削除</string>
 
+    <string name="content_desc_export_vault">Export Vault</string>
+    <string name="content_desc_import_vault">Import Vault</string>
+    <string name="msg_vault_exported">Vault exported successfully</string>
+    <string name="msg_vault_imported">Vault imported successfully: %1$d passwords</string>
+    <string name="msg_vault_export_failed">Export failed</string>
+    <string name="msg_vault_import_failed">Import failed. Invalid or corrupted file.</string>
+
     <plurals name="selected_files_count">
         <item quantity="other">%1$d 個のファイルを選択</item>
     </plurals>
