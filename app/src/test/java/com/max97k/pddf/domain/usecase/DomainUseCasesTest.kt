@@ -237,7 +237,6 @@ class DomainUseCasesTest {
         ): Boolean = true
 
 
-
         override suspend fun packageToZip(
             fileUris: List<String>,
             outputZipUri: String,
@@ -251,6 +250,7 @@ class DomainUseCasesTest {
             rotationDegrees: Int
         ): Boolean = true
 
+        override suspend fun getOutline(sourceUri: String, passwordValue: String): List<com.max97k.pddf.feature.viewer.OutlineItem> = emptyList()
     }
 
     @Test

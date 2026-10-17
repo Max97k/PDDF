@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.domain.repository
+package com.max97k.pddf.domain.repository
 
 import com.max97k.pddf.DecryptStatus
 import com.max97k.pddf.PdfMetadata
@@ -44,6 +44,11 @@ interface PdfRepository {
         sourceUri: String,
         destUri: String
     ): com.max97k.pddf.util.Result<Long>
+
+    suspend fun getOutline(
+        sourceUri: String,
+        passwordValue: String = ""
+    ): List<com.max97k.pddf.feature.viewer.OutlineItem> = emptyList()
 
     suspend fun copy(
         sourceUri: String,

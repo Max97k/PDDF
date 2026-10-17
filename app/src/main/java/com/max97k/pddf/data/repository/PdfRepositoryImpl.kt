@@ -270,7 +270,6 @@ open class PdfRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun exportPageAsImage(
         sourceUri: String,
         pageIndex: Int,
@@ -302,6 +301,61 @@ open class PdfRepositoryImpl @Inject constructor(
             e.printStackTrace()
             false
         }
+    }
+
+    override suspend fun getOutline(
+        sourceUri: String,
+        passwordValue: String
+    ): List<com.max97k.pddf.feature.viewer.OutlineItem> = withContext(ioDispatcher) {
+        val result = mutableListOf<com.max97k.pddf.feature.viewer.OutlineItem>()
+        try {
+            openSafeInputStream(sourceUri)?.use { inputStream ->
+                val doc = try {
+                    PDDocument.load(
+                        inputStream.buffered(),
+                        passwordValue,
+                        com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMixed(50 * 1024 * 1024)
+                    )
+                } catch (_: Exception) {
+                    null
+                }
+                doc?.use { document ->
+                    val documentOutline = document.documentCatalog.documentOutline
+                    if (documentOutline != null) {
+                        fun traverse(item: com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem): com.max97k.pddf.feature.viewer.OutlineItem {
+                            var pageIndex = -1
+                            try {
+                                val page = item.findDestinationPage(document)
+                                if (page != null) {
+                                    pageIndex = document.pages.indexOf(page)
+                                }
+                            } catch (_: Exception) {}
+
+                            val children = mutableListOf<com.max97k.pddf.feature.viewer.OutlineItem>()
+                            var child = item.firstChild
+                            while (child != null) {
+                                children.add(traverse(child))
+                                child = child.nextSibling
+                            }
+                            return com.max97k.pddf.feature.viewer.OutlineItem(
+                                title = item.title ?: "Untitled",
+                                pageIndex = pageIndex,
+                                children = children
+                            )
+                        }
+
+                        var current = documentOutline.firstChild
+                        while (current != null) {
+                            result.add(traverse(current))
+                            current = current.nextSibling
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        result
     }
 
     override suspend fun extractMetadata(
