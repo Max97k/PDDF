@@ -229,4 +229,5 @@
     <string name="label_doc_version">Version</string>
     <string name="label_doc_identical">Identisch</string>
     <string name="label_doc_differences">Unterschiede</string>
+    <string name="btn_page_overview">Seitenübersicht</string>
 </resources>

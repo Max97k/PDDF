@@ -227,4 +227,5 @@
     <string name="label_doc_version">バージョン</string>
     <string name="label_doc_identical">一致</string>
     <string name="label_doc_differences">相違点</string>
+    <string name="btn_page_overview">ページ概要</string>
 </resources>

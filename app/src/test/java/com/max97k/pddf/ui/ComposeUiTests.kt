@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui
+package com.max97k.pddf.ui
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.*

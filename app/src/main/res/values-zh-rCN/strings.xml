@@ -227,4 +227,5 @@
     <string name="label_doc_version">版本</string>
     <string name="label_doc_identical">完全相同</string>
     <string name="label_doc_differences">差异</string>
+    <string name="btn_page_overview">页面总览</string>
 </resources>
