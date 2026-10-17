@@ -74,9 +74,10 @@ fun PdfPageOverviewDialog(
                 }
             }
             awaitCancellation()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         } finally {
+            pdfRenderer = null
+            fileDescriptor = null
             withContext(NonCancellable + Dispatchers.IO) {
                 bitmapCache.evictAll()
                 try {
@@ -85,13 +86,11 @@ fun PdfPageOverviewDialog(
                             it.close()
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
                 try {
                     localFd?.close()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -185,8 +184,7 @@ fun PdfThumbnailItem(
                             bitmap = newBitmap
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }

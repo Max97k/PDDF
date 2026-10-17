@@ -263,6 +263,9 @@
     <string name="title_bookmarks">Signets</string>
     <string name="cd_bookmarks">Signets</string>
     <string name="cd_bookmark">Signet</string>
+    <string name="title_table_of_contents">Table des matières</string>
+    <string name="msg_no_table_of_contents">Aucune table des matières disponible dans ce document</string>
+    <string name="cd_close_table_of_contents">Fermer la table des matières</string>
     <string name="cd_tts">Synthèse vocale</string>
     <string name="cd_more_options">Plus d\'options</string>
     <string name="action_view_bookmarks">Afficher les signets</string>

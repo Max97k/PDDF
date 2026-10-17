@@ -24,8 +24,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 36
     targetSdk = 37
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 21
-    versionName = (project.findProperty("versionName") as? String) ?: "0.9.4"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 22
+    versionName = (project.findProperty("versionName") as? String) ?: "0.9.5"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -104,6 +104,7 @@ android {
 
 tasks.withType<Test>().configureEach {
   extensions.findByType(JacocoTaskExtension::class.java)?.apply {
+    isEnabled = false
     isIncludeNoLocationClasses = false
     excludes = listOf("jdk.internal.*", "sun.*", "java.*", "javax.*", "org.conscrypt.*")
   }
@@ -146,11 +147,6 @@ tasks.register<JacocoReport>("jacocoTestReport") {
   })
 }
 
-tasks.withType<Test>().configureEach {
-  (extensions.findByName("jacoco") as? org.gradle.testing.jacoco.plugins.JacocoTaskExtension)?.apply {
-    isEnabled = false
-  }
-}
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
@@ -164,7 +160,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.6.1")
+  implementation(libs.androidx.appcompat)
 
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)

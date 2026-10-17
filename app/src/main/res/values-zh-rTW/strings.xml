@@ -53,7 +53,7 @@
     <string name="btn_exit_search_pdf">關閉搜尋</string>
     <string name="btn_overwrite">覆蓋原檔</string>
     <string name="btn_save_as">另存新檔</string>
-    <string name="btn_save_as_zip">Save as ZIP Archive</string>
+    <string name="btn_save_as_zip">另存為 ZIP 壓縮檔</string>
     <string name="btn_decrypt_and_preview">解密並預覽</string>
     <string name="version_info">版本 %1$s</string>
     <string name="github_link">GitHub 專案</string>
@@ -123,11 +123,11 @@
     <string name="settings_screenshot_protection">截圖保護</string>
     <string name="settings_screenshot_protection_desc">防止截圖，並在多工視窗中隱藏 App 內容預覽</string>
     <string name="content_desc_settings">設定</string>
-    <string name="settings_section_notifications">Notifications</string>
-    <string name="settings_notify_batch_completion">Notify on Batch Completion</string>
-    <string name="settings_notify_sound">Sound</string>
-    <string name="settings_notify_vibration">Vibration</string>
-    <string name="settings_notify_silent">Silent</string>
+    <string name="settings_section_notifications">通知設定</string>
+    <string name="settings_notify_batch_completion">批次解密完成時通知</string>
+    <string name="settings_notify_sound">音效</string>
+    <string name="settings_notify_vibration">震動</string>
+    <string name="settings_notify_silent">靜音</string>
     <string name="content_desc_whats_new">最新功能</string>
     <string name="msg_screenshot_protection_on">截圖保護已啟用</string>
     <string name="msg_screenshot_protection_off">截圖保護已停用</string>
@@ -191,13 +191,13 @@
     <string name="error_invalid_page_range">無效的頁碼範圍</string>
 
     <!-- Export Image -->
-    <string name="btn_export_image">Export Image</string>
-    <string name="dialog_title_export_image">Export Page as Image</string>
-    <string name="label_page_number">Page Number</string>
+    <string name="btn_export_image">匯出圖片</string>
+    <string name="dialog_title_export_image">將頁面匯出為圖片</string>
+    <string name="label_page_number">頁碼</string>
     <string name="format_png">PNG</string>
     <string name="format_jpeg">JPEG</string>
-    <string name="msg_export_success">Image exported successfully</string>
-    <string name="msg_export_failed">Failed to export image</string>
+    <string name="msg_export_success">圖片匯出成功</string>
+    <string name="msg_export_failed">圖片匯出失敗</string>
 
     <string name="btn_reverse_pages">反轉頁面</string>
     <string name="btn_stamp_pages">添加頁碼</string>
@@ -260,6 +260,9 @@
     <string name="title_bookmarks">書籤</string>
     <string name="cd_bookmarks">書籤</string>
     <string name="cd_bookmark">書籤</string>
+    <string name="title_table_of_contents">目錄</string>
+    <string name="msg_no_table_of_contents">此文件未包含目錄</string>
+    <string name="cd_close_table_of_contents">關閉目錄</string>
     <string name="cd_tts">語音朗讀</string>
     <string name="cd_more_options">更多選項</string>
     <string name="action_view_bookmarks">檢視書籤</string>

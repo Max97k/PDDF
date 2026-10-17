@@ -1,1 +1,1 @@
-v0.9.4 Release: Major multi-feature upgrade with smart vault password auto-matching, batch retry, PDF text-to-speech reader, AES-256 re-encryption, photo-preserving night mode, bookmarks, TOC outline drawer, and inactivity auto-lock.
+v0.9.5 Release: Enhanced security with unified FLAG_SECURE protection, deep DoD 5220.22-M recursive cache shredding, smart title & filename suggestion, fixed attachment saving and page share URIs, memory OOM optimizations, and complete localization.

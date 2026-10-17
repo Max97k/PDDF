@@ -75,16 +75,20 @@ class FileUtilsTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val file1 = File(context.cacheDir, "auto_decrypted_12345.pdf").apply { writeText("dummy pdf 1") }
         val file2 = File(context.cacheDir, "decrypted_99999_0.pdf").apply { writeText("dummy pdf 2") }
+        val subDir = File(context.cacheDir, "decrypted").apply { mkdirs() }
+        val watermarkedFile = File(subDir, "watermarked_temp_12345.pdf").apply { writeText("dummy watermarked pdf") }
         val nonPdf = File(context.cacheDir, "other_cache.txt").apply { writeText("keep me") }
 
         assertTrue(file1.exists())
         assertTrue(file2.exists())
+        assertTrue(watermarkedFile.exists())
         assertTrue(nonPdf.exists())
 
         FileUtils.cleanUpDecryptedCache(context)
 
         assertFalse(file1.exists())
         assertFalse(file2.exists())
+        assertFalse(watermarkedFile.exists())
         assertTrue(nonPdf.exists())
 
         // Cleanup

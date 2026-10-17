@@ -31,41 +31,70 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.max97k.pddf.R
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.text.font.FontWeight
+
 @Composable
 fun PdfOutlineDrawer(
     outline: List<OutlineItem>,
     onPageClicked: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClose: (() -> Unit)? = null
 ) {
-    if (outline.isEmpty()) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    Column(modifier = modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "No Table of Contents available in this document",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp)
+                text = stringResource(R.string.title_table_of_contents),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+            if (onClose != null) {
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cd_close_table_of_contents)
+                    )
+                }
+            }
         }
-    } else {
-        LazyColumn(
-            modifier = modifier.fillMaxSize()
-        ) {
-            item {
+        HorizontalDivider()
+
+        if (outline.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = "Table of Contents",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = stringResource(R.string.msg_no_table_of_contents),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            items(outline) { item ->
-                OutlineItemNode(
-                    item = item,
-                    depth = 0,
-                    onPageClicked = onPageClicked
-                )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                items(outline) { item ->
+                    OutlineItemNode(
+                        item = item,
+                        depth = 0,
+                        onPageClicked = onPageClicked
+                    )
+                }
             }
         }
     }

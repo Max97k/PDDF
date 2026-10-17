@@ -103,7 +103,7 @@ fun PostDecryptActionSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Protect PDF",
+                    text = stringResource(R.string.title_protect_pdf),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

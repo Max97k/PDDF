@@ -26,6 +26,10 @@ class PasswordVaultUseCase(
         repository.deleteById(id)
     }
 
+    suspend fun recordPasswordHit(id: Int) {
+        repository.recordPasswordHit(id)
+    }
+
     suspend fun exportEncryptedVault(outputStream: java.io.OutputStream): Result<Unit> {
         return repository.exportEncryptedVault(outputStream)
     }

@@ -9,21 +9,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +71,9 @@ fun DocumentDetailsCard(
     onExportText: (() -> Unit)? = null,
     onSaveAttachment: ((String) -> Unit)? = null,
     onSaveAllAttachments: (() -> Unit)? = null,
-    uriHash: Int? = null
+    uriHash: Int? = null,
+    suggestedTitle: String? = null,
+    onSaveAsSuggested: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var exportMenuExpanded by remember { mutableStateOf(false) }
@@ -88,7 +104,9 @@ fun DocumentDetailsCard(
                 view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
                 expanded = !expanded
             },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -96,31 +114,34 @@ fun DocumentDetailsCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.title_document_details),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Surface(
+                        modifier = Modifier.size(36.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.title_document_details),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (onReversePages != null) {
-                        TextButton(onClick = onReversePages) {
-                            Text("🔄 " + stringResource(R.string.btn_reverse_pages))
-                        }
-                    }
-                    if (onStamp != null) {
-                        TextButton(onClick = onStamp) {
-                            Text("📝 " + stringResource(R.string.btn_stamp_pages))
-                        }
-                    }
-                    if (onPreview != null) {
-                        TextButton(onClick = onPreview) {
-                            Text("👁️ " + stringResource(R.string.btn_preview_pdf))
-                        }
-                    }
-                    if (onExportText != null) {
-                        TextButton(onClick = onExportText) {
-                            Text("📝 " + stringResource(R.string.btn_export_text))
-                        }
-                    }
                     if (onFlattenForms != null) {
                         IconButton(onClick = { exportMenuExpanded = true }) {
                             Icon(
@@ -141,83 +162,243 @@ fun DocumentDetailsCard(
                             )
                         }
                     }
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (expanded) {
-                            stringResource(R.string.content_desc_collapse)
-                        } else {
-                            stringResource(R.string.content_desc_expand)
-                        }
-                    )
+                    IconButton(onClick = {
+                        view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_RELEASE)
+                        expanded = !expanded
+                    }) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (expanded) {
+                                stringResource(R.string.content_desc_collapse)
+                            } else {
+                                stringResource(R.string.content_desc_expand)
+                            }
+                        )
+                    }
                 }
             }
-            if (readingProgress != null && !expanded) {
-                Text(
-                    text = "Reading progress: $readingProgress%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+
+            // Quick action chips row if actions are provided
+            if (onPreview != null || onReversePages != null || onStamp != null || onExportText != null || (suggestedTitle != null && onSaveAsSuggested != null)) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (onPreview != null) {
+                        AssistChip(
+                            onClick = onPreview,
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.btn_preview_pdf),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Visibility,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                leadingIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            border = AssistChipDefaults.assistChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                    if (onReversePages != null) {
+                        AssistChip(
+                            onClick = onReversePages,
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.btn_reverse_pages),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.SwapVert,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            border = AssistChipDefaults.assistChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                    if (onStamp != null) {
+                        AssistChip(
+                            onClick = onStamp,
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.btn_stamp_pages),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.FormatListNumbered,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            border = AssistChipDefaults.assistChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                    if (onExportText != null) {
+                        AssistChip(
+                            onClick = onExportText,
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.btn_export_text),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.TextFields,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            border = AssistChipDefaults.assistChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                    if (!suggestedTitle.isNullOrBlank() && onSaveAsSuggested != null) {
+                        AssistChip(
+                            onClick = onSaveAsSuggested,
+                            label = {
+                                Text(
+                                    text = "${stringResource(R.string.btn_save_as)}: $suggestedTitle",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            border = AssistChipDefaults.assistChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                }
             }
-            if (expanded) {
+
+            if (readingProgress != null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                if (readingProgress != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = "Reading progress: $readingProgress%",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
                 }
-                Text(
-                    text = stringResource(R.string.label_doc_title, metadata.title),
-                    style = MaterialTheme.typography.bodySmall
+                Spacer(modifier = Modifier.height(4.dp))
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { (readingProgress ?: 0) / 100f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-                Text(
-                    text = stringResource(R.string.label_doc_author, metadata.author),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                val pagesText = if (metadata.pageCount > 0) {
-                    metadata.pageCount.toString()
-                } else {
-                    stringResource(R.string.label_unknown)
-                }
-                Text(
-                    text = stringResource(R.string.label_doc_pages, pagesText),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                val sizeText = "${String.format(Locale.US, "%.2f", metadata.fileSizeMb)} MB"
-                Text(
-                    text = stringResource(R.string.label_doc_file_size, sizeText),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = stringResource(R.string.label_doc_encryption, metadata.encryptionMethod),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                val printStatus = if (metadata.canPrint) {
-                    stringResource(R.string.label_printing_allowed)
-                } else {
-                    stringResource(R.string.label_printing_denied)
-                }
-                val copyStatus = if (metadata.canCopy) {
-                    stringResource(R.string.label_copying_allowed)
-                } else {
-                    stringResource(R.string.label_copying_denied)
-                }
-                val permText = "$printStatus, $copyStatus"
-                Text(
-                    text = stringResource(R.string.label_doc_permissions, permText),
-                    style = MaterialTheme.typography.bodySmall
-                )
+            }
 
-                if (decryptionDurationMs != null) {
-                    val durationSec = decryptionDurationMs / 1000.0
-                    val mbps = if (durationSec > 0) metadata.fileSizeMb / durationSec else 0.0
-                    val mbpsFormatted = String.format(Locale.US, "%.2f", mbps)
-                    Text(
-                        text = "Performance: ${decryptionDurationMs}ms ($mbpsFormatted MB/s)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
+            if (expanded) {
+                Spacer(modifier = Modifier.height(14.dp))
+                androidx.compose.material3.Surface(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = stringResource(R.string.label_doc_title, metadata.title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.label_doc_author, metadata.author),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val pagesText = if (metadata.pageCount > 0) {
+                            metadata.pageCount.toString()
+                        } else {
+                            stringResource(R.string.label_unknown)
+                        }
+                        Text(
+                            text = stringResource(R.string.label_doc_pages, pagesText),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val sizeText = "${String.format(Locale.US, "%.2f", metadata.fileSizeMb)} MB"
+                        Text(
+                            text = stringResource(R.string.label_doc_file_size, sizeText),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.label_doc_encryption, metadata.encryptionMethod),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val printStatus = if (metadata.canPrint) {
+                            stringResource(R.string.label_printing_allowed)
+                        } else {
+                            stringResource(R.string.label_printing_denied)
+                        }
+                        val copyStatus = if (metadata.canCopy) {
+                            stringResource(R.string.label_copying_allowed)
+                        } else {
+                            stringResource(R.string.label_copying_denied)
+                        }
+                        val permText = "$printStatus, $copyStatus"
+                        Text(
+                            text = stringResource(R.string.label_doc_permissions, permText),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        if (decryptionDurationMs != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            val durationSec = decryptionDurationMs / 1000.0
+                            val mbps = if (durationSec > 0) metadata.fileSizeMb / durationSec else 0.0
+                            val mbpsFormatted = String.format(Locale.US, "%.2f", mbps)
+                            Text(
+                                text = "Performance: ${decryptionDurationMs}ms ($mbpsFormatted MB/s)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

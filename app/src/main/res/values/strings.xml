@@ -263,6 +263,9 @@
     <string name="title_bookmarks">Bookmarks</string>
     <string name="cd_bookmarks">Bookmarks</string>
     <string name="cd_bookmark">Bookmark</string>
+    <string name="title_table_of_contents">Table of Contents</string>
+    <string name="msg_no_table_of_contents">No Table of Contents available in this document</string>
+    <string name="cd_close_table_of_contents">Close Table of Contents</string>
     <string name="cd_tts">Text to Speech</string>
     <string name="cd_more_options">More options</string>
     <string name="action_view_bookmarks">View Bookmarks</string>

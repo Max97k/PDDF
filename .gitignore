@@ -24,3 +24,9 @@ app/release/
 *.pdf
 .agents/
 TEST_READY.md
+.jules/
+.Jules/
+distribution/**/*.apk
+distribution/**/*.aab
+plan_review.md
+test_plan_ideas.md

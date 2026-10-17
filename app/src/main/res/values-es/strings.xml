@@ -263,6 +263,9 @@
     <string name="title_bookmarks">Marcadores</string>
     <string name="cd_bookmarks">Marcadores</string>
     <string name="cd_bookmark">Marcador</string>
+    <string name="title_table_of_contents">Índice</string>
+    <string name="msg_no_table_of_contents">No hay índice disponible en este documento</string>
+    <string name="cd_close_table_of_contents">Cerrar índice</string>
     <string name="cd_tts">Texto a voz</string>
     <string name="cd_more_options">Más opciones</string>
     <string name="action_view_bookmarks">Ver marcadores</string>

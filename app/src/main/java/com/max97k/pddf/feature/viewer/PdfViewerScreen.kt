@@ -14,10 +14,14 @@ import android.util.Log
 import android.view.View
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Palette
 import com.max97k.pddf.ui.components.ReadingModeBottomSheet
 import androidx.compose.runtime.collectAsState
@@ -71,6 +75,8 @@ import com.max97k.pddf.data.AppDatabase
 import com.max97k.pddf.data.local.ReadingProgressEntity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.clickable
@@ -111,10 +117,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.max97k.pddf.R
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.zIndex
 import com.max97k.pddf.domain.repository.PdfRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -300,46 +310,15 @@ fun PdfViewerScreen(
     }
 
     var outline by remember { mutableStateOf<List<com.max97k.pddf.feature.viewer.OutlineItem>>(emptyList()) }
+    var showOutlineDrawer by remember(uri) { mutableStateOf(false) }
 
     LaunchedEffect(uri) {
+        showOutlineDrawer = false
         outline = repository.getOutline(uri.toString())
     }
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
     val isCurrentPageBookmarked = bookmarks.any { it.pageIndex == currentPageIndex }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                com.max97k.pddf.feature.viewer.PdfOutlineDrawer(
-                    outline = outline,
-                    onPageClicked = { pageIndex ->
-                        coroutineScope.launch { drawerState.close() }
-                        if (fragmentActivity != null) {
-                            val fragmentManager = fragmentActivity.supportFragmentManager
-                            val fragment = fragmentManager.fragments.firstOrNull { it is InkPdfViewerFragment } as? InkPdfViewerFragment
-                            if (fragment != null) {
-                                try {
-                                    val method = fragment.javaClass.getMethod("getPdfView")
-                                    method.isAccessible = true
-                                    val pdfView = method.invoke(fragment)
-                                    if (pdfView != null) {
-                                        val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.java)
-                                        scrollToPageMethod.isAccessible = true
-                                        scrollToPageMethod.invoke(pdfView, pageIndex)
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("PdfViewerScreen", "Failed to scroll to page", e)
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-        }
-    ) {
     Scaffold(
         modifier = modifier,
         contentWindowInsets = contentInsets,
@@ -361,48 +340,20 @@ fun PdfViewerScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onClose) {
+                        val closeDesc = stringResource(R.string.btn_close)
+                        IconButton(
+                            onClick = onClose,
+                            modifier = Modifier.semantics {
+                                contentDescription = closeDesc
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.btn_close)
+                                contentDescription = closeDesc
                             )
                         }
                     },
                     actions = {
-                        if (outline.isNotEmpty()) {
-                            IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.List,
-                                    contentDescription = stringResource(R.string.cd_bookmarks)
-                                )
-                            }
-                        }
-                        IconButton(onClick = {
-                            val activePage = currentPageIndex ?: (fragmentActivity?.supportFragmentManager?.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment)?.getCurrentPage() ?: 0
-                            currentPageIndex = activePage
-                            if (isCurrentPageBookmarked) {
-                                effectiveViewModel?.deleteBookmark(activePage)
-                            } else {
-                                showAddBookmarkDialog = true
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = stringResource(R.string.cd_bookmark)
-                            )
-                        }
-                        // Search toggle — open search on first tap, close on second tap.
-
-                        IconButton(onClick = {
-                            ttsBarVisible = !ttsBarVisible
-                            if (!ttsBarVisible) ttsController.stop()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.RecordVoiceOver,
-                                contentDescription = stringResource(R.string.cd_tts)
-                            )
-                        }
-
                         IconButton(onClick = {
                             showBookmarksSheet = false
                             isSearchActive = !isSearchActive
@@ -447,9 +398,19 @@ fun PdfViewerScreen(
                                 expanded = showMoreMenu,
                                 onDismissRequest = { showMoreMenu = false }
                             ) {
+                                if (outline.isNotEmpty()) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.title_table_of_contents)) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            showOutlineDrawer = true
+                                        }
+                                    )
+                                }
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.action_view_bookmarks)) },
-                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                                    leadingIcon = { Icon(Icons.Default.Bookmark, contentDescription = null) },
                                     onClick = {
                                         showMoreMenu = false
                                         showBookmarksSheet = true
@@ -469,6 +430,15 @@ fun PdfViewerScreen(
                                     onClick = {
                                         showMoreMenu = false
                                         showReadingModeSheet = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.cd_tts)) },
+                                    leadingIcon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        ttsBarVisible = !ttsBarVisible
+                                        if (!ttsBarVisible) ttsController.stop()
                                     }
                                 )
                                 DropdownMenuItem(
@@ -776,6 +746,78 @@ fun PdfViewerScreen(
                     }
                 )
 
+                // Floating Bottom Action Dock for quick navigation & tools
+                AnimatedVisibility(
+                    visible = topBarVisible && !ttsBarVisible,
+                    enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+                    exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                ) {
+                    androidx.compose.material3.Surface(
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
+                        tonalElevation = 6.dp,
+                        shadowElevation = 8.dp,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            if (outline.isNotEmpty()) {
+                                IconButton(onClick = { showOutlineDrawer = true }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.List,
+                                        contentDescription = stringResource(R.string.title_table_of_contents),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            IconButton(onClick = {
+                                val activePage = currentPageIndex ?: (fragmentActivity?.supportFragmentManager?.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment)?.getCurrentPage() ?: 0
+                                currentPageIndex = activePage
+                                if (isCurrentPageBookmarked) {
+                                    effectiveViewModel?.deleteBookmark(activePage)
+                                } else {
+                                    showAddBookmarkDialog = true
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = if (isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                    contentDescription = stringResource(R.string.cd_bookmark),
+                                    tint = if (isCurrentPageBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { showPageOverview = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.GridView,
+                                    contentDescription = stringResource(R.string.btn_page_overview),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { showReadingModeSheet = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Palette,
+                                    contentDescription = stringResource(R.string.btn_reading_mode),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = {
+                                ttsBarVisible = !ttsBarVisible
+                                if (!ttsBarVisible) ttsController.stop()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.RecordVoiceOver,
+                                    contentDescription = stringResource(R.string.cd_tts),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
 
                 AnimatedVisibility(
                     visible = ttsBarVisible,
@@ -896,6 +938,58 @@ fun PdfViewerScreen(
                     }
                 )
             }
+
+            // Table of Contents Side Drawer Overlay
+            if (showOutlineDrawer) {
+                BackHandler(enabled = true) {
+                    showOutlineDrawer = false
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(60f)
+                ) {
+                    // Scrim
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .clickable { showOutlineDrawer = false }
+                    )
+
+                    // Drawer Sheet
+                    AnimatedVisibility(
+                        visible = showOutlineDrawer,
+                        enter = slideInHorizontally { -it } + fadeIn(),
+                        exit = slideOutHorizontally { -it } + fadeOut(),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .widthIn(max = 340.dp)
+                            .align(Alignment.CenterStart)
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+                            color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                            tonalElevation = 6.dp,
+                            shadowElevation = 12.dp
+                        ) {
+                            com.max97k.pddf.feature.viewer.PdfOutlineDrawer(
+                                outline = outline,
+                                onClose = { showOutlineDrawer = false },
+                                onPageClicked = { pageIndex ->
+                                    showOutlineDrawer = false
+                                    if (fragmentActivity != null) {
+                                        val fragmentManager = fragmentActivity.supportFragmentManager
+                                        val fragment = fragmentManager.fragments.firstOrNull { it is InkPdfViewerFragment } as? InkPdfViewerFragment
+                                        fragment?.gotoPage(pageIndex)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         if (showAddBookmarkDialog && currentPageIndex != null) {
@@ -972,7 +1066,6 @@ fun PdfViewerScreen(
                 }
             }
         }
-    }
     }
 }
 

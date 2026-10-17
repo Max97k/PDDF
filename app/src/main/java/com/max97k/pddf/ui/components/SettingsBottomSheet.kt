@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -27,6 +32,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -40,10 +47,10 @@ import com.max97k.pddf.data.DensityMode
  * Settings ModalBottomSheet — consolidates all user-configurable preferences.
  *
  * Sections:
- *  1. Appearance — Theme selection (moved here from ThemeDropdownMenu)
- *  2. Privacy    — Screenshot protection toggle (FLAG_SECURE)
- *
- * To add future settings append more [ListItem] / section blocks.
+ *  1. Appearance — Theme & Density selection with M3 Segmented Buttons
+ *  2. Notifications — Batch completion preferences
+ *  3. Language — System default and 7 supported locales
+ *  4. Privacy & Storage — Screenshot protection and SAF permissions
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +71,7 @@ fun SettingsBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val scrollState = rememberScrollState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -73,151 +81,109 @@ fun SettingsBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .verticalScroll(scrollState)
+                .padding(bottom = 32.dp)
         ) {
             Text(
                 text = stringResource(R.string.title_settings),
                 style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             )
 
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // ── Appearance Section ─────────────────────────────────────────
             Text(
                 text = stringResource(R.string.settings_section_appearance),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             val themeEntries = listOf(
                 ThemeMode.SYSTEM to stringResource(R.string.theme_system_default),
                 ThemeMode.LIGHT  to stringResource(R.string.theme_light),
                 ThemeMode.DARK   to stringResource(R.string.theme_dark),
+                ThemeMode.AMOLED to stringResource(R.string.theme_amoled),
                 ThemeMode.OLED_BLACK to stringResource(R.string.theme_oled_black)
             )
-            themeEntries.forEach { (mode, label) ->
-                ListItem(
-                    headlineContent = { Text(label) },
-                    trailingContent = {
-                        if (currentTheme == mode) {
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                themeEntries.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = currentTheme == mode,
+                        onClick = { onThemeSelected(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = themeEntries.size),
+                        label = {
                             Text(
-                                text = stringResource(R.string.symbol_checkmark),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary
+                                text = label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onThemeSelected(mode)
-                                onDismiss()
-                            }
-                        )
-                        .semantics { role = Role.RadioButton }
-                )
+                    )
+                }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // ── Density Section ─────────────────────────────────────────
             Text(
                 text = stringResource(R.string.settings_section_density),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             val densityEntries = listOf(
                 DensityMode.COMPACT to stringResource(R.string.density_compact),
                 DensityMode.STANDARD  to stringResource(R.string.density_standard),
                 DensityMode.COMFORTABLE   to stringResource(R.string.density_comfortable)
             )
-            densityEntries.forEach { (mode, label) ->
-                ListItem(
-                    headlineContent = { Text(label) },
-                    trailingContent = {
-                        if (currentDensity == mode) {
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                densityEntries.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = currentDensity == mode,
+                        onClick = { onDensitySelected(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = densityEntries.size),
+                        label = {
                             Text(
-                                text = stringResource(R.string.symbol_checkmark),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary
+                                text = label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onDensitySelected(mode)
-                                onDismiss()
-                            }
-                        )
-                        .semantics { role = Role.RadioButton }
-                )
+                    )
+                }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // ── Language Section ─────────────────────────────────────────
-            Text(
-                text = stringResource(R.string.settings_section_language),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
-            )
-
-            val currentLocales = AppCompatDelegate.getApplicationLocales()
-            val currentLanguage = if (currentLocales.isEmpty) "" else currentLocales.get(0)?.toLanguageTag() ?: ""
-
-            val languageEntries = listOf(
-                "" to stringResource(R.string.language_system_default),
-                "en" to stringResource(R.string.language_en),
-                "zh-TW" to stringResource(R.string.language_zh_tw),
-                "zh-CN" to stringResource(R.string.language_zh_cn),
-                "ja" to stringResource(R.string.language_ja),
-                "es" to stringResource(R.string.language_es),
-                "de" to stringResource(R.string.language_de),
-                "fr" to stringResource(R.string.language_fr)
-            )
-
-            languageEntries.forEach { (languageTag, label) ->
-                ListItem(
-                    headlineContent = { Text(label) },
-                    trailingContent = {
-                        val isSelected = if (languageTag.isEmpty()) currentLanguage.isEmpty() else currentLanguage.equals(languageTag, ignoreCase = true) || (currentLanguage.startsWith("zh", ignoreCase = true) && languageTag.startsWith("zh", ignoreCase = true) && currentLanguage.contains("CN", ignoreCase = true) == languageTag.contains("CN", ignoreCase = true))
-                        if (isSelected) {
-                            Text(
-                                text = stringResource(R.string.symbol_checkmark),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                val locales = if (languageTag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(languageTag)
-                                AppCompatDelegate.setApplicationLocales(locales)
-                            }
-                        )
-                )
-            }
-
+            Spacer(modifier = Modifier.height(14.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // ── Notifications Section ──────────────────────────────────────
             Text(
                 text = stringResource(R.string.settings_section_notifications),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
@@ -225,38 +191,41 @@ fun SettingsBottomSheet(
             Text(
                 text = stringResource(R.string.settings_notify_batch_completion),
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             val notificationEntries = listOf(
                 com.max97k.pddf.data.NotificationPreference.SOUND to stringResource(R.string.settings_notify_sound),
                 com.max97k.pddf.data.NotificationPreference.VIBRATION to stringResource(R.string.settings_notify_vibration),
                 com.max97k.pddf.data.NotificationPreference.SILENT to stringResource(R.string.settings_notify_silent)
             )
-            notificationEntries.forEach { (mode, label) ->
-                ListItem(
-                    headlineContent = { Text(label) },
-                    trailingContent = {
-                        if (currentBatchNotificationPreference == mode) {
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                notificationEntries.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = currentBatchNotificationPreference == mode,
+                        onClick = { onBatchNotificationSelected(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = notificationEntries.size),
+                        label = {
                             Text(
-                                text = stringResource(R.string.symbol_checkmark),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary
+                                text = label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onBatchNotificationSelected(mode)
-                            }
-                        )
-                        .semantics { role = Role.RadioButton }
-                )
+                    )
+                }
             }
 
+            Spacer(modifier = Modifier.height(14.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // ── Export Section ────────────────────────────────────────────
@@ -295,10 +264,76 @@ fun SettingsBottomSheet(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Privacy Section ────────────────────────────────────────────
+            // ── Language Section ───────────────────────────────────────────
+            var expandedLanguage by remember { mutableStateOf(false) }
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            val currentLangTag = if (currentLocales.isEmpty) "" else (currentLocales.toLanguageTags().split(",").firstOrNull() ?: "")
+            val languageOptions = listOf(
+                "" to stringResource(R.string.language_system_default),
+                "en" to stringResource(R.string.language_en),
+                "zh-TW" to stringResource(R.string.language_zh_tw),
+                "zh-CN" to stringResource(R.string.language_zh_cn),
+                "ja" to stringResource(R.string.language_ja),
+                "es" to stringResource(R.string.language_es),
+                "de" to stringResource(R.string.language_de),
+                "fr" to stringResource(R.string.language_fr)
+            )
+            val currentLanguageLabel = languageOptions.firstOrNull { (tag, _) ->
+                tag.equals(currentLangTag, ignoreCase = true)
+            }?.second ?: stringResource(R.string.language_system_default)
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_section_language)) },
+                supportingContent = { Text(currentLanguageLabel) },
+                trailingContent = {
+                    androidx.compose.material3.Icon(
+                        Icons.Default.ArrowDropDown,
+                        contentDescription = stringResource(R.string.settings_section_language)
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedLanguage = !expandedLanguage }
+            )
+
+            if (expandedLanguage) {
+                languageOptions.forEach { (tag, label) ->
+                    val isSelected = tag.equals(currentLangTag, ignoreCase = true)
+                    ListItem(
+                        headlineContent = { Text(label) },
+                        trailingContent = {
+                            if (isSelected) {
+                                Text(
+                                    text = stringResource(R.string.symbol_checkmark),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 32.dp)
+                            .clickable {
+                                val localeList = if (tag.isEmpty()) {
+                                    LocaleListCompat.getEmptyLocaleList()
+                                } else {
+                                    LocaleListCompat.forLanguageTags(tag)
+                                }
+                                AppCompatDelegate.setApplicationLocales(localeList)
+                                expandedLanguage = false
+                            }
+                            .semantics { role = Role.RadioButton }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
+
+            // ── Privacy Section ────────────────────────────────────────────
 
             Text(
                 text = stringResource(R.string.settings_section_privacy),
@@ -328,7 +363,7 @@ fun SettingsBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Storage",
+                text = stringResource(R.string.settings_section_storage),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)

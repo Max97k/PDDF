@@ -261,6 +261,9 @@
     <string name="title_bookmarks">ブックマーク</string>
     <string name="cd_bookmarks">ブックマーク</string>
     <string name="cd_bookmark">ブックマーク</string>
+    <string name="title_table_of_contents">目次</string>
+    <string name="msg_no_table_of_contents">このドキュメントには目次がありません</string>
+    <string name="cd_close_table_of_contents">目次を閉じる</string>
     <string name="cd_tts">テキスト読み上げ</string>
     <string name="cd_more_options">その他のオプション</string>
     <string name="action_view_bookmarks">ブックマークを表示</string>

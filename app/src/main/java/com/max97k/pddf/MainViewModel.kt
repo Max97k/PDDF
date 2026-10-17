@@ -227,6 +227,10 @@ class MainViewModel @Inject constructor(
         return decryptPdfUseCase.createTempFile(prefix, suffix)
     }
 
+    suspend fun getShareableUri(fileUri: String): String {
+        return pdfRepository.getShareableUri(fileUri)
+    }
+
     fun emitEffect(effect: UiEffect) {
         viewModelScope.launch {
             _uiEffect.send(effect)
@@ -592,7 +596,9 @@ class MainViewModel @Inject constructor(
                     statusMessage.value = context.getString(R.string.summary_error, 1)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.e("MainViewModel", "Failed to export metadata report", e)
+                }
                 statusMessage.value = context.getString(R.string.summary_error, 1)
             } finally {
                 isProcessing.value = false
@@ -1416,7 +1422,7 @@ class MainViewModel @Inject constructor(
             var successCount = 0
             for (attachment in attachments) {
                 val destUri = com.max97k.pddf.util.FileUtils.findChildUriInTree(context, Uri.parse(directoryUriString), attachment.name)?.toString()
-                    ?: (decryptPdfUseCase as com.max97k.pddf.domain.repository.PdfRepository).createDocumentInDirectory(directoryUriString, attachment.name, attachment.mimeType)
+                    ?: pdfRepository.createDocumentInDirectory(directoryUriString, attachment.name, attachment.mimeType)
                 if (destUri != null) {
                     if (extractAttachmentsUseCase.saveAttachment(sourceUriString, attachment.name, destUri, passwordValue)) {
                         successCount++

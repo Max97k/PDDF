@@ -110,7 +110,7 @@ PDDF is engineered for a minimal footprint and fast startup times:
 
 - **R8 Full Mode & Minification**: ProGuard optimizations with unused code and resource shrinking (`isMinifyEnabled = true`, `isShrinkResources = true`).
 - **CMap & Font Preservation**: Targeted keep rules for PDFBox font tables to prevent garbled text while eliminating unnecessary byte bloat.
-- **Resource & Locale Filtering**: Restricts bundled string resources strictly to `en` and `zh-rTW` (`localeFilters += listOf("zh-rTW", "en")`).
+- **Resource & Locale Filtering**: Restricts bundled string resources to the 7 supported locales (`localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en")`).
 - **AAB Dynamic Delivery**: Optimized dynamic ABI splitting (`arm64-v8a`, `armeabi-v7a`, `x86_64`) for minimal Google Play download sizes (< 5 MB).
 
 ---
@@ -187,7 +187,7 @@ PDDF/
 ├── app/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/com/example/
+│   │   │   ├── java/com/max97k/pddf/
 │   │   │   │   ├── MainActivity.kt              # Compose UI entry & Intent handling
 │   │   │   │   ├── MainViewModel.kt             # UDF State Management & Decryption Engine
 │   │   │   │   ├── PdfDecryptorTileService.kt   # Android Quick Settings Tile

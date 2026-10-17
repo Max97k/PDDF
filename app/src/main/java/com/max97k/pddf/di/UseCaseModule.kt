@@ -93,4 +93,13 @@ class UseCaseModule {
     ): ExportMetadataReportUseCase {
         return ExportMetadataReportUseCase(ioDispatcher)
     }
+
+    @Provides
+    @Singleton
+    fun provideSuggestDocumentTitleUseCase(
+        pdfRepository: PdfRepository,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): com.max97k.pddf.domain.usecase.SuggestDocumentTitleUseCase {
+        return com.max97k.pddf.domain.usecase.SuggestDocumentTitleUseCase(pdfRepository, ioDispatcher)
+    }
 }

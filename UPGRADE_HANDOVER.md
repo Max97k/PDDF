@@ -38,9 +38,19 @@
 - **activityCompose**: `1.10.1` ➔ **`1.13.0`**
 - **navigationCompose**: `2.8.7` ➔ **`2.10.2`**
 
-### 4. 目前測試驗證狀態
-- **JVM 單元測試**：`BUILD SUCCESSFUL`，182 項測試任務 100% 通過（0 Failures / 0 Errors）。
+### 4. v0.9.5 深度審查與升級完成事項 (Version 0.9.5 Release)
+- ✅ **全域 `FLAG_SECURE` 防截圖架構統一**：修復 `ReEncryptPasswordDialog` 關閉時誤清除主視窗截圖保護問題，強化無障礙與密碼可見性切換。
+- ✅ **DoD 5220.22-M 遞迴快取粉碎**：升級 `FileUtils.cleanUpDecryptedCache` 為遞迴清理，徹底粉碎 `cacheDir/decrypted/` 下所有解密暫存檔。
+- ✅ **執行期異常修復**：修正 `MainViewModel.saveAllAttachments` 強制轉型崩潰（`ClassCastException`），以及頁面擷取分享時之 `FileUriExposedException`（改採安全 `FileProvider` URI）。
+- ✅ **記憶體 OOM 串流最佳化**：PDF 元數據解析改用串流載入與動態記憶體分流，杜絕大檔記憶體溢出。
+- ✅ **生命週期與資源洩漏修復**：快取 `InkPdfViewerFragment` 反射欄位並於銷毀時註銷 Handler；`PdfViewerViewModel` 串接 Job 取消；`PdfPageOverviewDialog` 安全釋放底層渲染器。
+- ✅ **業務功能與在地化完善**：實作 `SuggestDocumentTitleUseCase`、恢復 Settings 7 國語言切換選單、密碼庫命中次數自動累加，並補齊繁體中文與簡體中文在地化資源。
+
+### 5. 目前測試驗證狀態
+- **JVM 單元測試**：`BUILD SUCCESSFUL`，全數測試套件 100% 通過（0 Failures / 0 Errors / 0 Skipped）。
+- **Android Lint 靜態檢查**：`.\gradlew.bat lint` 0 Errors 通過。
 - **覆蓋率建置**：`.\gradlew.bat :app:jacocoTestReport` 建置正常。
+- **發布建置**：`.\gradlew.bat :app:assembleDebug` 建置正常。
 
 ---
 

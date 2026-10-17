@@ -40,7 +40,7 @@ if (-not (Test-Path $ScreenshotDir)) {
 # Helper Functions
 # ------------------------------------------------------------------------------
 function Dump-UiHierarchy {
-    param([string]$RemotePath = "/sdcard/e2e_dump.xml")
+    param([string]$RemotePath = "/data/local/tmp/e2e_dump.xml")
     $null = & $adb -s $DeviceId shell "rm -f $RemotePath 2>/dev/null"
     $null = & $adb -s $DeviceId shell "uiautomator dump $RemotePath 2>/dev/null"
     $lines = & $adb -s $DeviceId shell "cat $RemotePath 2>/dev/null"
@@ -83,18 +83,18 @@ function Find-UiNode {
             if ($ExactText) {
                 if ($nodeText -ne $Text) { $match = $false }
             } else {
-                if ($nodeText -notlike "*$Text*") { $match = $false }
+                if (-not $nodeText -or $nodeText.IndexOf($Text, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { $match = $false }
             }
         }
         if ($ContentDesc) {
             if ($ExactContentDesc) {
                 if ($nodeDesc -ne $ContentDesc) { $match = $false }
             } else {
-                if ($nodeDesc -notlike "*$ContentDesc*") { $match = $false }
+                if (-not $nodeDesc -or $nodeDesc.IndexOf($ContentDesc, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { $match = $false }
             }
         }
-        if ($ResourceId -and $nodeRes -notlike "*$ResourceId*") { $match = $false }
-        if ($ClassName -and $nodeCls -notlike "*$ClassName*") { $match = $false }
+        if ($ResourceId -and (-not $nodeRes -or $nodeRes.IndexOf($ResourceId, [System.StringComparison]::OrdinalIgnoreCase) -lt 0)) { $match = $false }
+        if ($ClassName -and (-not $nodeCls -or $nodeCls.IndexOf($ClassName, [System.StringComparison]::OrdinalIgnoreCase) -lt 0)) { $match = $false }
         if ($Enabled -and $nodeEn -ne $Enabled) { $match = $false }
 
         if ($match) {
@@ -158,7 +158,7 @@ function Tap-Node {
 function Save-Screenshot {
     param([string]$FileName)
     $destPath = Join-Path $ScreenshotDir $FileName
-    $remoteTmp = "/sdcard/$FileName"
+    $remoteTmp = "/data/local/tmp/$FileName"
     & $adb -s $DeviceId shell screencap -p $remoteTmp
     & $adb -s $DeviceId pull $remoteTmp $destPath | Out-Null
     & $adb -s $DeviceId shell rm -f $remoteTmp
@@ -195,9 +195,35 @@ function Test-WindowHasSecureFlag {
     return ($rawText -match 'com\.max97k\.pddf[\s\S]*?fl=[^\n]*\bSECURE\b')
 }
 
+function Dismiss-SoftKeyboard {
+    $imeDump = & $adb -s $DeviceId shell dumpsys input_method 2>&1
+    if (($imeDump -join "`n") -match "mInputShown=true") {
+        Write-Host "  -> Dismissing visible soft keyboard..."
+        & $adb -s $DeviceId shell input keyevent 4
+        Start-Sleep -Milliseconds 600
+    }
+}
+
 # ==============================================================================
 # Execution Steps
 # ==============================================================================
+
+# Step 0: Ensure UIAutomator environment is clean
+Write-Host "`n[Step 0] Cleaning accessibility services, waking device and stopping background overlays..."
+& $adb -s $DeviceId shell input keyevent 224
+& $adb -s $DeviceId shell input keyevent 82
+& $adb -s $DeviceId shell wm dismiss-keyguard
+& $adb -s $DeviceId shell settings delete secure enabled_accessibility_services 2>$null
+& $adb -s $DeviceId shell settings put secure accessibility_enabled 0 2>$null
+& $adb -s $DeviceId shell am force-stop com.aar.reader.debug 2>$null
+& $adb -s $DeviceId shell am force-stop com.android.settings 2>$null
+Start-Sleep -Milliseconds 500
+
+$isInstalled = & $adb -s $DeviceId shell pm list packages | Select-String "package:com.max97k.pddf"
+if (-not $isInstalled) {
+    Write-Host "  -> com.max97k.pddf not detected, installing app-debug.apk..."
+    & $adb -s $DeviceId install -r app/build/outputs/apk/debug/app-debug.apk
+}
 
 # Step 1: Ensure test asset is pushed to /sdcard/Download/encrypted.pdf
 Write-Host "`n[Step 1] Pushing encrypted.pdf to device..."
@@ -218,48 +244,69 @@ Start-Sleep -Seconds 1
 # Step 3: Launch MainActivity
 Write-Host "`n[Step 3] Launching MainActivity..."
 & $adb -s $DeviceId shell input keyevent 224
+& $adb -s $DeviceId shell input keyevent 82
 & $adb -s $DeviceId shell wm dismiss-keyguard
-& $adb -s $DeviceId shell am start -n com.max97k.pddf/.MainActivity
+& $adb -s $DeviceId shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.max97k.pddf/.MainActivity
 Start-Sleep -Seconds 2
 
-# Step 4: Handle What's New dialog & capture screenshots
-Write-Host "`n[Step 4] Waiting for app to load and checking for 'What''s New' dialog..."
-$startWait = Get-Date
-$whatsNewNode = $null
-while (((Get-Date) - $startWait).TotalSeconds -lt 15) {
+function Dismiss-WhatsNewIfPresent {
     $xml = Dump-UiHierarchy
-    $whatsNewNode = Find-UiNode -XmlDoc $xml -Text "What's New"
-    if ($whatsNewNode) { break }
-    $mainNode = Find-UiNode -XmlDoc $xml -Text "Select Encrypted"
-    if ($mainNode) { break }
-    Start-Sleep -Milliseconds 800
-}
-if ($whatsNewNode) {
-    Write-Host "  -> Detected What's New dialog, saving screenshot 02_whats_new_dialog.png..."
-    Save-Screenshot "02_whats_new_dialog.png"
-    $closeDialogBtn = Wait-ForUiNode -Text "Close" -ExactText -TimeoutSec 5
-    if ($closeDialogBtn) {
-        Tap-Node $closeDialogBtn
-        Start-Sleep -Seconds 1
+    $wn = Find-UiNode -XmlDoc $xml -Text "What's New"
+    if ($wn) {
+        Write-Host "  -> Detected What's New dialog, saving screenshot 02_whats_new_dialog.png..."
+        Save-Screenshot "02_whats_new_dialog.png"
+        $closeBtn = Find-UiNode -XmlDoc $xml -Text "Close" -ExactText
+        if (-not $closeBtn) {
+            $closeBtn = Wait-ForUiNode -Text "Close" -ExactText -TimeoutSec 5
+        }
+        if ($closeBtn) {
+            Tap-Node $closeBtn
+            Start-Sleep -Seconds 1
+        } else {
+            & $adb -s $DeviceId shell input keyevent 4
+            Start-Sleep -Seconds 1
+        }
     }
-    $stillThere = Find-UiNode -XmlDoc (Dump-UiHierarchy) -Text "What's New"
-    if ($stillThere) {
-        & $adb -s $DeviceId shell input keyevent 4
-        Start-Sleep -Seconds 1
-    }
-} else {
-    Write-Host "  -> No intro dialog displayed."
 }
 
+# Step 4: Handle What's New dialog & capture screenshots
+Write-Host "`n[Step 4] Waiting for app to load..."
+$appWaitStart = Get-Date
+while (((Get-Date) - $appWaitStart).TotalSeconds -lt 45) {
+    $focus = Get-WindowFocus
+    if ($focus -match "com\.max97k\.pddf") { break }
+    Start-Sleep -Milliseconds 800
+}
+Start-Sleep -Seconds 2
+
+$startWait = Get-Date
+while (((Get-Date) - $startWait).TotalSeconds -lt 25) {
+    $xml = Dump-UiHierarchy
+    $wn = Find-UiNode -XmlDoc $xml -Text "What's New"
+    if ($wn) { break }
+    $mainBtn = Find-UiNode -XmlDoc $xml -Text "Select Encrypted"
+    if ($mainBtn) { break }
+    Start-Sleep -Milliseconds 800
+}
+Dismiss-WhatsNewIfPresent
+
 # Wait for Main screen button to be ready before taking empty state screenshot
-$readyBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 10
+$readyBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 15
+if (-not $readyBtn) {
+    Dismiss-WhatsNewIfPresent
+    $readyBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 15
+}
 # Capture Step 1: Empty state on app launch
 Write-Host "`n[Step 4b] Capturing 01_app_launch_empty_state.png..."
 Save-Screenshot "01_app_launch_empty_state.png"
 
 # Step 5: Click "Select PDF" button
 Write-Host "`n[Step 5] Clicking 'Select Encrypted PDFs' button..."
-$selectBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 10
+$selectBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 15
+if (-not $selectBtn) {
+    Dismiss-WhatsNewIfPresent
+    $selectBtn = Wait-ForUiNode -Text "Select Encrypted" -TimeoutSec 10
+}
 if (-not $selectBtn) {
     $selectBtn = Wait-ForUiNode -Text "Select" -TimeoutSec 5
 }
@@ -318,7 +365,7 @@ Start-Sleep -Milliseconds 300
 1..20 | ForEach-Object { & $adb -s $DeviceId shell input keyevent 67 }
 & $adb -s $DeviceId shell input text "$Password"
 Start-Sleep -Milliseconds 300
-& $adb -s $DeviceId shell input keyevent 4 # Dismiss soft keyboard
+Dismiss-SoftKeyboard
 Start-Sleep -Seconds 1
 
 # Capture Step 5: Password typed and masked
@@ -346,11 +393,14 @@ if (-not $toggleHide) {
 Write-Host "  -> [ACCESSIBILITY PASS] Dynamic State Transition Verified: Accessibility content-desc successfully transitioned to 'Hide password'!"
 Tap-Node $toggleHide
 Start-Sleep -Milliseconds 400
+Dismiss-SoftKeyboard
+Start-Sleep -Milliseconds 400
 Save-Screenshot "07_autounlock_dialog_ready.png"
 Write-Host "  -> [SECURITY AUDIT] 07_autounlock_dialog_ready.png is hardware-blacked out as expected by FLAG_SECURE."
 
 # Step 9: Click "Unlock & View" (AutoUnlock Dialog) or "Overwrite Original"
 Write-Host "`n[Step 9] Proceeding with decryption..."
+Dismiss-SoftKeyboard
 $unlockBtn = Wait-ForUiNode -Text "Unlock & View" -TimeoutSec 5
 if (-not $unlockBtn) {
     $unlockBtn = Wait-ForUiNode -Text "Unlock" -ClassName "android.widget.Button" -TimeoutSec 3
@@ -360,6 +410,13 @@ if ($unlockBtn) {
     Write-Host "`n[Step 11] Clearing Logcat for crash monitoring..."
     & $adb -s $DeviceId logcat -c
     Tap-Node $unlockBtn
+    Start-Sleep -Seconds 1
+    # Check if dialog is still visible, retry tap if so
+    $dialogStillThere = Find-UiNode -XmlDoc (Dump-UiHierarchy) -Text "Unlock & View"
+    if ($dialogStillThere) {
+        Write-Host "  -> AutoUnlock dialog still visible, retrying tap on Unlock & View..."
+        Tap-Node $dialogStillThere
+    }
 } else {
     $overwriteBtn = Wait-ForUiNode -Text "Overwrite Original" -Enabled "true" -TimeoutSec 10
     if (-not $overwriteBtn) {
@@ -386,9 +443,12 @@ if ($unlockBtn) {
 
 # Wait for viewer to render
 Write-Host "  -> Waiting for PDF viewer to render..."
-$viewerRendered = Wait-ForUiNode -ContentDesc "Share File" -TimeoutSec 20
+$viewerRendered = Wait-ForUiNode -ContentDesc "Share File" -TimeoutSec 25
 if (-not $viewerRendered) {
     $viewerRendered = Wait-ForUiNode -ContentDesc "Close" -ExactContentDesc -TimeoutSec 5
+}
+if (-not $viewerRendered) {
+    $viewerRendered = Wait-ForUiNode -ContentDesc "Search in Document" -TimeoutSec 5
 }
 if (-not $viewerRendered) {
     throw "PDF Viewer did not render within timeout!"

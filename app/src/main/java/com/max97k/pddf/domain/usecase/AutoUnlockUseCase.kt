@@ -46,6 +46,7 @@ open class AutoUnlockUseCase(
                     )
                 }
                 if (status == DecryptStatus.SUCCESS) {
+                    passwordVaultUseCase.recordPasswordHit(saved.id)
                     val shareableUri = pdfRepository.getShareableUri(tempUri)
                     return@withContext AutoUnlockResult.UnlockedWithSavedPassword(
                         outputUri = shareableUri,

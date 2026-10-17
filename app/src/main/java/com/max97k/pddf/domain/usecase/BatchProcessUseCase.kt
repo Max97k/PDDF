@@ -37,17 +37,17 @@ class BatchProcessUseCase(
         manualPasswordValue: String,
         vaultPasswords: List<PasswordEntity>
     ): DecryptStatus {
-        val allPasswordChars = mutableListOf<CharArray>()
-
-        allPasswordChars.add(manualPasswordValue.toCharArray())
+        val candidateEntries = mutableListOf<Pair<Int?, CharArray>>()
+        candidateEntries.add(null to manualPasswordValue.toCharArray())
 
         for (password in vaultPasswords) {
-            allPasswordChars.add(password.getPasswordChars())
+            candidateEntries.add(password.id to password.getPasswordChars())
         }
 
         var status = DecryptStatus.WRONG_PASSWORD
+        var matchedVaultId: Int? = null
         try {
-            for (chars in allPasswordChars) {
+            for ((vaultId, chars) in candidateEntries) {
                 kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 val currentStatus = decryptPdfUseCase.decrypt(
                     inputUriString = inputUriString,
@@ -57,13 +57,20 @@ class BatchProcessUseCase(
 
                 if (currentStatus != DecryptStatus.WRONG_PASSWORD) {
                     status = currentStatus
+                    if (currentStatus == DecryptStatus.SUCCESS && vaultId != null) {
+                        matchedVaultId = vaultId
+                    }
                     break
                 }
             }
         } finally {
-            for (chars in allPasswordChars) {
+            for ((_, chars) in candidateEntries) {
                 MemoryUtils.wipe(chars)
             }
+        }
+
+        if (matchedVaultId != null) {
+            passwordRepository.recordPasswordHit(matchedVaultId)
         }
 
         return status

@@ -71,13 +71,20 @@ fun AutoUnlockPasswordDialog(
             .padding(24.dp)
             .wrapContentWidth()
             .wrapContentHeight(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             dismissOnClickOutside = false,
             securePolicy = SecureFlagPolicy.SecureOn
         ),
-        title = { Text(stringResource(R.string.title_unlock_pdf)) },
+        title = {
+            Text(
+                text = stringResource(R.string.title_unlock_pdf),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
+        },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -93,6 +100,7 @@ fun AutoUnlockPasswordDialog(
                     onValueChange = { inputPass = it },
                     label = { Text(stringResource(R.string.label_password)) },
                     singleLine = true,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     isError = errorMessage != null,
                     supportingText = if (errorMessage != null) {
                         { Text(errorMessage, color = MaterialTheme.colorScheme.error) }

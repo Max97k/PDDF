@@ -1,6 +1,8 @@
 package com.max97k.pddf.feature.viewer
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import androidx.pdf.PdfDocument
@@ -21,6 +23,22 @@ class InkPdfViewerFragment : PdfViewerFragment() {
 
     companion object {
         private const val TAG = "InkPdfViewerFragment"
+
+        private val pdfViewField: Field? by lazy {
+            runCatching {
+                PdfViewerFragment::class.java.getDeclaredField("pdfView").apply {
+                    isAccessible = true
+                }
+            }.getOrNull()
+        }
+
+        private val pdfDocumentField: Field? by lazy {
+            runCatching {
+                PdfViewerFragment::class.java.getDeclaredField("pdfDocument").apply {
+                    isAccessible = true
+                }
+            }.getOrNull()
+        }
     }
 
     /** Invoked on the main thread whenever the fragment requests an immersive-mode change. */
@@ -43,6 +61,11 @@ class InkPdfViewerFragment : PdfViewerFragment() {
     /** Tracks the current visible page. Called periodically. */
     var onPageChanged: ((Int, Int) -> Unit)? = null
 
+    private val pagePollHandler = Handler(Looper.getMainLooper())
+    private var pagePollRunnable: Runnable? = null
+    private var cachedGetFirstVisiblePageMethod: Method? = null
+    private var cachedScrollToPageMethod: Method? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val searchViewId = view.resources.getIdentifier("pdfSearchView", "id", view.context.packageName)
@@ -51,6 +74,11 @@ class InkPdfViewerFragment : PdfViewerFragment() {
             val isVisible = searchView.visibility == View.VISIBLE
             onSearchModeChanged?.invoke(isVisible)
         }
+    }
+
+    override fun onDestroyView() {
+        stopPagePolling()
+        super.onDestroyView()
     }
 
     override fun onRequestImmersiveMode(enterImmersive: Boolean) {
@@ -68,46 +96,47 @@ class InkPdfViewerFragment : PdfViewerFragment() {
         handleDocumentLoadedSuccess()
     }
 
+    private fun stopPagePolling() {
+        pagePollRunnable?.let { pagePollHandler.removeCallbacks(it) }
+        pagePollRunnable = null
+    }
+
     private fun handleDocumentLoadedSuccess() {
         isDocumentLoaded = true
+        stopPagePolling()
 
         try {
-            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
-            pdfViewField.isAccessible = true
-            val pdfView = pdfViewField.get(this)
+            val pdfView = pdfViewField?.get(this)
             if (pdfView != null) {
-                // Since there is no listener, we use a Runnable to poll
-                val handler = android.os.Handler(android.os.Looper.getMainLooper())
+                val firstPageMethod = cachedGetFirstVisiblePageMethod ?: pdfView.javaClass
+                    .getMethod("getFirstVisiblePage")
+                    .also { cachedGetFirstVisiblePageMethod = it }
+
                 val runnable = object : Runnable {
                     override fun run() {
                         if (isAdded && !isDetached && isDocumentLoaded) {
                             try {
-                                val getFirstVisiblePageMethod = pdfView.javaClass.getMethod("getFirstVisiblePage")
-                                val page = getFirstVisiblePageMethod.invoke(pdfView) as? Int ?: 0
-
-                                val pdfDocumentField = PdfViewerFragment::class.java.getDeclaredField("pdfDocument")
-                                pdfDocumentField.isAccessible = true
-                                val pdfDoc = pdfDocumentField.get(this@InkPdfViewerFragment) as? PdfDocument
+                                val page = firstPageMethod.invoke(pdfView) as? Int ?: 0
+                                val pdfDoc = pdfDocumentField?.get(this@InkPdfViewerFragment) as? PdfDocument
                                 val totalPages = pdfDoc?.pageCount ?: 0
 
                                 onPageChanged?.invoke(page, totalPages)
-                                handler.postDelayed(this, 1000)
-                            } catch (e: Exception) {
-                                // Ignore
+                                pagePollHandler.postDelayed(this, 1000)
+                            } catch (_: Exception) {
+                                // Ignore transient reflection invocation failures
                             }
                         }
                     }
                 }
-                handler.postDelayed(runnable, 500)
+                pagePollRunnable = runnable
+                pagePollHandler.postDelayed(runnable, 500)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to setup page polling", e)
         }
 
         try {
-            val pdfDocumentField = PdfViewerFragment::class.java.getDeclaredField("pdfDocument")
-            pdfDocumentField.isAccessible = true
-            val pdfDoc = pdfDocumentField.get(this) as? PdfDocument
+            val pdfDoc = pdfDocumentField?.get(this) as? PdfDocument
             onDocumentLoaded?.invoke(pdfDoc?.pageCount ?: 0)
         } catch (e: Exception) {
             onDocumentLoaded?.invoke(0)
@@ -128,6 +157,7 @@ class InkPdfViewerFragment : PdfViewerFragment() {
         super.onLoadDocumentError(error)
         Log.e(TAG, "Failed to load PDF document", error)
         isDocumentLoaded = false
+        stopPagePolling()
     }
 
     fun scrollToPage(page: Int) {
@@ -153,12 +183,12 @@ class InkPdfViewerFragment : PdfViewerFragment() {
     fun gotoPage(pageIndex: Int) {
         if (!isDocumentLoaded || !isAdded || isDetached) return
         try {
-            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
-            pdfViewField.isAccessible = true
-            val pdfView = pdfViewField.get(this)
+            val pdfView = pdfViewField?.get(this)
             if (pdfView != null) {
-                val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.javaPrimitiveType)
-                scrollToPageMethod.invoke(pdfView, pageIndex)
+                val scrollMethod = cachedScrollToPageMethod ?: pdfView.javaClass
+                    .getMethod("scrollToPage", Int::class.javaPrimitiveType)
+                    .also { cachedScrollToPageMethod = it }
+                scrollMethod.invoke(pdfView, pageIndex)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to navigate to page $pageIndex", e)
@@ -169,12 +199,12 @@ class InkPdfViewerFragment : PdfViewerFragment() {
     fun getCurrentPage(): Int {
         if (!isDocumentLoaded || !isAdded || isDetached) return 0
         return try {
-            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
-            pdfViewField.isAccessible = true
-            val pdfView = pdfViewField.get(this)
+            val pdfView = pdfViewField?.get(this)
             if (pdfView != null) {
-                val getFirstVisiblePageMethod = pdfView.javaClass.getMethod("getFirstVisiblePage")
-                getFirstVisiblePageMethod.invoke(pdfView) as? Int ?: 0
+                val firstPageMethod = cachedGetFirstVisiblePageMethod ?: pdfView.javaClass
+                    .getMethod("getFirstVisiblePage")
+                    .also { cachedGetFirstVisiblePageMethod = it }
+                firstPageMethod.invoke(pdfView) as? Int ?: 0
             } else {
                 0
             }

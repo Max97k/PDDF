@@ -420,22 +420,23 @@ open class PdfRepositoryImpl @Inject constructor(
         val fileSizeBytes = FileUtils.getFileSize(context, parseUri(sourceUri))
         try {
             openSafeInputStream(sourceUri)?.use { inputStream ->
-                val fileBytes = inputStream.readBytes()
                 var doc: PDDocument? = null
                 try {
                     doc = PDDocument.load(
-                        ByteArrayInputStream(fileBytes),
+                        inputStream.buffered(),
                         passwordValue,
                         MemoryUtils.getOptimalMemorySetting(fileSizeBytes)
                     )
                 } catch (e: Exception) {
                     if (e.message?.contains("xref", ignoreCase = true) == true) {
                         try {
-                            doc = PDDocument.load(
-                                ByteArrayInputStream(fileBytes),
-                                passwordValue,
-                                com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
-                            )
+                            openSafeInputStream(sourceUri)?.use { fallbackStream ->
+                                doc = PDDocument.load(
+                                    fallbackStream.buffered(),
+                                    passwordValue,
+                                    com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly()
+                                )
+                            }
                         } catch (_: Exception) {}
                     }
                 }
@@ -456,6 +457,9 @@ open class PdfRepositoryImpl @Inject constructor(
                     val signatures = mutableListOf<SignatureInfo>()
                     try {
                         val sigDicts = it.signatureDictionaries
+                        val signedFileBytes: ByteArray? = if (sigDicts.isNotEmpty() && fileSizeBytes <= 50L * 1024L * 1024L) {
+                            openSafeInputStream(sourceUri)?.use { s -> s.readBytes() }
+                        } else null
                         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
                         for (sig in sigDicts) {
                             val name = sig.name ?: "Unknown"
@@ -469,7 +473,7 @@ open class PdfRepositoryImpl @Inject constructor(
 
                             try {
                                 val contents = sig.contents
-                                val signedContent = sig.getSignedContent(fileBytes)
+                                val signedContent = if (signedFileBytes != null) sig.getSignedContent(signedFileBytes) else null
 
                                 if (contents != null && signedContent != null) {
                                     val cms = CMSSignedData(CMSProcessableByteArray(signedContent), contents)
@@ -1028,11 +1032,8 @@ open class PdfRepositoryImpl @Inject constructor(
                         tempFile.outputStream().buffered().use { outputStream ->
                             doc.save(outputStream)
                         }
-                        // Need atomicReplace, let's see why it's failing
                         if (atomicReplace(tempFile, destUri)) {
                             success = true
-                        } else {
-                            println("atomicReplace failed")
                         }
                     } finally {
                         if (tempFile.exists()) {
@@ -1040,7 +1041,7 @@ open class PdfRepositoryImpl @Inject constructor(
                         }
                     }
                 }
-            } ?: println("openSafeInputStream returned null for $sourceUri")
+            }
             success
         } catch (e: Exception) {
             e.printStackTrace()

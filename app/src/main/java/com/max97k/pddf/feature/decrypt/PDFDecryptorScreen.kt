@@ -45,19 +45,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -256,6 +264,29 @@ fun PDFDecryptorScreen(
     var showSettingsSheet by remember { mutableStateOf(false) }
     var isAppPaused by remember { mutableStateOf(false) }
     var showExtractPagesDialog by remember { mutableStateOf(false) }
+
+    val openPasswordVault: () -> Unit = {
+        val fragmentActivity = context as? FragmentActivity
+        if (fragmentActivity != null) {
+            val promptTitle = context.resources.getString(R.string.biometric_prompt_title)
+            val promptSubtitle = context.resources.getString(R.string.biometric_prompt_subtitle)
+            BiometricHelper.authenticate(
+                activity = fragmentActivity,
+                title = promptTitle,
+                subtitle = promptSubtitle,
+                onSuccess = { onAction(MainUiAction.SetPasswordListDialogVisible(true)) },
+                onError = { errorCode, errString ->
+                    if (errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
+                        errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON
+                    ) {
+                        android.widget.Toast.makeText(context, errString, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+        } else {
+            onAction(MainUiAction.SetPasswordListDialogVisible(true))
+        }
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         isAppPaused = true
@@ -649,7 +680,7 @@ fun PDFDecryptorScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // Header Row — App Title | About (Help) | Settings
+            // Header Row — App Title & Icon | Action Icons (Saved Passwords, Settings, About)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -657,22 +688,57 @@ fun PDFDecryptorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { showAboutDialog = true }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.HelpOutline,
-                        contentDescription = stringResource(R.string.content_desc_about)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    androidx.compose.material3.Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                IconButton(onClick = { showSettingsSheet = true }) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = stringResource(R.string.content_desc_settings)
-                    )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    IconButton(onClick = openPasswordVault) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = stringResource(R.string.content_desc_saved_passwords),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { showSettingsSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.content_desc_settings),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { showAboutDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.content_desc_about),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -793,9 +859,7 @@ fun PDFDecryptorScreen(
                                 passwordVisible = uiState.passwordVisible,
                                 onPasswordChange = { onAction(MainUiAction.UpdatePassword(it)) },
                                 onTogglePasswordVisible = { onAction(MainUiAction.TogglePasswordVisibility) },
-                                onOpenPasswordList = {
-                                    onAction(MainUiAction.RequestOpenPasswordList)
-                                },
+                                onOpenPasswordList = openPasswordVault,
                                 onOpenSavePassword = { onAction(MainUiAction.SetSavePasswordDialogVisible(true)) }
                             )
 
@@ -808,117 +872,41 @@ fun PDFDecryptorScreen(
                                     strokeWidth = 4.dp
                                 )
                             } else if (!uiState.isProcessing) {
-                                if (uiState.isSingleFile) {
-                                    Button(
-                                        onClick = {
-                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                            uiState.selectedUris.firstOrNull()?.let { uri ->
-                                                onAction(MainUiAction.DecryptAndPreview(uri, uiState.password))
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(56.dp),
-                                        enabled = uiState.password.isNotEmpty(),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                    ) {
-                                        Icon(Icons.Default.Visibility, contentDescription = null)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.btn_decrypt_and_preview),
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                            onAction(MainUiAction.DecryptInPlace)
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(56.dp),
-                                        enabled = uiState.password.isNotEmpty(),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    ) {
-                                        Text(stringResource(R.string.btn_overwrite), textAlign = TextAlign.Center)
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                            if (uiState.isBatch) {
-                                                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                                                openDocumentTreeLauncher.launch(intent)
-                                            } else {
-                                                val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
-                                                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                                    addCategory(Intent.CATEGORY_OPENABLE)
-                                                    type = "application/pdf"
-                                                    putExtra(Intent.EXTRA_TITLE, fileName)
-                                                }
-                                                createDocumentLauncher.launch(intent)
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(56.dp),
-                                        enabled = uiState.password.isNotEmpty(),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                                    ) {
-                                        Text(stringResource(R.string.btn_save_as), textAlign = TextAlign.Center)
-                                    }
-
-                                    if (uiState.isBatch) {
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Button(
-                                            onClick = {
-                                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                                    addCategory(Intent.CATEGORY_OPENABLE)
-                                                    type = "application/zip"
-                                                    putExtra(Intent.EXTRA_TITLE, "decrypted_batch.zip")
-                                                }
-                                                createZipDocumentLauncher.launch(intent)
-                                            },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(56.dp),
-                                            enabled = uiState.password.isNotEmpty(),
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                                        ) {
-                                            Text(stringResource(R.string.btn_save_as_zip), textAlign = TextAlign.Center)
+                                DecryptActionButtons(
+                                    uiState = uiState,
+                                    onAction = onAction,
+                                    onSaveAsSingle = {
+                                        val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                            addCategory(Intent.CATEGORY_OPENABLE)
+                                            type = "application/pdf"
+                                            putExtra(Intent.EXTRA_TITLE, fileName)
                                         }
+                                        createDocumentLauncher.launch(intent)
+                                    },
+                                    onSaveAsBatch = {
+                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                        openDocumentTreeLauncher.launch(intent)
+                                    },
+                                    onSaveAsZip = {
+                                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                            addCategory(Intent.CATEGORY_OPENABLE)
+                                            type = "application/zip"
+                                            putExtra(Intent.EXTRA_TITLE, "decrypted_batch.zip")
+                                        }
+                                        createZipDocumentLauncher.launch(intent)
                                     }
-
-                                }
+                                )
                             }
 
                             if (uiState.statusMessage != null) {
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Text(
-                                    text = uiState.statusMessage,
-                                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                    color = when (uiState.statusLevel) {
-                                        com.max97k.pddf.StatusLevel.ERROR -> MaterialTheme.colorScheme.error
-                                        com.max97k.pddf.StatusLevel.WARNING -> MaterialTheme.colorScheme.tertiary
-                                        else -> MaterialTheme.colorScheme.primary
-                                    },
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = TextAlign.Center
+                                Spacer(modifier = Modifier.height(20.dp))
+                                StatusBannerCard(
+                                    statusMessage = uiState.statusMessage!!,
+                                    statusLevel = uiState.statusLevel
                                 )
 
-                                Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
                                 PostDecryptActionSection(
                                     previewUri = uiState.activePreviewUri,
@@ -1081,153 +1069,84 @@ fun PDFDecryptorScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             PasswordInputSection(
-                            password = uiState.password,
-                            passwordVisible = uiState.passwordVisible,
-                            onPasswordChange = { onAction(MainUiAction.UpdatePassword(it)) },
-                            onTogglePasswordVisible = { onAction(MainUiAction.TogglePasswordVisibility) },
-                            onOpenPasswordList = {
-                                val fragmentActivity = context as? FragmentActivity
-                                if (fragmentActivity != null) {
-                                    val promptTitle = context.resources.getString(R.string.biometric_prompt_title)
-                                    val promptSubtitle = context.resources.getString(R.string.biometric_prompt_subtitle)
-                                    BiometricHelper.authenticate(
-                                        activity = fragmentActivity,
-                                        title = promptTitle,
-                                        subtitle = promptSubtitle,
-                                        onSuccess = { onAction(MainUiAction.SetPasswordListDialogVisible(true)) },
-                                        onError = { errorCode, errString ->
-                                            if (errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
-                                                errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON
-                                            ) {
-                                                android.widget.Toast.makeText(context, errString, android.widget.Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-                                    )
-                                } else {
-                                    onAction(MainUiAction.SetPasswordListDialogVisible(true))
-                                }
-                            },
-                            onOpenSavePassword = { onAction(MainUiAction.SetSavePasswordDialogVisible(true)) }
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        if (uiState.isProcessing && !uiState.batchState.isProcessing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(48.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 4.dp
-                            )
-                        } else if (!uiState.isProcessing) {
-                            if (uiState.isSingleFile) {
-                                Button(
-                                    onClick = {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                        uiState.selectedUris.firstOrNull()?.let { uri ->
-                                            onAction(MainUiAction.DecryptAndPreview(uri, uiState.password))
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp),
-                                    enabled = uiState.password.isNotEmpty(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                ) {
-                                    Icon(Icons.Default.Visibility, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(R.string.btn_decrypt_and_preview),
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Button(
-                                    onClick = {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                        onAction(MainUiAction.DecryptInPlace)
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(56.dp),
-                                    enabled = uiState.password.isNotEmpty(),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                ) {
-                                    Text(stringResource(R.string.btn_overwrite), textAlign = TextAlign.Center)
-                                }
-
-                                Button(
-                                    onClick = {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                        if (uiState.isBatch) {
-                                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                                            openDocumentTreeLauncher.launch(intent)
-                                        } else {
-                                            val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
-                                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                                addCategory(Intent.CATEGORY_OPENABLE)
-                                                type = "application/pdf"
-                                                putExtra(Intent.EXTRA_TITLE, fileName)
-                                            }
-                                            createDocumentLauncher.launch(intent)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(56.dp),
-                                    enabled = uiState.password.isNotEmpty(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                                ) {
-                                    Text(stringResource(R.string.btn_save_as), textAlign = TextAlign.Center)
-                                }
-                            }
-                        }
-
-                        if (uiState.statusMessage != null) {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = uiState.statusMessage,
-                                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                color = when (uiState.statusLevel) {
-                                    com.max97k.pddf.StatusLevel.ERROR -> MaterialTheme.colorScheme.error
-                                    com.max97k.pddf.StatusLevel.WARNING -> MaterialTheme.colorScheme.tertiary
-                                    else -> MaterialTheme.colorScheme.primary
-                                },
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
+                                password = uiState.password,
+                                passwordVisible = uiState.passwordVisible,
+                                onPasswordChange = { onAction(MainUiAction.UpdatePassword(it)) },
+                                onTogglePasswordVisible = { onAction(MainUiAction.TogglePasswordVisibility) },
+                                onOpenPasswordList = openPasswordVault,
+                                onOpenSavePassword = { onAction(MainUiAction.SetSavePasswordDialogVisible(true)) }
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            PostDecryptActionSection(
-                                previewUri = uiState.activePreviewUri,
-                                lastDecryptedUri = uiState.lastDecryptedUri,
-                                onPreviewClick = {
-                                    uiState.activePreviewUri?.let { previewUri ->
-                                        onAction(MainUiAction.SetPreviewPdfUri(previewUri))
+                            if (uiState.isProcessing && !uiState.batchState.isProcessing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(48.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 4.dp
+                                )
+                            } else if (!uiState.isProcessing) {
+                                DecryptActionButtons(
+                                    uiState = uiState,
+                                    onAction = onAction,
+                                    onSaveAsSingle = {
+                                        val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                            addCategory(Intent.CATEGORY_OPENABLE)
+                                            type = "application/pdf"
+                                            putExtra(Intent.EXTRA_TITLE, fileName)
+                                        }
+                                        createDocumentLauncher.launch(intent)
+                                    },
+                                    onSaveAsBatch = {
+                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                        openDocumentTreeLauncher.launch(intent)
+                                    },
+                                    onSaveAsZip = {
+                                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                            addCategory(Intent.CATEGORY_OPENABLE)
+                                            type = "application/zip"
+                                            putExtra(Intent.EXTRA_TITLE, "decrypted_batch.zip")
+                                        }
+                                        createZipDocumentLauncher.launch(intent)
+                                    }
+                                )
+                            }
+
+                            if (uiState.statusMessage != null) {
+                                Spacer(modifier = Modifier.height(20.dp))
+                                StatusBannerCard(
+                                    statusMessage = uiState.statusMessage!!,
+                                    statusLevel = uiState.statusLevel
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                PostDecryptActionSection(
+                                    previewUri = uiState.activePreviewUri,
+                                    lastDecryptedUri = uiState.lastDecryptedUri,
+                                    onPreviewClick = {
+                                        uiState.activePreviewUri?.let { previewUri ->
+                                            onAction(MainUiAction.SetPreviewPdfUri(previewUri))
+                                        }
+                                    },
+                                    onProtectClick = {
+                                        uiState.lastDecryptedUri?.let { uri ->
+                                            onAction(MainUiAction.RequestReEncrypt(uri))
+                                        }
+                                    }
+                                )
+
+                                if (uiState.batchState.failedFiles.isNotEmpty() && !uiState.batchState.isProcessing) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(stringResource(R.string.btn_view_details_retry))
                                     }
                                 }
-                            )
-
-                            if (uiState.batchState.failedFiles.isNotEmpty() && !uiState.batchState.isProcessing) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(
-                                    onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.btn_view_details_retry))
-                                }
                             }
-                        }
                         }
                     }
                 }
@@ -1320,13 +1239,14 @@ fun PDFDecryptorScreen(
                                         pageRange = pageRange
                                     )
                                     if (extractResult.isSuccess) {
-                                        // Wait until file is fully written, then create share intent
+                                        // Convert raw cache path to FileProvider content:// URI before sharing
+                                        val shareableUri = viewModel.getShareableUri(tempUri)
                                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                             type = "application/pdf"
-                                            putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(tempUri))
+                                            putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(shareableUri))
                                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                         }
-                                        context.startActivity(Intent.createChooser(shareIntent, "Share extracted pages"))
+                                        context.startActivity(Intent.createChooser(shareIntent, shareFileTitle))
                                     } else {
                                         android.widget.Toast.makeText(context, "Extraction failed", android.widget.Toast.LENGTH_SHORT).show()
                                     }
@@ -1457,6 +1377,184 @@ fun PDFDecryptorScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun StatusBannerCard(
+    statusMessage: String,
+    statusLevel: com.max97k.pddf.StatusLevel,
+    modifier: Modifier = Modifier
+) {
+    val (containerColor, contentColor, icon) = when (statusLevel) {
+        com.max97k.pddf.StatusLevel.ERROR -> Triple(
+            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+            MaterialTheme.colorScheme.onErrorContainer,
+            Icons.Default.Error
+        )
+        com.max97k.pddf.StatusLevel.WARNING -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f),
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            Icons.Default.Warning
+        )
+        else -> Triple(
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            Icons.Default.CheckCircle
+        )
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = statusMessage,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                color = contentColor,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun DecryptActionButtons(
+    uiState: MainUiState,
+    onAction: (MainUiAction) -> Unit,
+    onSaveAsSingle: () -> Unit,
+    onSaveAsBatch: () -> Unit,
+    onSaveAsZip: () -> Unit
+) {
+    val view = LocalView.current
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        if (uiState.isSingleFile) {
+            Button(
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    uiState.selectedUris.firstOrNull()?.let { uri ->
+                        onAction(MainUiAction.DecryptAndPreview(uri, uiState.password))
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                enabled = uiState.password.isNotEmpty(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.btn_decrypt_and_preview),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    onAction(MainUiAction.DecryptInPlace)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                enabled = uiState.password.isNotEmpty(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                border = BorderStroke(
+                    1.dp,
+                    if (uiState.password.isNotEmpty()) MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    else MaterialTheme.colorScheme.outlineVariant
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.btn_overwrite),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            FilledTonalButton(
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    if (uiState.isBatch) {
+                        onSaveAsBatch()
+                    } else {
+                        onSaveAsSingle()
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                enabled = uiState.password.isNotEmpty(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.btn_save_as),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            if (uiState.isBatch) {
+                FilledTonalButton(
+                    onClick = {
+                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                        onSaveAsZip()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    enabled = uiState.password.isNotEmpty(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_save_as_zip),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
 

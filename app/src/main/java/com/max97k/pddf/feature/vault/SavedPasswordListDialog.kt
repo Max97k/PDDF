@@ -100,6 +100,7 @@ fun SavedPasswordListDialog(
             .padding(24.dp)
             .wrapContentWidth()
             .wrapContentHeight(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             securePolicy = SecureFlagPolicy.SecureOn
@@ -111,7 +112,11 @@ fun SavedPasswordListDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.dialog_title_saved_passwords))
+                Text(
+                    text = stringResource(R.string.dialog_title_saved_passwords),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
                 Row {
                     IconButton(onClick = onExportClick) {
                         Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.content_desc_export_vault))
@@ -132,9 +137,10 @@ fun SavedPasswordListDialog(
                         onValueChange = { searchQuery = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
+                            .padding(bottom = 12.dp),
                         label = { Text(stringResource(R.string.label_search)) },
                         singleLine = true,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                         trailingIcon = {
                             if (searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { searchQuery = "" }) {
@@ -160,60 +166,69 @@ fun SavedPasswordListDialog(
                             style = MaterialTheme.typography.bodyMedium
                         )
                     } else {
-                        LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f, fill = false),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
                             items(filteredPasswords, key = { it.id }) { savedPass ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .defaultMinSize(minHeight = minRowHeight)
-                                        .clickable {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            onSelectPassword(savedPass.passwordValue)
-                                        }
-                                        .padding(vertical = verticalPadding, horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                androidx.compose.material3.Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)
                                 ) {
-                                    val name = savedPass.name
-                                    val highlightIndex = name.indexOf(searchQuery, ignoreCase = true)
-                                    val annotatedString = if (searchQuery.isNotEmpty() && highlightIndex != -1) {
-                                        buildAnnotatedString {
-                                            append(name.substring(0, highlightIndex))
-                                            withStyle(
-                                                style = SpanStyle(background = MaterialTheme.colorScheme.primaryContainer)
-                                            ) {
-                                                append(name.substring(highlightIndex, highlightIndex + searchQuery.length))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .defaultMinSize(minHeight = minRowHeight)
+                                            .clickable {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                onSelectPassword(savedPass.passwordValue)
                                             }
-                                            append(name.substring(highlightIndex + searchQuery.length))
+                                            .padding(vertical = verticalPadding, horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val name = savedPass.name
+                                        val highlightIndex = name.indexOf(searchQuery, ignoreCase = true)
+                                        val annotatedString = if (searchQuery.isNotEmpty() && highlightIndex != -1) {
+                                            buildAnnotatedString {
+                                                append(name.substring(0, highlightIndex))
+                                                withStyle(
+                                                    style = SpanStyle(background = MaterialTheme.colorScheme.primaryContainer)
+                                                ) {
+                                                    append(name.substring(highlightIndex, highlightIndex + searchQuery.length))
+                                                }
+                                                append(name.substring(highlightIndex + searchQuery.length))
+                                            }
+                                        } else {
+                                            buildAnnotatedString { append(name) }
                                         }
-                                    } else {
-                                        buildAnnotatedString { append(name) }
-                                    }
 
-                                    Text(
-                                        text = annotatedString,
-                                        modifier = Modifier.weight(1f),
-                                        style = textStyle
-                                    )
-                                    val copyMsg = stringResource(R.string.msg_password_copied)
-                                    IconButton(onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        ClipboardUtils.copyPasswordToClipboard(context, "Password", savedPass.passwordValue)
-                                        Toast.makeText(context, copyMsg, Toast.LENGTH_SHORT).show()
-                                    }) {
-                                        Icon(
-                                            Icons.Default.ContentCopy,
-                                            contentDescription = stringResource(R.string.content_desc_copy_password)
+                                        Text(
+                                            text = annotatedString,
+                                            modifier = Modifier.weight(1f),
+                                            style = textStyle
                                         )
-                                    }
-                                    IconButton(onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onDeletePassword(savedPass)
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.content_desc_delete_named, savedPass.name),
-                                            modifier = Modifier.size(iconSize)
-                                        )
+                                        val copyMsg = stringResource(R.string.msg_password_copied)
+                                        IconButton(onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            ClipboardUtils.copyPasswordToClipboard(context, "Password", savedPass.passwordValue)
+                                            Toast.makeText(context, copyMsg, Toast.LENGTH_SHORT).show()
+                                        }) {
+                                            Icon(
+                                                Icons.Default.ContentCopy,
+                                                contentDescription = stringResource(R.string.content_desc_copy_password)
+                                            )
+                                        }
+                                        IconButton(onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onDeletePassword(savedPass)
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = stringResource(R.string.content_desc_delete_named, savedPass.name),
+                                                modifier = Modifier.size(iconSize)
+                                            )
+                                        }
                                     }
                                 }
                             }

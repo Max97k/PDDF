@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.ui.components
+package com.max97k.pddf.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
@@ -61,6 +61,13 @@ fun ThemeDropdownMenu(
                 text = { Text(stringResource(R.string.theme_amoled)) },
                 onClick = {
                     onThemeSelected(ThemeMode.AMOLED)
+                    expanded = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.theme_oled_black)) },
+                onClick = {
+                    onThemeSelected(ThemeMode.OLED_BLACK)
                     expanded = false
                 }
             )

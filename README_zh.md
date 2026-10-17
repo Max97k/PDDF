@@ -110,7 +110,7 @@ PDDF 針對安裝包體積與啟動速度進行了深度最佳化：
 
 - **R8 Full Mode 混淆與壓縮**：啟用 `isMinifyEnabled = true` 與 `isShrinkResources = true`，精準剔除未引用程式碼與資產。
 - **PDFBox 字型與 CMap 映射保留**：精確保留解密與中文字型渲染所需的 CMap 規則，杜絕解密後亂碼問題。
-- **語系資源過濾**：設定 `localeFilters += listOf("zh-rTW", "en")`，剔除第三方依賴庫中多餘的數十種語言資產包。
+- **語系資源過濾**：設定 `localeFilters += listOf("zh-rTW", "zh-rCN", "ja", "es", "de", "fr", "en")`，剔除第三方依賴庫中多餘的數十種語言資產包。
 - **AAB 依架構動態分發**：透過 Google Play AAB 動態分割 ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`)，使用者下載體積小於 5 MB。
 
 ---
@@ -187,7 +187,7 @@ PDDF/
 ├── app/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/com/example/
+│   │   │   ├── java/com/max97k/pddf/
 │   │   │   │   ├── MainActivity.kt              # Compose UI 進入點與 Intent 路由
 │   │   │   │   ├── MainViewModel.kt             # UDF 狀態管理與解密業務邏輯
 │   │   │   │   ├── PdfDecryptorTileService.kt   # Android 快速設定下拉磁貼服務

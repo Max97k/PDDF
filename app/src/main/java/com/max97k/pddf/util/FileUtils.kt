@@ -267,12 +267,30 @@ object FileUtils {
     fun cleanUpDecryptedCache(context: Context) {
         try {
             val cacheDir = context.cacheDir ?: return
-            val files = cacheDir.listFiles() ?: return
-            for (file in files) {
-                if (file.isFile && (file.name.startsWith("auto_decrypted_") || file.name.startsWith("decrypted_") || file.name.endsWith(".pdf", ignoreCase = true))) {
-                    secureDelete(file)
-                }
-            }
+            cleanUpCacheDirectory(cacheDir)
         } catch (_: Exception) {}
+    }
+
+    private fun cleanUpCacheDirectory(dir: File) {
+        val entries = dir.listFiles() ?: return
+        for (entry in entries) {
+            if (entry.isDirectory) {
+                if (entry.name.equals("decrypted", ignoreCase = true)) {
+                    cleanUpCacheDirectory(entry)
+                    entry.delete()
+                }
+            } else if (
+                entry.isFile && (
+                    entry.name.startsWith("auto_decrypted_") ||
+                    entry.name.startsWith("decrypted_") ||
+                    entry.name.startsWith("watermarked_temp_") ||
+                    entry.name.startsWith("extracted_") ||
+                    entry.name.startsWith("reversed_") ||
+                    entry.name.endsWith(".pdf", ignoreCase = true)
+                )
+            ) {
+                secureDelete(entry)
+            }
+        }
     }
 }

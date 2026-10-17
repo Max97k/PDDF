@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.max97k.pddf.data.BookmarkDao
 import com.max97k.pddf.data.BookmarkEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,10 +22,14 @@ class PdfViewerViewModel @Inject constructor(
     val bookmarks: StateFlow<List<BookmarkEntity>> = _bookmarks.asStateFlow()
 
     private var currentFileUriHash: String = ""
+    private var bookmarksJob: Job? = null
 
     fun loadBookmarks(uri: Uri) {
-        currentFileUriHash = uri.toString().hashCode().toString()
-        viewModelScope.launch {
+        val newHash = uri.toString().hashCode().toString()
+        if (newHash == currentFileUriHash && bookmarksJob?.isActive == true) return
+        currentFileUriHash = newHash
+        bookmarksJob?.cancel()
+        bookmarksJob = viewModelScope.launch {
             bookmarkDao.getBookmarksForFile(currentFileUriHash).collect {
                 _bookmarks.value = it
             }
@@ -46,7 +51,7 @@ class PdfViewerViewModel @Inject constructor(
 
     fun deleteBookmark(pageIndex: Int) {
         viewModelScope.launch {
-             bookmarkDao.deleteBookmarkByPage(currentFileUriHash, pageIndex)
+            bookmarkDao.deleteBookmarkByPage(currentFileUriHash, pageIndex)
         }
     }
 }

@@ -263,6 +263,9 @@
     <string name="title_bookmarks">Lesezeichen</string>
     <string name="cd_bookmarks">Lesezeichen</string>
     <string name="cd_bookmark">Lesezeichen</string>
+    <string name="title_table_of_contents">Inhaltsverzeichnis</string>
+    <string name="msg_no_table_of_contents">Kein Inhaltsverzeichnis in diesem Dokument verfügbar</string>
+    <string name="cd_close_table_of_contents">Inhaltsverzeichnis schließen</string>
     <string name="cd_tts">Text-zu-Sprache</string>
     <string name="cd_more_options">Weitere Optionen</string>
     <string name="action_view_bookmarks">Lesezeichen anzeigen</string>
