@@ -125,7 +125,7 @@ fun DocumentDetailsCard(
                         IconButton(onClick = { exportMenuExpanded = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Export options"
+                                contentDescription = stringResource(R.string.cd_export_options)
                             )
                         }
                         DropdownMenu(
@@ -133,7 +133,7 @@ fun DocumentDetailsCard(
                             onDismissRequest = { exportMenuExpanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Flatten Forms") },
+                                text = { Text(stringResource(R.string.action_flatten_forms)) },
                                 onClick = {
                                     exportMenuExpanded = false
                                     onFlattenForms()
@@ -283,7 +283,7 @@ fun DocumentDetailsCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (onSaveAllAttachments != null) {
                                 TextButton(onClick = { onSaveAllAttachments() }) {
-                                    Text("Save All")
+                                    Text(stringResource(R.string.btn_save_all))
                                 }
                             }
                             Icon(

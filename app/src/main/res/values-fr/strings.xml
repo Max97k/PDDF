@@ -232,4 +232,84 @@
     <string name="label_doc_identical">Identique</string>
     <string name="label_doc_differences">Différences</string>
     <string name="btn_page_overview">Aperçu des pages</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">Détails des échecs par lot</string>
+    <string name="desc_batch_failure_select">Sélectionnez les fichiers à réessayer avec un nouveau mot de passe :</string>
+    <string name="label_alternative_password">Autre mot de passe</string>
+    <string name="btn_retry_selected">Réessayer la sélection</string>
+    <string name="btn_view_details_retry">Afficher les détails et réessayer</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">Protéger le PDF</string>
+    <string name="label_new_password">Nouveau mot de passe</string>
+    <string name="label_confirm_password">Confirmer le mot de passe</string>
+    <string name="btn_protect">Protéger</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">Options d\'impression</string>
+    <string name="label_eco_grayscale">Niveaux de gris écologiques</string>
+    <string name="label_all_pages">Toutes les pages</string>
+    <string name="label_custom_range">Plage personnalisée</string>
+    <string name="placeholder_custom_range">par ex. 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">Imprimer</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">Ajouter un filigrane</string>
+    <string name="label_custom_text">Texte personnalisé</string>
+    <string name="btn_apply">Appliquer</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">Signets</string>
+    <string name="cd_bookmarks">Signets</string>
+    <string name="cd_bookmark">Signet</string>
+    <string name="cd_tts">Synthèse vocale</string>
+    <string name="cd_more_options">Plus d\'options</string>
+    <string name="action_view_bookmarks">Afficher les signets</string>
+    <string name="action_watermark">Filigrane</string>
+    <string name="title_add_bookmark">Ajouter un signet</string>
+    <string name="label_note_optional">Remarque (facultative)</string>
+    <string name="msg_no_bookmarks">Aucun signet pour le moment.</string>
+    <string name="cd_delete_bookmark">Supprimer le signet</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">Propriété</string>
+    <string name="label_title">Titre</string>
+    <string name="label_author">Auteur</string>
+    <string name="label_pages">Pages</string>
+    <string name="label_size_mb">Taille (Mo)</string>
+    <string name="label_encryption">Chiffrement</string>
+    <string name="label_permissions">Autorisations</string>
+    <string name="label_perm_print">Imprimer</string>
+    <string name="label_perm_no_print">Pas d\'impression</string>
+    <string name="label_perm_copy">Copier</string>
+    <string name="label_perm_no_copy">Pas de copie</string>
+    <string name="action_flatten_forms">Aplatir les formulaires</string>
+    <string name="btn_save_all">Tout enregistrer</string>
+    <string name="cd_export_options">Options d\'exportation</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">Autorisations de stockage accordées</string>
+    <string name="msg_no_permissions_granted">Aucune autorisation accordée.</string>
+    <string name="badge_read">Lecture</string>
+    <string name="badge_write">Écriture</string>
+    <string name="cd_revoke">Révoquer</string>
+    <string name="btn_revoke_all">Tout révoquer</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">Exporter en CSV</string>
+    <string name="setting_export_csv_desc">Exporter les métadonnées des fichiers récemment traités</string>
+    <string name="setting_export_json_title">Exporter en JSON</string>
+    <string name="setting_export_json_desc">Exporter les métadonnées des fichiers récemment traités</string>
+    <string name="setting_granted_folders_title">Dossiers de stockage autorisés</string>
+    <string name="setting_auto_lock_title">Délai de verrouillage automatique</string>
+    <string name="cd_select_auto_lock">Sélectionner le délai de verrouillage automatique</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">Configurer les numéros de page</string>
+    <string name="label_format_page_numbers" formatted="false">Format (par ex. Page %d sur %d)</string>
+    <string name="label_position_page_numbers">Position (en bas au centre ou en bas à droite)</string>
+    <string name="label_font_size">Taille de police</string>
+    <string name="label_margin">Marge</string>
+    <string name="btn_next">Suivant</string>
 </resources>

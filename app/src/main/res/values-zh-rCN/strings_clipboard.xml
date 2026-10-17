@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="msg_password_copied">密码已复制到剪贴板，将在 30 秒后自动清除。</string>
+    <string name="content_desc_copy_password">复制密码</string>
+</resources>

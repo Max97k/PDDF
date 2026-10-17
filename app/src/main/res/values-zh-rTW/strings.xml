@@ -229,4 +229,84 @@
     <string name="label_doc_identical">完全相同</string>
     <string name="label_doc_differences">差異</string>
     <string name="btn_page_overview">頁面總覽</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">批次失敗詳細資訊</string>
+    <string name="desc_batch_failure_select">選擇要使用新密碼重試的檔案：</string>
+    <string name="label_alternative_password">替代密碼</string>
+    <string name="btn_retry_selected">重試所選項目</string>
+    <string name="btn_view_details_retry">檢視詳情並重試</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">保護 PDF</string>
+    <string name="label_new_password">新密碼</string>
+    <string name="label_confirm_password">確認密碼</string>
+    <string name="btn_protect">保護</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">列印選項</string>
+    <string name="label_eco_grayscale">環保黑白灰階</string>
+    <string name="label_all_pages">全部頁面</string>
+    <string name="label_custom_range">自訂頁數範圍</string>
+    <string name="placeholder_custom_range">例如 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">列印</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">新增浮水印</string>
+    <string name="label_custom_text">自訂文字</string>
+    <string name="btn_apply">套用</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">書籤</string>
+    <string name="cd_bookmarks">書籤</string>
+    <string name="cd_bookmark">書籤</string>
+    <string name="cd_tts">語音朗讀</string>
+    <string name="cd_more_options">更多選項</string>
+    <string name="action_view_bookmarks">檢視書籤</string>
+    <string name="action_watermark">浮水印</string>
+    <string name="title_add_bookmark">新增書籤</string>
+    <string name="label_note_optional">備註（選填）</string>
+    <string name="msg_no_bookmarks">尚無書籤。</string>
+    <string name="cd_delete_bookmark">刪除書籤</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">屬性</string>
+    <string name="label_title">標題</string>
+    <string name="label_author">作者</string>
+    <string name="label_pages">頁數</string>
+    <string name="label_size_mb">大小 (MB)</string>
+    <string name="label_encryption">加密方式</string>
+    <string name="label_permissions">權限</string>
+    <string name="label_perm_print">可列印</string>
+    <string name="label_perm_no_print">不可列印</string>
+    <string name="label_perm_copy">可複製</string>
+    <string name="label_perm_no_copy">不可複製</string>
+    <string name="action_flatten_forms">扁平化表單</string>
+    <string name="btn_save_all">全部儲存</string>
+    <string name="cd_export_options">匯出選項</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">已授予的儲存權限</string>
+    <string name="msg_no_permissions_granted">尚未授予任何目錄權限。</string>
+    <string name="badge_read">讀取</string>
+    <string name="badge_write">寫入</string>
+    <string name="cd_revoke">撤銷</string>
+    <string name="btn_revoke_all">全部撤銷</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">匯出為 CSV</string>
+    <string name="setting_export_csv_desc">匯出最近處理檔案的元資料報表</string>
+    <string name="setting_export_json_title">匯出為 JSON</string>
+    <string name="setting_export_json_desc">匯出最近處理檔案的元資料報表</string>
+    <string name="setting_granted_folders_title">已授權儲存目錄</string>
+    <string name="setting_auto_lock_title">閒置自動上鎖時間</string>
+    <string name="cd_select_auto_lock">選擇閒置自動上鎖時間</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">設定頁碼格式</string>
+    <string name="label_format_page_numbers" formatted="false">格式（例如：第 %d 頁，共 %d 頁）</string>
+    <string name="label_position_page_numbers">位置（置中或置右）</string>
+    <string name="label_font_size">字體大小</string>
+    <string name="label_margin">邊距</string>
+    <string name="btn_next">下一步</string>
 </resources>

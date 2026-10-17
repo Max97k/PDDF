@@ -79,9 +79,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
@@ -372,8 +372,8 @@ fun PdfViewerScreen(
                         if (outline.isNotEmpty()) {
                             IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
                                 Icon(
-                                    imageVector = Icons.Default.List,
-                                    contentDescription = "Bookmarks"
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = stringResource(R.string.cd_bookmarks)
                                 )
                             }
                         }
@@ -388,7 +388,7 @@ fun PdfViewerScreen(
                         }) {
                             Icon(
                                 imageVector = if (isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Bookmark"
+                                contentDescription = stringResource(R.string.cd_bookmark)
                             )
                         }
                         // Search toggle — open search on first tap, close on second tap.
@@ -399,7 +399,7 @@ fun PdfViewerScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.RecordVoiceOver,
-                                contentDescription = "Text to Speech"
+                                contentDescription = stringResource(R.string.cd_tts)
                             )
                         }
 
@@ -440,7 +440,7 @@ fun PdfViewerScreen(
                             IconButton(onClick = { showMoreMenu = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More options"
+                                    contentDescription = stringResource(R.string.cd_more_options)
                                 )
                             }
                             DropdownMenu(
@@ -448,8 +448,8 @@ fun PdfViewerScreen(
                                 onDismissRequest = { showMoreMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("View Bookmarks") },
-                                    leadingIcon = { Icon(Icons.Default.List, contentDescription = null) },
+                                    text = { Text(stringResource(R.string.action_view_bookmarks)) },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                                     onClick = {
                                         showMoreMenu = false
                                         showBookmarksSheet = true
@@ -509,7 +509,7 @@ fun PdfViewerScreen(
                                 }
                                 if (onAddWatermark != null) {
                                     DropdownMenuItem(
-                                        text = { Text("Watermark") },
+                                        text = { Text(stringResource(R.string.action_watermark)) },
                                         onClick = {
                                             showMoreMenu = false
                                             showWatermarkDialog = true
@@ -902,14 +902,14 @@ fun PdfViewerScreen(
             var note by remember { mutableStateOf("") }
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { showAddBookmarkDialog = false },
-                title = { Text("Add Bookmark") },
+                title = { Text(stringResource(R.string.title_add_bookmark)) },
                 text = {
                     Column {
                         Text("Page ${(currentPageIndex ?: 0) + 1}")
                         OutlinedTextField(
                             value = note,
                             onValueChange = { note = it },
-                            label = { Text("Note (Optional)") },
+                            label = { Text(stringResource(R.string.label_note_optional)) },
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                         )
                     }
@@ -919,12 +919,12 @@ fun PdfViewerScreen(
                         effectiveViewModel?.addBookmark(currentPageIndex ?: 0, note.ifEmpty { null })
                         showAddBookmarkDialog = false
                     }) {
-                        Text("Save")
+                        Text(stringResource(R.string.btn_save))
                     }
                 },
                 dismissButton = {
                     Button(onClick = { showAddBookmarkDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.btn_cancel))
                     }
                 }
             )
@@ -936,9 +936,9 @@ fun PdfViewerScreen(
                 sheetState = rememberModalBottomSheetState()
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text("Bookmarks", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.title_bookmarks), style = MaterialTheme.typography.titleLarge)
                     if (bookmarks.isEmpty()) {
-                        Text("No bookmarks yet.", modifier = Modifier.padding(top = 16.dp))
+                        Text(stringResource(R.string.msg_no_bookmarks), modifier = Modifier.padding(top = 16.dp))
                     } else {
                         LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
                             items(bookmarks) { bookmark ->
@@ -962,7 +962,7 @@ fun PdfViewerScreen(
                                         }
                                     }
                                     IconButton(onClick = { effectiveViewModel?.deleteBookmark(bookmark.pageIndex) }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete Bookmark")
+                                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete_bookmark))
                                     }
                                 }
                                 HorizontalDivider()

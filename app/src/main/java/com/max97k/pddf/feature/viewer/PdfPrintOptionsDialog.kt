@@ -20,8 +20,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.max97k.pddf.R
 
 @Composable
 fun PdfPrintOptionsDialog(
@@ -36,7 +38,7 @@ fun PdfPrintOptionsDialog(
     AlertDialog(
         modifier = modifier,
         onDismissRequest = onDismiss,
-        title = { Text("Print Options") },
+        title = { Text(stringResource(R.string.title_print_options)) },
         text = {
             Column {
                 Row(
@@ -47,7 +49,7 @@ fun PdfPrintOptionsDialog(
                         checked = isGrayscale,
                         onCheckedChange = { isGrayscale = it }
                     )
-                    Text("Eco-friendly Grayscale")
+                    Text(stringResource(R.string.label_eco_grayscale))
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -55,7 +57,7 @@ fun PdfPrintOptionsDialog(
                         selected = printAllPages,
                         onClick = { printAllPages = true }
                     )
-                    Text("All Pages")
+                    Text(stringResource(R.string.label_all_pages))
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -63,14 +65,14 @@ fun PdfPrintOptionsDialog(
                         selected = !printAllPages,
                         onClick = { printAllPages = false }
                     )
-                    Text("Custom Range")
+                    Text(stringResource(R.string.label_custom_range))
                 }
 
                 if (!printAllPages) {
                     OutlinedTextField(
                         value = customPageRange,
                         onValueChange = { customPageRange = it },
-                        label = { Text("e.g. 1-5, 8, 11-13") },
+                        label = { Text(stringResource(R.string.placeholder_custom_range)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -85,12 +87,12 @@ fun PdfPrintOptionsDialog(
                     onConfirm(isGrayscale, if (printAllPages) null else customPageRange)
                 }
             ) {
-                Text("Print")
+                Text(stringResource(R.string.btn_execute_print))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

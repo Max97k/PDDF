@@ -25,8 +25,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.max97k.pddf.R
 import com.max97k.pddf.util.MemoryUtils
 
 @Composable
@@ -54,7 +56,7 @@ fun ReEncryptPasswordDialog(
         properties = DialogProperties(
             securePolicy = androidx.compose.ui.window.SecureFlagPolicy.SecureOn
         ),
-        title = { Text("Protect PDF") },
+        title = { Text(stringResource(R.string.title_protect_pdf)) },
         text = {
             Column(
                 modifier = Modifier
@@ -64,7 +66,7 @@ fun ReEncryptPasswordDialog(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("New Password") },
+                    label = { Text(stringResource(R.string.label_new_password)) },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -74,7 +76,7 @@ fun ReEncryptPasswordDialog(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
+                    label = { Text(stringResource(R.string.label_confirm_password)) },
                     singleLine = true,
                     isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -95,7 +97,7 @@ fun ReEncryptPasswordDialog(
                 },
                 enabled = isConfirmEnabled
             ) {
-                Text("Protect")
+                Text(stringResource(R.string.btn_protect))
             }
         },
         dismissButton = {
@@ -106,7 +108,7 @@ fun ReEncryptPasswordDialog(
                     onDismiss()
                 }
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

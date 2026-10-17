@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 open class ReversePdfPagesUseCase @Inject constructor(
     private val pdfRepository: PdfRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     open suspend fun reversePages(sourceUriString: String): kotlin.Result<String> = withContext(ioDispatcher) {
         try {

@@ -1,5 +1,6 @@
 package com.max97k.pddf
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
@@ -155,11 +156,17 @@ class MainActivity : FragmentActivity() {
         FileUtils.cleanUpDecryptedCache(this)
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        viewModel.onUserInteraction()
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         viewModel.onUserInteraction()
         return super.dispatchTouchEvent(ev)
     }
 
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         viewModel.onUserInteraction()
         return super.dispatchKeyEvent(event)

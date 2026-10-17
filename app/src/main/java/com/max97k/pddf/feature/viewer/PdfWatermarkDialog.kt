@@ -22,7 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.max97k.pddf.R
 
 @Composable
 fun PdfWatermarkDialog(
@@ -35,7 +37,7 @@ fun PdfWatermarkDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = "Add Watermark") },
+        title = { Text(text = stringResource(R.string.title_add_watermark)) },
         text = {
             Column {
                 presets.forEach { preset ->
@@ -58,7 +60,7 @@ fun PdfWatermarkDialog(
                     OutlinedTextField(
                         value = customText,
                         onValueChange = { customText = it },
-                        label = { Text("Custom Text") },
+                        label = { Text(stringResource(R.string.label_custom_text)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
@@ -75,12 +77,12 @@ fun PdfWatermarkDialog(
                     }
                 }
             ) {
-                Text("Apply")
+                Text(stringResource(R.string.btn_apply))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         },
         shape = RoundedCornerShape(16.dp)

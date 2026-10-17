@@ -23,6 +23,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
+import com.max97k.pddf.R
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,12 +57,12 @@ fun SafPermissionsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Granted Storage Permissions")
+            Text(text = stringResource(R.string.title_granted_storage_permissions))
         },
         text = {
             if (permissions.isEmpty()) {
                 Box(modifier = Modifier.padding(16.dp)) {
-                    Text("No permissions granted.")
+                    Text(stringResource(R.string.msg_no_permissions_granted))
                 }
             } else {
                 LazyColumn(
@@ -93,12 +95,12 @@ fun SafPermissionsDialog(
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                     if (permission.isReadPermission) {
                                         Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                                            Text("Read", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                            Text(stringResource(R.string.badge_read), color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         }
                                     }
                                     if (permission.isWritePermission) {
                                         Badge(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
-                                            Text("Write", color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                            Text(stringResource(R.string.badge_write), color = MaterialTheme.colorScheme.onSecondaryContainer)
                                         }
                                     }
                                 }
@@ -108,7 +110,7 @@ fun SafPermissionsDialog(
                                 FileUtils.releasePersistableUriPermissionSafely(context, uri)
                                 refreshPermissions()
                             }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Revoke", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_revoke), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                         HorizontalDivider()
@@ -127,13 +129,13 @@ fun SafPermissionsDialog(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Revoke All")
+                    Text(stringResource(R.string.btn_revoke_all))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.btn_close))
             }
         }
     )

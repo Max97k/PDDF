@@ -35,11 +35,11 @@ fun BatchFailureDetailsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Batch Failure Details") },
+        title = { Text(stringResource(R.string.title_batch_failure_details)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Select files to retry with a new password:",
+                    text = stringResource(R.string.desc_batch_failure_select),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -84,7 +84,7 @@ fun BatchFailureDetailsDialog(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Alternative Password") },
+                    label = { Text(stringResource(R.string.label_alternative_password)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -92,7 +92,7 @@ fun BatchFailureDetailsDialog(
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                contentDescription = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
                             )
                         }
                     },
@@ -105,7 +105,7 @@ fun BatchFailureDetailsDialog(
                 onClick = { onRetry(selectedUris.toList(), password) },
                 enabled = selectedUris.isNotEmpty() && password.isNotBlank()
             ) {
-                Text("Retry Selected")
+                Text(stringResource(R.string.btn_retry_selected))
             }
         },
         dismissButton = {

@@ -232,4 +232,84 @@
     <string name="label_doc_identical">Identisch</string>
     <string name="label_doc_differences">Unterschiede</string>
     <string name="btn_page_overview">Seitenübersicht</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">Details zu Stapelfehlern</string>
+    <string name="desc_batch_failure_select">Wählen Sie Dateien aus, die mit einem neuen Passwort wiederholt werden sollen:</string>
+    <string name="label_alternative_password">Alternatives Passwort</string>
+    <string name="btn_retry_selected">Ausgewählte wiederholen</string>
+    <string name="btn_view_details_retry">Details anzeigen &amp; wiederholen</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">PDF schützen</string>
+    <string name="label_new_password">Neues Passwort</string>
+    <string name="label_confirm_password">Passwort bestätigen</string>
+    <string name="btn_protect">Schützen</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">Druckoptionen</string>
+    <string name="label_eco_grayscale">Umweltfreundliche Graustufen</string>
+    <string name="label_all_pages">Alle Seiten</string>
+    <string name="label_custom_range">Benutzerdefinierter Bereich</string>
+    <string name="placeholder_custom_range">z. B. 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">Drucken</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">Wasserzeichen hinzufügen</string>
+    <string name="label_custom_text">Benutzerdefinierter Text</string>
+    <string name="btn_apply">Anwenden</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">Lesezeichen</string>
+    <string name="cd_bookmarks">Lesezeichen</string>
+    <string name="cd_bookmark">Lesezeichen</string>
+    <string name="cd_tts">Text-zu-Sprache</string>
+    <string name="cd_more_options">Weitere Optionen</string>
+    <string name="action_view_bookmarks">Lesezeichen anzeigen</string>
+    <string name="action_watermark">Wasserzeichen</string>
+    <string name="title_add_bookmark">Lesezeichen hinzufügen</string>
+    <string name="label_note_optional">Notiz (optional)</string>
+    <string name="msg_no_bookmarks">Noch keine Lesezeichen vorhanden.</string>
+    <string name="cd_delete_bookmark">Lesezeichen löschen</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">Eigenschaft</string>
+    <string name="label_title">Titel</string>
+    <string name="label_author">Autor</string>
+    <string name="label_pages">Seiten</string>
+    <string name="label_size_mb">Größe (MB)</string>
+    <string name="label_encryption">Verschlüsselung</string>
+    <string name="label_permissions">Berechtigungen</string>
+    <string name="label_perm_print">Drucken</string>
+    <string name="label_perm_no_print">Nicht drucken</string>
+    <string name="label_perm_copy">Kopieren</string>
+    <string name="label_perm_no_copy">Nicht kopieren</string>
+    <string name="action_flatten_forms">Formulare reduzieren</string>
+    <string name="btn_save_all">Alle speichern</string>
+    <string name="cd_export_options">Exportoptionen</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">Erteilte Speicherberechtigungen</string>
+    <string name="msg_no_permissions_granted">Keine Berechtigungen erteilt.</string>
+    <string name="badge_read">Lesen</string>
+    <string name="badge_write">Schreiben</string>
+    <string name="cd_revoke">Widerrufen</string>
+    <string name="btn_revoke_all">Alle widerrufen</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">Als CSV exportieren</string>
+    <string name="setting_export_csv_desc">Metadaten für kürzlich verarbeitete Dateien exportieren</string>
+    <string name="setting_export_json_title">Als JSON exportieren</string>
+    <string name="setting_export_json_desc">Metadaten für kürzlich verarbeitete Dateien exportieren</string>
+    <string name="setting_granted_folders_title">Erteilte Speicherordner</string>
+    <string name="setting_auto_lock_title">Automatische Sperrdauer</string>
+    <string name="cd_select_auto_lock">Automatische Sperrdauer auswählen</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">Seitenzahlen konfigurieren</string>
+    <string name="label_format_page_numbers" formatted="false">Format (z. B. Seite %d von %d)</string>
+    <string name="label_position_page_numbers">Position (unten-Mitte oder unten-rechts)</string>
+    <string name="label_font_size">Schriftgröße</string>
+    <string name="label_margin">Rand</string>
+    <string name="btn_next">Weiter</string>
 </resources>

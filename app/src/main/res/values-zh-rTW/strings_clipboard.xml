@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="msg_password_copied">密碼已複製到剪貼簿，將於 30 秒後自動清除。</string>
+    <string name="content_desc_copy_password">複製密碼</string>
+</resources>

@@ -941,7 +941,7 @@ fun PDFDecryptorScreen(
                                         onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text("View Details & Retry")
+                                        Text(stringResource(R.string.btn_view_details_retry))
                                     }
                                 }
                             }
@@ -1224,7 +1224,7 @@ fun PDFDecryptorScreen(
                                     onClick = { onAction(MainUiAction.SetBatchFailureDialogVisible(true)) },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("View Details & Retry")
+                                    Text(stringResource(R.string.btn_view_details_retry))
                                 }
                             }
                         }

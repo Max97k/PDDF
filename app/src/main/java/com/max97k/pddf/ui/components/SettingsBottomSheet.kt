@@ -268,8 +268,8 @@ fun SettingsBottomSheet(
             )
 
             ListItem(
-                headlineContent = { Text("Export to CSV") },
-                supportingContent = { Text("Export metadata for recently processed files") },
+                headlineContent = { Text(stringResource(R.string.setting_export_csv_title)) },
+                supportingContent = { Text(stringResource(R.string.setting_export_csv_desc)) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -280,8 +280,8 @@ fun SettingsBottomSheet(
             )
 
             ListItem(
-                headlineContent = { Text("Export to JSON") },
-                supportingContent = { Text("Export metadata for recently processed files") },
+                headlineContent = { Text(stringResource(R.string.setting_export_json_title)) },
+                supportingContent = { Text(stringResource(R.string.setting_export_json_desc)) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -341,7 +341,7 @@ fun SettingsBottomSheet(
             }
 
             ListItem(
-                headlineContent = { Text("Granted Storage Folders") },
+                headlineContent = { Text(stringResource(R.string.setting_granted_folders_title)) },
                 supportingContent = { Text("Total active permissions: $persistedCount") },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier
@@ -359,7 +359,7 @@ fun SettingsBottomSheet(
             var expandedAutoLock by remember { mutableStateOf(false) }
 
             ListItem(
-                headlineContent = { Text("Auto-Lock Duration") },
+                headlineContent = { Text(stringResource(R.string.setting_auto_lock_title)) },
                 supportingContent = {
                     val durationText = when (currentAutoLockDuration) {
                         60000L -> "1 min"
@@ -372,7 +372,7 @@ fun SettingsBottomSheet(
                 trailingContent = {
                     androidx.compose.material3.Icon(
                         androidx.compose.material.icons.Icons.Default.ArrowDropDown,
-                        contentDescription = "Select Auto-Lock Duration"
+                        contentDescription = stringResource(R.string.cd_select_auto_lock)
                     )
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),

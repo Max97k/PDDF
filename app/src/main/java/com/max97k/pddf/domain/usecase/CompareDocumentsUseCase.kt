@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 class CompareDocumentsUseCase @Inject constructor(
     private val pdfRepository: PdfRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     suspend fun compare(
         uri1: String,

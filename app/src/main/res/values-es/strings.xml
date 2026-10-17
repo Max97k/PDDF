@@ -232,4 +232,84 @@
     <string name="label_doc_identical">Idéntico</string>
     <string name="label_doc_differences">Diferencias</string>
     <string name="btn_page_overview">Vista general de páginas</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">Detalles de errores por lote</string>
+    <string name="desc_batch_failure_select">Seleccione archivos para reintentar con una nueva contraseña:</string>
+    <string name="label_alternative_password">Contraseña alternativa</string>
+    <string name="btn_retry_selected">Reintentar seleccionados</string>
+    <string name="btn_view_details_retry">Ver detalles y reintentar</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">Proteger PDF</string>
+    <string name="label_new_password">Nueva contraseña</string>
+    <string name="label_confirm_password">Confirmar contraseña</string>
+    <string name="btn_protect">Proteger</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">Opciones de impresión</string>
+    <string name="label_eco_grayscale">Escala de grises ecológica</string>
+    <string name="label_all_pages">Todas las páginas</string>
+    <string name="label_custom_range">Rango personalizado</string>
+    <string name="placeholder_custom_range">ej. 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">Imprimir</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">Agregar marca de agua</string>
+    <string name="label_custom_text">Texto personalizado</string>
+    <string name="btn_apply">Aplicar</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">Marcadores</string>
+    <string name="cd_bookmarks">Marcadores</string>
+    <string name="cd_bookmark">Marcador</string>
+    <string name="cd_tts">Texto a voz</string>
+    <string name="cd_more_options">Más opciones</string>
+    <string name="action_view_bookmarks">Ver marcadores</string>
+    <string name="action_watermark">Marca de agua</string>
+    <string name="title_add_bookmark">Agregar marcador</string>
+    <string name="label_note_optional">Nota (opcional)</string>
+    <string name="msg_no_bookmarks">Aún no hay marcadores.</string>
+    <string name="cd_delete_bookmark">Eliminar marcador</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">Propiedad</string>
+    <string name="label_title">Título</string>
+    <string name="label_author">Autor</string>
+    <string name="label_pages">Páginas</string>
+    <string name="label_size_mb">Tamaño (MB)</string>
+    <string name="label_encryption">Cifrado</string>
+    <string name="label_permissions">Permisos</string>
+    <string name="label_perm_print">Imprimir</string>
+    <string name="label_perm_no_print">Sin imprimir</string>
+    <string name="label_perm_copy">Copiar</string>
+    <string name="label_perm_no_copy">Sin copiar</string>
+    <string name="action_flatten_forms">Aplanar formularios</string>
+    <string name="btn_save_all">Guardar todo</string>
+    <string name="cd_export_options">Opciones de exportación</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">Permisos de almacenamiento concedidos</string>
+    <string name="msg_no_permissions_granted">No se concedieron permisos.</string>
+    <string name="badge_read">Lectura</string>
+    <string name="badge_write">Escritura</string>
+    <string name="cd_revoke">Revocar</string>
+    <string name="btn_revoke_all">Revocar todo</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">Exportar a CSV</string>
+    <string name="setting_export_csv_desc">Exportar metadatos de archivos procesados recientemente</string>
+    <string name="setting_export_json_title">Exportar a JSON</string>
+    <string name="setting_export_json_desc">Exportar metadatos de archivos procesados recientemente</string>
+    <string name="setting_granted_folders_title">Carpetas de almacenamiento concedidas</string>
+    <string name="setting_auto_lock_title">Duración de bloqueo automático</string>
+    <string name="cd_select_auto_lock">Seleccionar duración de bloqueo automático</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">Configurar números de página</string>
+    <string name="label_format_page_numbers" formatted="false">Formato (ej. Página %d de %d)</string>
+    <string name="label_position_page_numbers">Posición (centro inferior o inferior derecha)</string>
+    <string name="label_font_size">Tamaño de fuente</string>
+    <string name="label_margin">Margen</string>
+    <string name="btn_next">Siguiente</string>
 </resources>

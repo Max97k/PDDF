@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="password_strength_weak">弱</string>
+    <string name="password_strength_medium">中等</string>
+    <string name="password_strength_strong">高</string>
+    <string name="password_strength_none">无密码</string>
+    <string name="password_strength_tip_weak">密码容易被猜出或长度过短。</string>
+    <string name="password_strength_tip_medium">强度尚可，建议加入符号或数字。</string>
+    <string name="password_strength_tip_strong">安全性极佳的密码。</string>
+    <string name="password_strength_tip_none"></string>
+</resources>

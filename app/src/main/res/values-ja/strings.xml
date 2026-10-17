@@ -230,4 +230,84 @@
     <string name="label_doc_identical">一致</string>
     <string name="label_doc_differences">相違点</string>
     <string name="btn_page_overview">ページ概要</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">一括処理失敗の詳細</string>
+    <string name="desc_batch_failure_select">新しいパスワードで再試行するファイルを選択してください：</string>
+    <string name="label_alternative_password">代替パスワード</string>
+    <string name="btn_retry_selected">選択した項目を再試行</string>
+    <string name="btn_view_details_retry">詳細を表示して再試行</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">PDF を保護</string>
+    <string name="label_new_password">新しいパスワード</string>
+    <string name="label_confirm_password">パスワードの確認</string>
+    <string name="btn_protect">保護</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">印刷オプション</string>
+    <string name="label_eco_grayscale">エコグレースケール</string>
+    <string name="label_all_pages">すべてのページ</string>
+    <string name="label_custom_range">カスタム範囲</string>
+    <string name="placeholder_custom_range">例: 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">印刷</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">透かしを追加</string>
+    <string name="label_custom_text">カスタムテキスト</string>
+    <string name="btn_apply">適用</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">ブックマーク</string>
+    <string name="cd_bookmarks">ブックマーク</string>
+    <string name="cd_bookmark">ブックマーク</string>
+    <string name="cd_tts">テキスト読み上げ</string>
+    <string name="cd_more_options">その他のオプション</string>
+    <string name="action_view_bookmarks">ブックマークを表示</string>
+    <string name="action_watermark">透かし</string>
+    <string name="title_add_bookmark">ブックマークを追加</string>
+    <string name="label_note_optional">メモ（省略可）</string>
+    <string name="msg_no_bookmarks">ブックマークはまだありません。</string>
+    <string name="cd_delete_bookmark">ブックマークを削除</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">プロパティ</string>
+    <string name="label_title">タイトル</string>
+    <string name="label_author">作成者</string>
+    <string name="label_pages">ページ数</string>
+    <string name="label_size_mb">サイズ (MB)</string>
+    <string name="label_encryption">暗号化方式</string>
+    <string name="label_permissions">権限</string>
+    <string name="label_perm_print">印刷可能</string>
+    <string name="label_perm_no_print">印刷不可</string>
+    <string name="label_perm_copy">コピー可能</string>
+    <string name="label_perm_no_copy">コピー不可</string>
+    <string name="action_flatten_forms">フォームの結合</string>
+    <string name="btn_save_all">すべて保存</string>
+    <string name="cd_export_options">エクスポートオプション</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">許可されたストレージ権限</string>
+    <string name="msg_no_permissions_granted">許可された権限はありません。</string>
+    <string name="badge_read">読み取り</string>
+    <string name="badge_write">書き込み</string>
+    <string name="cd_revoke">取り消す</string>
+    <string name="btn_revoke_all">すべて取り消す</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">CSV としてエクスポート</string>
+    <string name="setting_export_csv_desc">最近処理されたファイルのメタデータをエクスポート</string>
+    <string name="setting_export_json_title">JSON としてエクスポート</string>
+    <string name="setting_export_json_desc">最近処理されたファイルのメタデータをエクスポート</string>
+    <string name="setting_granted_folders_title">許可されたストレージフォルダ</string>
+    <string name="setting_auto_lock_title">自動ロック時間</string>
+    <string name="cd_select_auto_lock">自動ロック時間を選択</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">ページ番号の設定</string>
+    <string name="label_format_page_numbers" formatted="false">フォーマット（例: Page %d of %d）</string>
+    <string name="label_position_page_numbers">位置（下部中央または下部右）</string>
+    <string name="label_font_size">フォントサイズ</string>
+    <string name="label_margin">余白</string>
+    <string name="btn_next">次へ</string>
 </resources>

@@ -232,4 +232,84 @@
     <string name="label_doc_identical">Identical</string>
     <string name="label_doc_differences">Differences</string>
     <string name="btn_page_overview">Page Overview</string>
+
+    <!-- Batch Failure Details & Targeted Retry -->
+    <string name="title_batch_failure_details">Batch Failure Details</string>
+    <string name="desc_batch_failure_select">Select files to retry with a new password:</string>
+    <string name="label_alternative_password">Alternative Password</string>
+    <string name="btn_retry_selected">Retry Selected</string>
+    <string name="btn_view_details_retry">View Details &amp; Retry</string>
+
+    <!-- Protect / Re-encrypt PDF -->
+    <string name="title_protect_pdf">Protect PDF</string>
+    <string name="label_new_password">New Password</string>
+    <string name="label_confirm_password">Confirm Password</string>
+    <string name="btn_protect">Protect</string>
+
+    <!-- Print Options Dialog -->
+    <string name="title_print_options">Print Options</string>
+    <string name="label_eco_grayscale">Eco-friendly Grayscale</string>
+    <string name="label_all_pages">All Pages</string>
+    <string name="label_custom_range">Custom Range</string>
+    <string name="placeholder_custom_range">e.g. 1-5, 8, 11-13</string>
+    <string name="btn_execute_print">Print</string>
+
+    <!-- Watermark Dialog -->
+    <string name="title_add_watermark">Add Watermark</string>
+    <string name="label_custom_text">Custom Text</string>
+    <string name="btn_apply">Apply</string>
+
+    <!-- Bookmarks and Viewer Actions -->
+    <string name="title_bookmarks">Bookmarks</string>
+    <string name="cd_bookmarks">Bookmarks</string>
+    <string name="cd_bookmark">Bookmark</string>
+    <string name="cd_tts">Text to Speech</string>
+    <string name="cd_more_options">More options</string>
+    <string name="action_view_bookmarks">View Bookmarks</string>
+    <string name="action_watermark">Watermark</string>
+    <string name="title_add_bookmark">Add Bookmark</string>
+    <string name="label_note_optional">Note (Optional)</string>
+    <string name="msg_no_bookmarks">No bookmarks yet.</string>
+    <string name="cd_delete_bookmark">Delete Bookmark</string>
+
+    <!-- Document Comparison & Metadata Details -->
+    <string name="label_property">Property</string>
+    <string name="label_title">Title</string>
+    <string name="label_author">Author</string>
+    <string name="label_pages">Pages</string>
+    <string name="label_size_mb">Size (MB)</string>
+    <string name="label_encryption">Encryption</string>
+    <string name="label_permissions">Permissions</string>
+    <string name="label_perm_print">Print</string>
+    <string name="label_perm_no_print">No Print</string>
+    <string name="label_perm_copy">Copy</string>
+    <string name="label_perm_no_copy">No Copy</string>
+    <string name="action_flatten_forms">Flatten Forms</string>
+    <string name="btn_save_all">Save All</string>
+    <string name="cd_export_options">Export options</string>
+
+    <!-- Storage Access Framework (SAF) Permissions -->
+    <string name="title_granted_storage_permissions">Granted Storage Permissions</string>
+    <string name="msg_no_permissions_granted">No permissions granted.</string>
+    <string name="badge_read">Read</string>
+    <string name="badge_write">Write</string>
+    <string name="cd_revoke">Revoke</string>
+    <string name="btn_revoke_all">Revoke All</string>
+
+    <!-- Settings: Metadata Export & Storage & Auto-lock -->
+    <string name="setting_export_csv_title">Export to CSV</string>
+    <string name="setting_export_csv_desc">Export metadata for recently processed files</string>
+    <string name="setting_export_json_title">Export to JSON</string>
+    <string name="setting_export_json_desc">Export metadata for recently processed files</string>
+    <string name="setting_granted_folders_title">Granted Storage Folders</string>
+    <string name="setting_auto_lock_title">Auto-Lock Duration</string>
+    <string name="cd_select_auto_lock">Select Auto-Lock Duration</string>
+
+    <!-- Stamp Page Numbers Dialog -->
+    <string name="title_configure_page_numbers">Configure Page Numbers</string>
+    <string name="label_format_page_numbers" formatted="false">Format (e.g. Page %d of %d)</string>
+    <string name="label_position_page_numbers">Position (bottom-center or bottom-right)</string>
+    <string name="label_font_size">Font Size</string>
+    <string name="label_margin">Margin</string>
+    <string name="btn_next">Next</string>
 </resources>

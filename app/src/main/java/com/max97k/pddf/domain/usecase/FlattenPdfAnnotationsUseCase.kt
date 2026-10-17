@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 class FlattenPdfAnnotationsUseCase(
     private val pdfRepository: PdfRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     suspend fun flattenForms(

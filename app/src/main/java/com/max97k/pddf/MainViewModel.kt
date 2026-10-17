@@ -573,7 +573,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 val outputStream = withContext(ioDispatcher) {
-                    context.contentResolver.openOutputStream(uri)
+                    context.contentResolver.openOutputStream(uri, "wt")
                 }
 
                 if (outputStream != null) {
