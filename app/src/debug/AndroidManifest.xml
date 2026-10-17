@@ -4,11 +4,6 @@
         <activity
             android:name="androidx.fragment.app.FragmentActivity"
             android:theme="@style/Theme.MyApplication"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false" />
     </application>
 </manifest>
