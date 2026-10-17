@@ -102,8 +102,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.max97k.pddf.R
-import kotlinx.coroutines.delay
-
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -138,6 +137,7 @@ fun PdfViewerScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val uriHash = remember(uri) { uri.toString().hashCode() }
+    val isDarkTheme = isSystemInDarkTheme()
     val view = LocalView.current
     val fragmentActivity = remember(context) { context.findFragmentActivity() }
     val insetsController = remember(fragmentActivity, view) {
@@ -494,9 +494,17 @@ fun PdfViewerScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
 
+            val preserveImages by securityPreferences.preserveEmbeddedImages.collectAsState()
+
             if (showReadingModeSheet) {
                 ReadingModeBottomSheet(
                     currentMode = readingMode,
+                    preserveImages = preserveImages,
+                    onPreserveImagesChanged = { checked ->
+                        scope.launch {
+                            securityPreferences.savePreserveImages(checked)
+                        }
+                    },
                     onModeSelected = { newMode ->
                         scope.launch {
                             securityPreferences.saveReadingMode(newMode)
@@ -525,6 +533,17 @@ fun PdfViewerScreen(
                     factory = { ctx ->
                         FragmentContainerView(ctx).apply {
                             id = containerId
+                            if (isDarkTheme && preserveImages) {
+                                val matrix = ColorMatrix(floatArrayOf(
+                                    -0.574f, 1.43f, 0.144f, 0f, 0f,
+                                    0.426f, 0.43f, 0.144f, 0f, 0f,
+                                    0.426f, 1.43f, -0.856f, 0f, 0f,
+                                    0f, 0f, 0f, 1f, 0f
+                                ))
+                                setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply {
+                                    colorFilter = ColorMatrixColorFilter(matrix)
+                                })
+                            }
                         }
                     },
                     update = { view ->
@@ -555,23 +574,47 @@ fun PdfViewerScreen(
                                 view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
                             }
                             ReadingMode.DARK -> {
-                                val invertMatrix = ColorMatrix().apply {
-                                    set(
-                                        floatArrayOf(
-                                            -1f, 0f, 0f, 0f, 255f,
-                                            0f, -1f, 0f, 0f, 255f,
-                                            0f, 0f, -1f, 0f, 255f,
-                                            0f, 0f, 0f, 1f, 0f
+                                if (preserveImages) {
+                                    val matrix = ColorMatrix(floatArrayOf(
+                                        -0.574f, 1.43f, 0.144f, 0f, 0f,
+                                        0.426f, 0.43f, 0.144f, 0f, 0f,
+                                        0.426f, 1.43f, -0.856f, 0f, 0f,
+                                        0f, 0f, 0f, 1f, 0f
+                                    ))
+                                    view.setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply {
+                                        colorFilter = ColorMatrixColorFilter(matrix)
+                                    })
+                                } else {
+                                    val invertMatrix = ColorMatrix().apply {
+                                        set(
+                                            floatArrayOf(
+                                                -1f, 0f, 0f, 0f, 255f,
+                                                0f, -1f, 0f, 0f, 255f,
+                                                0f, 0f, -1f, 0f, 255f,
+                                                0f, 0f, 0f, 1f, 0f
+                                            )
                                         )
-                                    )
+                                    }
+                                    val paint = Paint().apply {
+                                        colorFilter = ColorMatrixColorFilter(invertMatrix)
+                                    }
+                                    view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
                                 }
-                                val paint = Paint().apply {
-                                    colorFilter = ColorMatrixColorFilter(invertMatrix)
-                                }
-                                view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
                             }
                             else -> {
-                                view.setLayerType(View.LAYER_TYPE_NONE, null)
+                                if (isDarkTheme && preserveImages) {
+                                    val matrix = ColorMatrix(floatArrayOf(
+                                        -0.574f, 1.43f, 0.144f, 0f, 0f,
+                                        0.426f, 0.43f, 0.144f, 0f, 0f,
+                                        0.426f, 1.43f, -0.856f, 0f, 0f,
+                                        0f, 0f, 0f, 1f, 0f
+                                    ))
+                                    view.setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply {
+                                        colorFilter = ColorMatrixColorFilter(matrix)
+                                    })
+                                } else {
+                                    view.setLayerType(View.LAYER_TYPE_NONE, null)
+                                }
                             }
                         }
 

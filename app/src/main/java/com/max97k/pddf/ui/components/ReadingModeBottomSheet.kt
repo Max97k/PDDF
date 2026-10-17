@@ -31,7 +31,9 @@ fun ReadingModeBottomSheet(
     currentMode: ReadingMode,
     onModeSelected: (ReadingMode) -> Unit,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    preserveImages: Boolean = false,
+    onPreserveImagesChanged: ((Boolean) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -83,6 +85,24 @@ fun ReadingModeBottomSheet(
                             }
                         )
                         .semantics { role = Role.RadioButton }
+                )
+            }
+
+            if (onPreserveImagesChanged != null) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_preserve_images)) },
+                    supportingContent = { Text(stringResource(R.string.settings_preserve_images_desc)) },
+                    trailingContent = {
+                        androidx.compose.material3.Switch(
+                            checked = preserveImages,
+                            onCheckedChange = onPreserveImagesChanged
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onPreserveImagesChanged(!preserveImages) }
                 )
             }
         }
