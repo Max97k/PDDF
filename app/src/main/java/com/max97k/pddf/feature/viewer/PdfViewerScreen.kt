@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,6 +65,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,7 +97,12 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.max97k.pddf.R
+import kotlinx.coroutines.delay
 
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
@@ -108,7 +131,8 @@ fun PdfViewerScreen(
     onSaveAs: (() -> Unit)? = null,
     onAddWatermark: ((String) -> Unit)? = null,
     onRotateAll: ((Int) -> Unit)? = null,
-    onExtract: (() -> Unit)? = null
+    onExtract: (() -> Unit)? = null,
+    viewModel: PdfViewerViewModel? = null
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -119,6 +143,26 @@ fun PdfViewerScreen(
     val insetsController = remember(fragmentActivity, view) {
         fragmentActivity?.window?.let { window ->
             WindowCompat.getInsetsController(window, view)
+        }
+    }
+
+    val owner = LocalViewModelStoreOwner.current
+    val effectiveViewModel: PdfViewerViewModel? = viewModel ?: remember(owner, context) {
+        if (owner != null) {
+            val factory = object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    val db = AppDatabase.getDatabase(context.applicationContext)
+                    return PdfViewerViewModel(db.bookmarkDao()) as T
+                }
+            }
+            try {
+                ViewModelProvider(owner, factory)[PdfViewerViewModel::class.java]
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
         }
     }
 
@@ -158,6 +202,22 @@ fun PdfViewerScreen(
 
     // Tracks whether the page overview dialog is currently open.
     var showPageOverview by rememberSaveable { mutableStateOf(false) }
+    var showMoreMenu by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(uri, effectiveViewModel) {
+        effectiveViewModel?.loadBookmarks(uri)
+    }
+
+    val bookmarks = effectiveViewModel?.bookmarks?.collectAsState()?.value ?: emptyList()
+
+    var showBookmarksSheet by rememberSaveable { mutableStateOf(false) }
+    var showAddBookmarkDialog by rememberSaveable { mutableStateOf(false) }
+
+    val containerId = rememberSaveable { View.generateViewId() }
+    val fragmentTag = remember(containerId) { "pdf_viewer_$containerId" }
+
+    var currentPageIndex by remember { mutableStateOf<Int?>(null) }
+
 
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
@@ -218,6 +278,8 @@ fun PdfViewerScreen(
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    val isCurrentPageBookmarked = bookmarks.any { it.pageIndex == currentPageIndex }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -287,23 +349,23 @@ fun PdfViewerScreen(
                                 )
                             }
                         }
-                        IconButton(onClick = { showPageOverview = true }) {
+                        IconButton(onClick = {
+                            val activePage = currentPageIndex ?: (fragmentActivity?.supportFragmentManager?.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment)?.getCurrentPage() ?: 0
+                            currentPageIndex = activePage
+                            if (isCurrentPageBookmarked) {
+                                effectiveViewModel?.deleteBookmark(activePage)
+                            } else {
+                                showAddBookmarkDialog = true
+                            }
+                        }) {
                             Icon(
-                                imageVector = Icons.Default.GridView,
-                                contentDescription = stringResource(R.string.btn_page_overview)
+                                imageVector = if (isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark"
                             )
                         }
                         // Search toggle — open search on first tap, close on second tap.
                         IconButton(onClick = {
-                            showReadingModeSheet = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Palette,
-                                contentDescription = stringResource(R.string.btn_reading_mode)
-                            )
-                        }
-
-                        IconButton(onClick = {
+                            showBookmarksSheet = false
                             isSearchActive = !isSearchActive
                             if (isSearchActive) {
                                 topBarVisible = true
@@ -317,54 +379,6 @@ fun PdfViewerScreen(
                                     stringResource(R.string.btn_search_pdf)
                                 }
                             )
-                        }
-
-                        if (onExtract != null) {
-                            IconButton(onClick = onExtract) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = stringResource(R.string.btn_extract_pages)
-                                )
-                            }
-                        }
-
-                        IconButton(onClick = {
-                            showPrintDialog = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Print,
-                                contentDescription = stringResource(R.string.btn_print)
-                            )
-                        }
-
-                        if (onRotateAll != null) {
-                            Box {
-                                IconButton(onClick = { showRotationMenu = true }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = stringResource(R.string.btn_rotate)
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = showRotationMenu,
-                                    onDismissRequest = { showRotationMenu = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.btn_rotate_cw)) },
-                                        onClick = {
-                                            showRotationMenu = false
-                                            onRotateAll.invoke(90)
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.btn_rotate_ccw)) },
-                                        onClick = {
-                                            showRotationMenu = false
-                                            onRotateAll.invoke(-90)
-                                        }
-                                    )
-                                }
-                            }
                         }
 
                         if (onSaveAs != null) {
@@ -383,9 +397,86 @@ fun PdfViewerScreen(
                                 )
                             }
                         }
-                        if (onAddWatermark != null) {
-                            androidx.compose.material3.TextButton(onClick = { showWatermarkDialog = true }) {
-                                Text("Watermark")
+                        Box {
+                            IconButton(onClick = { showMoreMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More options"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMoreMenu,
+                                onDismissRequest = { showMoreMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("View Bookmarks") },
+                                    leadingIcon = { Icon(Icons.Default.List, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        showBookmarksSheet = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.btn_page_overview)) },
+                                    leadingIcon = { Icon(Icons.Default.GridView, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        showPageOverview = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.btn_reading_mode)) },
+                                    leadingIcon = { Icon(Icons.Default.Palette, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        showReadingModeSheet = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.btn_print)) },
+                                    leadingIcon = { Icon(Icons.Default.Print, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        showPrintDialog = true
+                                    }
+                                )
+                                if (onRotateAll != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.btn_rotate_cw)) },
+                                        leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null) },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            onRotateAll.invoke(90)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.btn_rotate_ccw)) },
+                                        leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null) },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            onRotateAll.invoke(-90)
+                                        }
+                                    )
+                                }
+                                if (onExtract != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.btn_extract_pages)) },
+                                        leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            onExtract.invoke()
+                                        }
+                                    )
+                                }
+                                if (onAddWatermark != null) {
+                                    DropdownMenuItem(
+                                        text = { Text("Watermark") },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            showWatermarkDialog = true
+                                        }
+                                    )
+                                }
                             }
                         }
                     },
@@ -402,8 +493,6 @@ fun PdfViewerScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            val containerId = rememberSaveable { View.generateViewId() }
-            val fragmentTag = remember(containerId) { "pdf_viewer_$containerId" }
 
             if (showReadingModeSheet) {
                 ReadingModeBottomSheet(
@@ -530,6 +619,7 @@ fun PdfViewerScreen(
                                                 }
 
                                                 fragment.onPageChanged = { page, totalPages ->
+                                                    currentPageIndex = page
                                                     coroutineScope.launch(Dispatchers.IO) {
                                                         dao.saveProgress(
                                                             ReadingProgressEntity(
@@ -585,6 +675,7 @@ fun PdfViewerScreen(
                                     }
 
                                     existing.onPageChanged = { page, totalPages ->
+                                        currentPageIndex = page
                                         coroutineScope.launch(Dispatchers.IO) {
                                             dao.saveProgress(
                                                 ReadingProgressEntity(
@@ -661,6 +752,81 @@ fun PdfViewerScreen(
                         }
                     }
                 )
+            }
+        }
+
+        if (showAddBookmarkDialog && currentPageIndex != null) {
+            var note by remember { mutableStateOf("") }
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showAddBookmarkDialog = false },
+                title = { Text("Add Bookmark") },
+                text = {
+                    Column {
+                        Text("Page ${(currentPageIndex ?: 0) + 1}")
+                        OutlinedTextField(
+                            value = note,
+                            onValueChange = { note = it },
+                            label = { Text("Note (Optional)") },
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        effectiveViewModel?.addBookmark(currentPageIndex ?: 0, note.ifEmpty { null })
+                        showAddBookmarkDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showAddBookmarkDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showBookmarksSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showBookmarksSheet = false },
+                sheetState = rememberModalBottomSheetState()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text("Bookmarks", style = MaterialTheme.typography.titleLarge)
+                    if (bookmarks.isEmpty()) {
+                        Text("No bookmarks yet.", modifier = Modifier.padding(top = 16.dp))
+                    } else {
+                        LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
+                            items(bookmarks) { bookmark ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            fragmentActivity?.let {
+                                                val frag = it.supportFragmentManager.findFragmentByTag(fragmentTag) as? InkPdfViewerFragment
+                                                frag?.scrollToPage(bookmark.pageIndex)
+                                                showBookmarksSheet = false
+                                            }
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Page ${bookmark.pageIndex + 1}", fontWeight = FontWeight.Bold)
+                                        if (!bookmark.note.isNullOrEmpty()) {
+                                            Text(bookmark.note, style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                    }
+                                    IconButton(onClick = { effectiveViewModel?.deleteBookmark(bookmark.pageIndex) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete Bookmark")
+                                    }
+                                }
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
             }
         }
     }

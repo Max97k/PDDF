@@ -1,10 +1,12 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.pdf.PdfDocument
 import androidx.pdf.viewer.fragment.PdfViewerFragment
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 
 /**
  * A thin subclass of [PdfViewerFragment] that bridges the immersive-mode callback
@@ -129,17 +131,7 @@ class InkPdfViewerFragment : PdfViewerFragment() {
     }
 
     fun scrollToPage(page: Int) {
-        try {
-            val pdfViewField = PdfViewerFragment::class.java.getDeclaredField("pdfView")
-            pdfViewField.isAccessible = true
-            val pdfView = pdfViewField.get(this)
-            if (pdfView != null) {
-                val scrollToPageMethod = pdfView.javaClass.getMethod("scrollToPage", Int::class.java)
-                scrollToPageMethod.invoke(pdfView, page)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to scrollToPage", e)
-        }
+        gotoPage(page)
     }
 
     /**
@@ -191,4 +183,6 @@ class InkPdfViewerFragment : PdfViewerFragment() {
             0
         }
     }
+
+    fun getFirstVisiblePage(): Int? = getCurrentPage()
 }
