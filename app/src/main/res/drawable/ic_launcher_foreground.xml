@@ -4,7 +4,24 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Document Sheet Body within 66dp Safe Zone (x: 36..72, y: 31..77) -->
+    <path
+        android:fillColor="#D1E4FF"
+        android:pathData="M40,31H60L72,43V73C72,75.21 70.21,77 68,77H40C37.79,77 36,75.21 36,73V35C36,32.79 37.79,31 40,31Z" />
+    <!-- Folded Top-Right Document Corner -->
+    <path
+        android:fillColor="#9CCAFF"
+        android:pathData="M60,31L72,43H63C61.34,43 60,41.66 60,40V31Z" />
+    <!-- Unlocked Shackle (Open on Right) -->
+    <path
+        android:fillColor="#003258"
+        android:pathData="M48,54V48.5C48,45.19 50.69,42.5 54,42.5C56.97,42.5 59.44,44.66 59.92,47.5H57.35C56.92,46.06 55.58,45 54,45C52.07,45 50.5,46.57 50.5,48.5V54H48Z" />
+    <!-- Lock Body -->
+    <path
+        android:fillColor="#1B5E91"
+        android:pathData="M46,53H62C63.66,53 65,54.34 65,56V68C65,69.66 63.66,71 62,71H46C44.34,71 43,69.66 43,68V56C43,54.34 44.34,53 46,53Z" />
+    <!-- Keyhole Cutout / Accent -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,34c-6.6,0 -12,5.4 -12,12v8H36v20h36V54h-6v-8C66,39.4 60.6,34 54,34zM54,38c4.4,0 8,3.6 8,8v8H46v-8C46,41.6 49.6,38 54,38zM40,58h28v12H40V58z" />
+        android:pathData="M54,58.5C52.62,58.5 51.5,59.62 51.5,61C51.5,61.95 52.03,62.77 52.8,63.2V66.5H55.2V63.2C55.97,62.77 56.5,61.95 56.5,61C56.5,59.62 55.38,58.5 54,58.5Z" />
 </vector>

@@ -74,10 +74,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -115,6 +111,8 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
@@ -155,7 +153,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PDFDecryptorScreen(
     viewModel: MainViewModel,
@@ -227,7 +225,7 @@ fun PDFDecryptorScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PDFDecryptorScreen(
     uiState: MainUiState,
@@ -237,19 +235,7 @@ fun PDFDecryptorScreen(
     windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
     viewModel: MainViewModel? = null
 ) {
-
-    val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
     val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(uiState.previewPdfUri) {
-        if (uiState.previewPdfUri != null) {
-            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-        } else {
-            if (navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.Detail) {
-                navigator.navigateBack()
-            }
-        }
-    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -586,9 +572,7 @@ fun PDFDecryptorScreen(
 
     val isExpandedLayout = windowWidthSizeClass == WindowWidthSizeClass.Expanded
 
-    ListDetailPaneScaffold(
-        directive = navigator.scaffoldDirective,
-        value = navigator.scaffoldValue,
+    Box(
         modifier = modifier
             .fillMaxSize()
             .focusRequester(focusRequester)
@@ -659,9 +643,9 @@ fun PDFDecryptorScreen(
                         else -> false
                     }
                 } else false
-            },
-        listPane = {
-            Box(
+            }
+    ) {
+        Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .safeDrawingPadding()
@@ -1178,88 +1162,88 @@ fun PDFDecryptorScreen(
             },
             onDismiss = { showSettingsSheet = false }
         )
-    }    },
-        detailPane = {
-            if (uiState.previewPdfUri != null) {
-                val shareFileTitle = stringResource(R.string.btn_share_file)
-                PdfViewerScreen(
-                    uri = uiState.previewPdfUri,
-                    modifier = Modifier.fillMaxSize(),
-                    title = uiState.selectedFileNames.firstOrNull() ?: "",
-                    onClose = { onAction(MainUiAction.SetPreviewPdfUri(null)) },
-                    onRotateAll = { degrees -> onAction(MainUiAction.RotatePreview(degrees)) },
-                    onShare = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "application/pdf"
-                            putExtra(Intent.EXTRA_STREAM, uiState.previewPdfUri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        try {
-                            context.startActivity(Intent.createChooser(intent, shareFileTitle))
-                        } catch (_: Exception) {}
-                    },
-                    onSaveAs = {
-                        val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
-                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                            addCategory(Intent.CATEGORY_OPENABLE)
-                            type = "application/pdf"
-                            putExtra(Intent.EXTRA_TITLE, fileName)
-                        }
-                        savePreviewDocumentLauncher.launch(intent)
-                    },
-                    onAddWatermark = { text ->
-                        onAction(MainUiAction.AddWatermark(uiState.previewPdfUri, text))
-                    },
-                    onExtract = { showExtractPagesDialog = true }
-                )
-                if (showExtractPagesDialog && viewModel != null) {
-                    val totalPages = uiState.selectedMetadata?.pageCount ?: 0
-                    com.max97k.pddf.feature.viewer.PdfExtractPagesDialog(
-                        totalPages = totalPages,
-                        onDismiss = { showExtractPagesDialog = false },
-                        onSaveAs = { pageRange ->
-                            showExtractPagesDialog = false
-                            pageRangeToExtract = pageRange
-                            val fileName = "extracted_${uiState.selectedFileNames.firstOrNull() ?: "document"}.pdf"
-                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "application/pdf"
-                                putExtra(Intent.EXTRA_TITLE, fileName)
-                            }
-                            extractPdfDocumentLauncher.launch(intent)
-                        },
-                        onShare = { pageRange ->
-                            showExtractPagesDialog = false
-                            scope.launch {
-                                try {
-                                    val tempUri = viewModel.createTempFile("extracted_", ".pdf")
-                                    val extractResult = viewModel.extractPages(
-                                        sourceUri = uiState.previewPdfUri.toString(),
-                                        destUri = tempUri,
-                                        pageRange = pageRange
-                                    )
-                                    if (extractResult.isSuccess) {
-                                        // Convert raw cache path to FileProvider content:// URI before sharing
-                                        val shareableUri = viewModel.getShareableUri(tempUri)
-                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                            type = "application/pdf"
-                                            putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(shareableUri))
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                        }
-                                        context.startActivity(Intent.createChooser(shareIntent, shareFileTitle))
-                                    } else {
-                                        android.widget.Toast.makeText(context, "Extraction failed", android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Extraction error", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                    )
-                }
-            }
+    }
+
+        if (uiState.previewPdfUri != null) {
+            val shareFileTitle = stringResource(R.string.btn_share_file)
+            PdfViewerDialog(
+                uri = uiState.previewPdfUri,
+                title = uiState.selectedFileNames.firstOrNull() ?: "",
+                onDismiss = { onAction(MainUiAction.SetPreviewPdfUri(null)) },
+                onRotateAll = { degrees -> onAction(MainUiAction.RotatePreview(degrees)) },
+                onShare = {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uiState.previewPdfUri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    try {
+                        context.startActivity(Intent.createChooser(intent, shareFileTitle))
+                    } catch (_: Exception) {}
+                },
+                onSaveAs = {
+                    val fileName = uiState.selectedFileNames.firstOrNull() ?: "decrypted.pdf"
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_TITLE, fileName)
+                    }
+                    savePreviewDocumentLauncher.launch(intent)
+                },
+                onAddWatermark = { text ->
+                    onAction(MainUiAction.AddWatermark(uiState.previewPdfUri, text))
+                },
+                onExtract = { showExtractPagesDialog = true }
+            )
         }
-    )
+
+        if (showExtractPagesDialog && viewModel != null && uiState.previewPdfUri != null) {
+            val totalPages = uiState.selectedMetadata?.pageCount ?: 0
+            val shareFileTitle = stringResource(R.string.btn_share_file)
+            com.max97k.pddf.feature.viewer.PdfExtractPagesDialog(
+                totalPages = totalPages,
+                onDismiss = { showExtractPagesDialog = false },
+                onSaveAs = { pageRange ->
+                    showExtractPagesDialog = false
+                    pageRangeToExtract = pageRange
+                    val fileName = "extracted_${uiState.selectedFileNames.firstOrNull() ?: "document"}.pdf"
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_TITLE, fileName)
+                    }
+                    extractPdfDocumentLauncher.launch(intent)
+                },
+                onShare = { pageRange ->
+                    showExtractPagesDialog = false
+                    scope.launch {
+                        try {
+                            val tempUri = viewModel.createTempFile("extracted_", ".pdf")
+                            val extractResult = viewModel.extractPages(
+                                sourceUri = uiState.previewPdfUri.toString(),
+                                destUri = tempUri,
+                                pageRange = pageRange
+                            )
+                            if (extractResult.isSuccess) {
+                                // Convert raw cache path to FileProvider content:// URI before sharing
+                                val shareableUri = viewModel.getShareableUri(tempUri)
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/pdf"
+                                    putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(shareableUri))
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, shareFileTitle))
+                            } else {
+                                android.widget.Toast.makeText(context, "Extraction failed", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Extraction error", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            )
+        }
+    }
 
 
 

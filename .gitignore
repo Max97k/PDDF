@@ -28,5 +28,6 @@ TEST_READY.md
 .Jules/
 distribution/**/*.apk
 distribution/**/*.aab
+assets/google_play/*.jpg
 plan_review.md
 test_plan_ideas.md

@@ -24,8 +24,8 @@ android {
     applicationId = "com.max97k.pddf"
     minSdk = 36
     targetSdk = 37
-    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 22
-    versionName = (project.findProperty("versionName") as? String) ?: "0.9.5"
+    versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 23
+    versionName = (project.findProperty("versionName") as? String) ?: "0.9.6"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -168,8 +168,6 @@ dependencies {
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
-  implementation(libs.androidx.compose.material3.adaptive.navigation)
-  implementation(libs.androidx.compose.material3.adaptive.layout)
   implementation(libs.androidx.compose.material3.windowsizeclass)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.graphics)

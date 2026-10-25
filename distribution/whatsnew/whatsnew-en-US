@@ -1,1 +1,1 @@
-v0.9.5 Release: Enhanced security with unified FLAG_SECURE protection, deep DoD 5220.22-M recursive cache shredding, smart title & filename suggestion, fixed attachment saving and page share URIs, memory OOM optimizations, and complete localization.
+v0.9.6 Release: Fixed landscape layout split issue on Pixel 8 Pro and large-screen devices by removing forced dual-pane scaffold; refined PDF viewer floating overlay top bar and full-screen experience.

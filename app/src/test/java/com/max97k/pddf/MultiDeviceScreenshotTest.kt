@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf
+package com.max97k.pddf
 
 import android.app.Application
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -107,5 +107,22 @@ class MultiDeviceScreenshotTest {
             }
         }
         composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/pixel_tablet_expanded.png")
+    }
+
+    @Test
+    @Config(qualifiers = "w1008dp-h450dp-land", sdk = [36])
+    fun screenshot_phone_pixel8pro_landscape() {
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = createTestMainViewModel(application)
+
+        composeTestRule.setContent {
+            MyApplicationTheme(themeMode = ThemeMode.DARK) {
+                PDFDecryptorScreen(
+                    viewModel = viewModel,
+                    windowWidthSizeClass = WindowWidthSizeClass.Expanded
+                )
+            }
+        }
+        composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/pixel8pro_landscape.png")
     }
 }

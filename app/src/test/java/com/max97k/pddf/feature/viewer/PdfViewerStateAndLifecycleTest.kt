@@ -1,4 +1,4 @@
-﻿package com.max97k.pddf.feature.viewer
+package com.max97k.pddf.feature.viewer
 
 import android.net.Uri
 import android.widget.FrameLayout
@@ -254,5 +254,26 @@ class PdfViewerStateAndLifecycleTest {
 
         composeTestRule.onNodeWithContentDescription(saveDesc).performClick()
         assertTrue("onSaveAs callback must be called", saved)
+    }
+
+    @Test
+    fun pdfViewerDialog_rendersAndDismissCallbackInvoked() {
+        val testUri = Uri.parse("file:///android_asset/unencrypted.pdf")
+        var dismissed = false
+
+        composeTestRule.setContent {
+            PdfViewerDialog(
+                uri = testUri,
+                title = "Dialog Test",
+                onDismiss = { dismissed = true }
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        val closeDesc = composeTestRule.activity.getString(R.string.btn_close)
+        composeTestRule.onNodeWithContentDescription(closeDesc).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(closeDesc).performClick()
+        assertTrue("onDismiss callback must be called", dismissed)
     }
 }

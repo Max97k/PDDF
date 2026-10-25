@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
@@ -260,14 +262,19 @@ fun PdfViewerScreen(
     }
 
 
+    LaunchedEffect(insetsController) {
+        insetsController?.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
     LaunchedEffect(topBarVisible, insetsController) {
         insetsController?.let { controller ->
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             if (topBarVisible) {
                 controller.show(WindowInsetsCompat.Type.systemBars())
             } else {
                 controller.hide(WindowInsetsCompat.Type.systemBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         }
     }
@@ -276,14 +283,6 @@ fun PdfViewerScreen(
         onDispose {
             insetsController?.show(WindowInsetsCompat.Type.systemBars())
         }
-    }
-
-    // When TopAppBar is hidden, 0 insets so the PDF takes up 100% of the display.
-    // When visible, safeDrawing accounts for system bars.
-    val contentInsets = if (topBarVisible) {
-        WindowInsets.safeDrawing
-    } else {
-        WindowInsets(0, 0, 0, 0)
     }
 
     if (showPrintDialog) {
@@ -321,15 +320,26 @@ fun PdfViewerScreen(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = contentInsets,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { _ ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // Floating Overlay TopAppBar - avoids resizing/compressing underlying PDF canvas
             AnimatedVisibility(
                 visible = topBarVisible,
-                enter = expandVertically(),
-                exit = shrinkVertically()
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .zIndex(20f)
             ) {
                 TopAppBar(
+                    windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
                     title = {
                         Text(
                             text = title.ifEmpty { stringResource(R.string.title_pdf_viewer) },
@@ -490,18 +500,10 @@ fun PdfViewerScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp).copy(alpha = 0.95f)
                     )
                 )
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
 
             val preserveImages by securityPreferences.preserveEmbeddedImages.collectAsState()
 
@@ -641,7 +643,9 @@ fun PdfViewerScreen(
                                                 fragment.documentUri = uri
                                                 fragment.setSearchActive(isSearchActive)
                                                 fragment.onImmersiveModeRequest = { enter ->
-                                                    topBarVisible = !enter
+                                                    if (topBarVisible == enter) {
+                                                        topBarVisible = !enter
+                                                    }
                                                 }
                                                 fragment.onSearchModeChanged = { active ->
                                                     if (isSearchActive != active) {
@@ -697,7 +701,9 @@ fun PdfViewerScreen(
                                     existing.setSearchActive(isSearchActive)
                                     // Ensure the lambdas are always up-to-date after recomposition.
                                     existing.onImmersiveModeRequest = { enter ->
-                                        topBarVisible = !enter
+                                        if (topBarVisible == enter) {
+                                            topBarVisible = !enter
+                                        }
                                     }
                                     existing.onSearchModeChanged = { active ->
                                         if (isSearchActive != active) {

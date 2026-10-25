@@ -46,7 +46,12 @@
 - ✅ **生命週期與資源洩漏修復**：快取 `InkPdfViewerFragment` 反射欄位並於銷毀時註銷 Handler；`PdfViewerViewModel` 串接 Job 取消；`PdfPageOverviewDialog` 安全釋放底層渲染器。
 - ✅ **業務功能與在地化完善**：實作 `SuggestDocumentTitleUseCase`、恢復 Settings 7 國語言切換選單、密碼庫命中次數自動累加，並補齊繁體中文與簡體中文在地化資源。
 
-### 5. 目前測試驗證狀態
+### 5. v0.9.6 橫屏自適應排版與預覽浮動層修復 (Version 0.9.6 Release)
+- ✅ **徹底修復 Pixel 8 Pro 及大螢幕橫屏畫面遭雙欄切半問題**：移除 `ListDetailPaneScaffold` 之雙欄強制分欄邏輯，還原全寬單欄佈局與 Overlay 預覽架構，避免在大寬度裝置（`WindowWidthSizeClass.Expanded`）下造成左側清單、右側空白的異常割裂。
+- ✅ **`PdfViewerScreen` 浮動頂部工具列優化**：頂部操作列採用沉浸式浮動 Overlay（`AnimatedVisibility` 搭配 `fadeIn`/`fadeOut`），並傳遞透明背景與安全區域 WindowInsets，解決底層 PDF 視窗大小變更時的重新排版與畫面擠壓變形。
+- ✅ **自適應應用程式圖示與深淺主題修飾**：更新 Adaptive Launcher Icon、色彩資源與商店宣傳截圖資源。
+
+### 6. 目前測試驗證狀態
 - **JVM 單元測試**：`BUILD SUCCESSFUL`，全數測試套件 100% 通過（0 Failures / 0 Errors / 0 Skipped）。
 - **Android Lint 靜態檢查**：`.\gradlew.bat lint` 0 Errors 通過。
 - **覆蓋率建置**：`.\gradlew.bat :app:jacocoTestReport` 建置正常。
